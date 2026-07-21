@@ -1,0 +1,71 @@
+# Gradle build/cache
+.gradle/
+**/build/
+out/
+bin/
+HELP.md
+
+# Keep the Gradle Wrapper in Git
+!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+**/config/api-key.txt
+application-local.properties
+application-local.yml
+application-local.yaml
+application-secret.properties
+application-secret.yml
+application-secret.yaml
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# Runtime files and logs
+logs/
+*.log
+*.pid
+*.tmp
+hs_err_pid*
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse / STS
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local Codex metadata and temporary design workspace
+.agents/
+figma-main-adjust/
+
+# Separate local AI server (do not include in this project repository)
+academy-ai-server/
