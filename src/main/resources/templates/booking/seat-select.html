@@ -1,3 +1,23 @@
-<!doctype html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 좌석 선택</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css"></head>
-<body id="top"><div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div><main class="booking-page"><div class="shell booking-grid"><section><header class="page-heading"><div class="cluster" style="justify-content:space-between"><div><span class="eyebrow">STEP 02</span><h1>좌석을 선택하세요</h1></div><div><small>선점 만료까지</small><div class="timer">04:32</div></div></div></header><div class="notice notice--danger" style="margin-bottom:18px"><b>좌석 선택 충돌</b> · A구역 8열 11번은 다른 사용자가 먼저 선점했습니다. 최신 좌석 상태를 확인해 주세요.</div><div class="card"><div class="seat-stage">STAGE</div><div class="seat-map" aria-label="좌석 배치도"><div class="seat-row"><button class="seat"></button><button class="seat"></button><button class="seat is-held"></button><button class="seat"></button><button class="seat is-disabled"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button></div><div class="seat-row"><button class="seat"></button><button class="seat is-selected"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat is-held"></button><button class="seat"></button><button class="seat"></button></div><div class="seat-row"><button class="seat is-disabled"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat is-disabled"></button></div></div><div class="seat-legend cluster" style="justify-content:center;margin-top:26px"><span><i class="status-dot available"></i>선택 가능</span><span><i class="status-dot held"></i>임시 선점</span><span><i class="status-dot reserved"></i>선택 좌석</span><span><i class="status-dot blocked"></i>선택 불가</span></div></div></section><aside class="stack"><div th:replace="~{fragments/booking/booking-summary :: summary}"></div><button class="btn btn--primary btn--wide" type="button">선택 좌석 선점하기</button></aside></div></main></body></html>
-
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 좌석 선택</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css"></head>
+<body id="top">
+<div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
+<main class="booking-page"><div class="shell booking-grid">
+  <!-- STEP 02: 회차별 좌석 상태와 임시 선점 -->
+  <section>
+    <header class="page-heading"><div class="cluster" style="justify-content:space-between"><div><span class="eyebrow">STEP 02</span><h1>좌석을 선택하세요</h1></div><div><small>선점 만료까지</small><div class="timer">04:32</div></div></div></header>
+    <div class="notice notice--danger" style="margin-bottom:18px"><b>좌석 선택 충돌</b> · 다른 사용자가 먼저 선점한 좌석은 최신 상태 조회 후 선택할 수 있습니다.</div>
+    <div class="card">
+      <div class="seat-stage">STAGE</div>
+      <div class="seat-map" aria-label="좌석 배치도">
+        <div class="seat-row"><button class="seat" aria-label="A구역 8열 9번"></button><button class="seat" aria-label="A구역 8열 10번"></button><button class="seat is-held" aria-label="선점된 좌석"></button><button class="seat"></button><button class="seat is-disabled" aria-label="선택 불가 좌석"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button></div>
+        <div class="seat-row"><button class="seat"></button><button class="seat is-selected" aria-label="선택한 좌석"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat is-held"></button><button class="seat"></button><button class="seat"></button></div>
+        <div class="seat-row"><button class="seat is-disabled"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat"></button><button class="seat is-disabled"></button></div>
+      </div>
+      <div class="seat-legend cluster" style="justify-content:center;margin-top:26px"><span><i class="status-dot available"></i>선택 가능</span><span><i class="status-dot held"></i>임시 선점</span><span><i class="status-dot reserved"></i>선택 좌석</span><span><i class="status-dot blocked"></i>선택 불가</span></div>
+    </div>
+  </section>
+  <aside class="stack"><div th:replace="~{fragments/booking/booking-summary :: summary}"></div><a class="btn btn--primary btn--wide" th:href="@{/order-review}" href="/order-review">선택 좌석 선점하고 주문 확인</a></aside>
+</div></main>
+</body></html>

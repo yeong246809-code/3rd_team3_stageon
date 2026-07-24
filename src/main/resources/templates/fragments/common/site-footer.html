@@ -1,13 +1,22 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
+<!-- 사이트 공통 안내와 보조 탐색 -->
 <footer th:fragment="footer" class="site-footer">
   <div class="shell footer-grid">
-    <div><div class="footer-brand display">StageOn</div><p>최고의 라이브 엔터테인먼트 경험을 위한 실시간 티켓팅 플랫폼.</p></div>
-    <div><div class="footer-links"><span>이용약관</span><span>개인정보처리방침</span><span>고객센터</span><span>회사소개</span><span>제휴문의</span></div><p style="margin-top:18px">본 화면은 2026년 8월 MVP 개발 방향을 공유하기 위한 정적 시안입니다.</p></div>
+    <div><a class="footer-brand display" th:href="@{/}" href="/">StageOn</a><p>최고의 라이브 엔터테인먼트 경험을 위한 실시간 티켓팅 플랫폼.</p></div>
+    <div>
+      <nav class="footer-links" aria-label="정책 및 고객지원">
+        <a href="#terms">이용약관</a>
+        <a href="#privacy">개인정보처리방침</a>
+        <a th:href="@{/ai}" href="/ai">고객센터</a>
+        <a href="#company">회사소개</a>
+        <a href="#partnership">제휴문의</a>
+      </nav>
+      <p style="margin-top:18px">본 화면은 2026년 8월 MVP 개발 방향을 공유하기 위한 시안입니다.</p>
+    </div>
     <div><b>고객센터 1588-0000</b><p>평일 09:00–18:00</p></div>
   </div>
 </footer>
 </body>
 </html>
-

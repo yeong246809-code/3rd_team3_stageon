@@ -3,13 +3,13 @@
 .admin-brand { color: #fff; font-size: 26px; font-weight: 800; }
 .admin-brand small { display: block; margin-top: 4px; color: #94a3b8; font-family: "Noto Sans KR"; font-size: 11px; }
 .admin-nav { margin-top: 38px; display: grid; gap: 6px; }
-.admin-nav button { padding: 12px 14px; border: 0; border-radius: 8px; color: inherit; background: transparent; text-align: left; }
-.admin-nav button.is-active { color: #fff; background: rgba(255,255,255,.1); }
+.admin-nav a { padding: 12px 14px; border: 0; border-radius: 8px; color: inherit; background: transparent; text-align: left; }
+.admin-nav a:hover, .admin-nav a.is-active { color: #fff; background: rgba(255,255,255,.1); }
 .admin-main { min-width: 0; }
 .admin-header { height: 72px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: #fff; }
 .admin-content { padding: 30px 32px 60px; }
 .admin-title { margin-bottom: 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
 .admin-title h1 { font-size: 28px; }
 .admin-title p { margin-top: 5px; color: var(--muted); font-size: 13px; }
-@media (max-width: 820px) { .admin-page { grid-template-columns: 76px 1fr; } .admin-sidebar { padding-inline: 12px; } .admin-brand small, .admin-nav button span { display: none; } .admin-content { padding-inline: 18px; } }
+@media (max-width: 820px) { .admin-page { grid-template-columns: 76px 1fr; } .admin-sidebar { padding-inline: 12px; } .admin-brand small, .admin-nav a span { display: none; } .admin-content { padding-inline: 18px; } }
 

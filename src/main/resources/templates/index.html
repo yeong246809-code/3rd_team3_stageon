@@ -16,7 +16,7 @@
           <span class="badge badge--brand">단독 예매</span>
           <h1 class="display">뮤지컬<br>〈드라큘라〉</h1>
           <p>오리지널 내한 공연 · 예술의전당 오페라극장</p>
-          <button class="btn btn--primary" type="button">실시간 예매하기</button>
+          <a class="btn btn--primary" th:href="@{/performance-detail}" href="/performance-detail">실시간 예매하기</a>
         </div>
       </div>
       <aside class="hero-panel"><span class="eyebrow">REALTIME BOOKING</span><strong>뮤지컬 예매 1위</strong><p>2026.07.18 – 10.11<br>블루스퀘어 신한카드홀</p><div class="notice notice--ai" style="margin-top:24px">✦ 취향과 관람 조건을 바탕으로 AI가 공연을 추천해 드려요.</div></aside>
@@ -24,23 +24,23 @@
   </section>
   <section class="home-section">
     <div class="shell">
-      <div class="section-head"><div><h2 class="section-title">티켓 오픈</h2><p class="section-copy">가장 먼저 만나는 인기 공연 예매 정보</p></div><span>전체보기 ›</span></div>
+      <div class="section-head"><div><h2 class="section-title">티켓 오픈</h2><p class="section-copy">가장 먼저 만나는 인기 공연 예매 정보</p></div><a th:href="@{/performances}" href="/performances">전체보기 ›</a></div>
       <div class="poster-grid">
-        <article class="poster-card"><img th:src="@{/images/figma/home-05.jpg}" src="/images/figma/home-05.jpg" alt="악뮤 10주년 콘서트 포스터"><h3>악뮤 10주년 콘서트</h3><p>KSPO DOME · 2026.08.28 오픈</p></article>
-        <article class="poster-card"><img th:src="@{/images/figma/home-06.jpg}" src="/images/figma/home-06.jpg" alt="지킬 앤 하이드 포스터"><h3>뮤지컬 〈지킬 앤 하이드〉</h3><p>블루스퀘어 · 2026.08.29 오픈</p></article>
-        <article class="poster-card"><img th:src="@{/images/figma/home-07.jpg}" src="/images/figma/home-07.jpg" alt="연극 포스터"><h3>연극 〈폴링 노트〉</h3><p>대학로 아트센터 · 2026.09.02</p></article>
-        <article class="poster-card"><img th:src="@{/images/figma/home-08.jpg}" src="/images/figma/home-08.jpg" alt="클래식 포스터"><h3>조성진 피아노 리사이틀</h3><p>예술의전당 · 2026.09.12</p></article>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-05.jpg}" src="/images/figma/home-05.jpg" alt="악뮤 10주년 콘서트 포스터"><h3>악뮤 10주년 콘서트</h3><p>KSPO DOME · 2026.08.28 오픈</p></a>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-06.jpg}" src="/images/figma/home-06.jpg" alt="지킬 앤 하이드 포스터"><h3>뮤지컬 〈지킬 앤 하이드〉</h3><p>블루스퀘어 · 2026.08.29 오픈</p></a>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-07.jpg}" src="/images/figma/home-07.jpg" alt="연극 포스터"><h3>연극 〈폴링 노트〉</h3><p>대학로 아트센터 · 2026.09.02</p></a>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-08.jpg}" src="/images/figma/home-08.jpg" alt="클래식 포스터"><h3>조성진 피아노 리사이틀</h3><p>예술의전당 · 2026.09.12</p></a>
       </div>
     </div>
   </section>
   <section class="home-section home-section--dark">
     <div class="shell">
-      <div class="section-head"><div><h2 class="section-title">장르별 랭킹</h2><p class="section-copy">지금 가장 많이 예매하는 공연</p></div><div class="tabs"><span class="tab is-active">뮤지컬</span><span class="tab">연극</span><span class="tab">콘서트</span></div></div>
+      <div class="section-head"><div><h2 class="section-title">장르별 랭킹</h2><p class="section-copy">지금 가장 많이 예매하는 공연</p></div><div class="tabs"><a class="tab is-active" th:href="@{/performances(genre='뮤지컬')}" href="/performances?genre=뮤지컬">뮤지컬</a><a class="tab" th:href="@{/performances(genre='연극')}" href="/performances?genre=연극">연극</a><a class="tab" th:href="@{/performances(genre='콘서트')}" href="/performances?genre=콘서트">콘서트</a></div></div>
       <div class="poster-grid">
-        <article class="poster-card"><img th:src="@{/images/figma/home-09.jpg}" src="/images/figma/home-09.jpg" alt="공연 랭킹 1위"><h3>1. 뮤지컬 시카고</h3><p>2026.08.01 – 10.20</p></article>
-        <article class="poster-card"><img th:src="@{/images/figma/home-10.jpg}" src="/images/figma/home-10.jpg" alt="공연 랭킹 2위"><h3>2. 연극 폴링 노트</h3><p>2026.08.07 – 09.30</p></article>
-        <article class="poster-card"><img th:src="@{/images/figma/home-11.jpg}" src="/images/figma/home-11.jpg" alt="공연 랭킹 3위"><h3>3. 오페라 토스카</h3><p>2026.08.13 – 08.18</p></article>
-        <article class="poster-card"><img th:src="@{/images/figma/home-12.jpg}" src="/images/figma/home-12.jpg" alt="공연 랭킹 4위"><h3>4. 뮤지컬 팬텀</h3><p>2026.08.20 – 11.22</p></article>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-09.jpg}" src="/images/figma/home-09.jpg" alt="공연 랭킹 1위"><h3>1. 뮤지컬 시카고</h3><p>2026.08.01 – 10.20</p></a>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-10.jpg}" src="/images/figma/home-10.jpg" alt="공연 랭킹 2위"><h3>2. 연극 폴링 노트</h3><p>2026.08.07 – 09.30</p></a>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-11.jpg}" src="/images/figma/home-11.jpg" alt="공연 랭킹 3위"><h3>3. 오페라 토스카</h3><p>2026.08.13 – 08.18</p></a>
+        <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/home-12.jpg}" src="/images/figma/home-12.jpg" alt="공연 랭킹 4위"><h3>4. 뮤지컬 팬텀</h3><p>2026.08.20 – 11.22</p></a>
       </div>
     </div>
   </section>

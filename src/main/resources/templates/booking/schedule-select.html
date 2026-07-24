@@ -1,3 +1,21 @@
-<!doctype html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 회차 선택</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css"></head>
-<body id="top"><div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div><main class="booking-page"><div class="shell booking-grid"><section><header class="page-heading"><span class="eyebrow">STEP 01</span><h1>날짜와 회차를 선택하세요</h1><p>예매 가능한 회차만 선택할 수 있습니다.</p></header><div class="card"><div class="cluster" style="justify-content:space-between"><button class="btn" type="button">‹</button><h2>2026년 8월</h2><button class="btn" type="button">›</button></div><div class="tabs" style="margin:24px 0"><span class="tab">14 금</span><span class="tab is-active">15 토</span><span class="tab">16 일</span><span class="tab">22 토</span><span class="tab">23 일</span></div><div class="schedule-list"><div class="schedule-item"><div><b>1회 14:00</b><p class="section-copy">잔여 219석</p></div><button type="button" class="btn">선택</button></div><div class="schedule-item"><div><b>2회 19:00</b><p class="section-copy">잔여 219석</p></div><button type="button" class="btn btn--primary">선택됨</button></div></div></div></section><div th:replace="~{fragments/booking/booking-summary :: summary}"></div></div></main></body></html>
-
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 회차 선택</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css"></head>
+<body id="top">
+<div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
+<main class="booking-page"><div class="shell booking-grid">
+  <!-- STEP 01: 공연 날짜와 회차 선택 -->
+  <section>
+    <header class="page-heading"><span class="eyebrow">STEP 01</span><h1>날짜와 회차를 선택하세요</h1><p>예매 가능한 회차만 선택할 수 있습니다.</p></header>
+    <div class="card">
+      <div class="cluster" style="justify-content:space-between"><button class="btn" type="button" aria-label="이전 달">‹</button><h2>2026년 8월</h2><button class="btn" type="button" aria-label="다음 달">›</button></div>
+      <div class="tabs" style="margin:24px 0"><span class="tab">14 금</span><span class="tab is-active">15 토</span><span class="tab">16 일</span><span class="tab">22 토</span><span class="tab">23 일</span></div>
+      <div class="schedule-list">
+        <div class="schedule-item"><div><b>1회 14:00</b><p class="section-copy">잔여 219석</p></div><a class="btn" th:href="@{/queue}" href="/queue">선택</a></div>
+        <div class="schedule-item"><div><b>2회 19:00</b><p class="section-copy">잔여 219석</p></div><a class="btn btn--primary" th:href="@{/queue}" href="/queue">선택하고 대기열 입장</a></div>
+      </div>
+    </div>
+  </section>
+  <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
+</div></main>
+</body></html>

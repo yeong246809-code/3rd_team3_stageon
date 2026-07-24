@@ -8,6 +8,7 @@
 .main-nav { display: flex; gap: 28px; font-size: 18px; font-weight: 800; }
 .search { width: 384px; height: 48px; padding: 0 18px; display: flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
 .search input { width: 100%; border: 0; outline: 0; background: transparent; }
+.search button { padding: 4px; border: 0; color: var(--ink); background: transparent; cursor: pointer; font-size: 20px; }
 .subnav { height: 57px; border-bottom: 1px solid var(--line); }
 .subnav .shell { justify-content: flex-start; gap: 32px; overflow-x: auto; font-size: 14px; font-weight: 700; white-space: nowrap; }
 .site-footer { padding: 54px 0; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); font-size: 12px; }

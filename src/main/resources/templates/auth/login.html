@@ -1,3 +1,12 @@
-<!doctype html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 로그인</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css"></head>
-<body id="top"><div th:replace="~{fragments/common/site-header :: header}"></div><main class="page page--soft"><div class="auth-wrap card card--shadow auth-card"><h1>로그인</h1><p class="section-copy" style="text-align:center">StageOn에서 빠르고 안전하게 예매하세요.</p><form><div class="field"><label>이메일</label><input class="input" type="email" placeholder="stageon@example.com"></div><div class="field"><label>비밀번호</label><input class="input" type="password" placeholder="비밀번호 입력"></div><label><input type="checkbox"> 로그인 상태 유지</label><button type="button" class="btn btn--primary btn--wide">로그인</button><button type="button" class="btn btn--wide">회원가입</button></form></div></main><div th:replace="~{fragments/common/site-footer :: footer}"></div><div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div></body></html>
-
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 로그인</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css"></head>
+<body id="top">
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+<main class="page page--soft"><div class="auth-wrap card card--shadow auth-card">
+  <!-- 세션 인증 구현 시 POST /api/auth/login에 연결할 입력 화면 -->
+  <h1>로그인</h1><p class="section-copy" style="text-align:center">StageOn에서 빠르고 안전하게 예매하세요.</p>
+  <form><div class="field"><label for="login-email">이메일</label><input id="login-email" class="input" type="email" autocomplete="email" placeholder="stageon@example.com"></div><div class="field"><label for="login-password">비밀번호</label><input id="login-password" class="input" type="password" autocomplete="current-password" placeholder="비밀번호 입력"></div><label><input type="checkbox"> 로그인 상태 유지</label><a class="btn btn--primary btn--wide" th:href="@{/}" href="/">로그인 시안 진행</a><a class="btn btn--wide" th:href="@{/signup}" href="/signup">회원가입</a></form>
+</div></main>
+<div th:replace="~{fragments/common/site-footer :: footer}"></div><div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+</body></html>
