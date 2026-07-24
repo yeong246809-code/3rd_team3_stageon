@@ -4,6 +4,9 @@
 out/
 bin/
 HELP.md
+*.class
+*.hprof
+replay_pid*
 
 # Keep the Gradle Wrapper in Git
 !gradle/wrapper/gradle-wrapper.jar
@@ -13,6 +16,9 @@ HELP.md
 .env
 .env.*
 !.env.example
+**/secrets/
+credentials.json
+service-account*.json
 **/config/api-key.txt
 application-local.properties
 application-local.yml
@@ -28,10 +34,47 @@ application-secret.yaml
 
 # Runtime files and logs
 logs/
+/tmp/
+/temp/
+/.cache/
+/uploads/
+/data/
 *.log
 *.pid
 *.tmp
+*.bak
+*.swp
+*~
 hs_err_pid*
+
+# Local databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Local AI model files
+/models/
+*.gguf
+*.safetensors
+*.onnx
+
+# Node.js tooling (if introduced for UI tooling)
+node_modules/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python tooling (local AI scripts and utilities)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
 
 # IntelliJ IDEA
 .idea/
@@ -58,6 +101,9 @@ nbdist/
 # VS Code
 .vscode/
 
+# Fleet
+.fleet/
+
 # Operating system files
 .DS_Store
 Thumbs.db
@@ -65,6 +111,7 @@ Desktop.ini
 
 # Local Codex metadata and temporary design workspace
 .agents/
+.codex/
 figma-main-adjust/
 
 # Separate local AI server (do not include in this project repository)

@@ -1,0 +1,30 @@
+.utility { height: 32px; color: #cbd5e1; background: var(--ink); font-size: 11px; }
+.utility .shell, .main-header .shell, .subnav .shell { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+.utility-menu { display: flex; gap: 20px; }
+.main-header { height: 110px; border-bottom: 1px solid var(--line); }
+.brand-wrap { display: flex; align-items: center; gap: 40px; }
+.brand { color: var(--brand); font-size: 32px; font-weight: 800; letter-spacing: -.04em; }
+.brand small { display: block; color: var(--muted); font-family: "Noto Sans KR"; font-size: 11px; letter-spacing: 0; }
+.main-nav { display: flex; gap: 28px; font-size: 18px; font-weight: 800; }
+.search { width: 384px; height: 48px; padding: 0 18px; display: flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.search input { width: 100%; border: 0; outline: 0; background: transparent; }
+.subnav { height: 57px; border-bottom: 1px solid var(--line); }
+.subnav .shell { justify-content: flex-start; gap: 32px; overflow-x: auto; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.site-footer { padding: 54px 0; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); font-size: 12px; }
+.footer-grid { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 36px; }
+.footer-brand { color: var(--ink); font-size: 26px; font-weight: 800; }
+.footer-links { display: flex; gap: 20px; flex-wrap: wrap; color: var(--ink-2); }
+.floating-actions { position: fixed; right: 26px; bottom: 26px; z-index: 100; display: grid; gap: 10px; justify-items: end; }
+.fab { width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: #fff; box-shadow: var(--shadow); font-size: 20px; }
+.chatbot-fab { width: 58px; height: 58px; color: #fff; border: 0; background: var(--brand); list-style: none; }
+.chatbot-fab::-webkit-details-marker { display: none; }
+.chat-panel { width: 280px; margin-bottom: 10px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: var(--shadow); }
+.chat-panel p { margin-top: 6px; color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) {
+  .main-header { height: auto; padding: 18px 0; }
+  .main-header .shell { align-items: flex-start; gap: 18px; flex-direction: column; }
+  .main-nav { display: none; }
+  .search { width: 100%; }
+  .footer-grid { grid-template-columns: 1fr; }
+}
+

@@ -1,181 +1,51 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="AI 기반 실시간 예매 & 안전 티켓 거래 플랫폼 StageOn">
-  <title>StageOn</title>
-  <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StageOn | 홈</title>
+  <link rel="stylesheet" th:href="@{/css/index.css}" href="../static/css/index.css">
 </head>
-<body>
-  <header>
-    <div class="meta-header">
-      <div class="content-row meta-inner">
-        <div class="meta-left">
-          <strong>StageOn</strong><i></i>
-          <span>AI 기반 실시간 예매 &amp; 안전 티켓 거래 플랫폼</span>
+<body id="top">
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+<main>
+  <section class="hero">
+    <div class="shell hero-grid">
+      <div class="hero-visual">
+        <img th:src="@{/images/figma/home-04.jpg}" src="/images/figma/home-04.jpg" alt="뮤지컬 드라큘라 공연 포스터">
+        <div class="hero-copy">
+          <span class="badge badge--brand">단독 예매</span>
+          <h1 class="display">뮤지컬<br>〈드라큘라〉</h1>
+          <p>오리지널 내한 공연 · 예술의전당 오페라극장</p>
+          <button class="btn btn--primary" type="button">실시간 예매하기</button>
         </div>
-        <nav class="meta-links" aria-label="회원 메뉴">
-          <a href="#">로그인</a><a href="#">회원가입</a><a href="#">마이페이지</a><a href="#">고객센터</a>
-        </nav>
+      </div>
+      <aside class="hero-panel"><span class="eyebrow">REALTIME BOOKING</span><strong>뮤지컬 예매 1위</strong><p>2026.07.18 – 10.11<br>블루스퀘어 신한카드홀</p><div class="notice notice--ai" style="margin-top:24px">✦ 취향과 관람 조건을 바탕으로 AI가 공연을 추천해 드려요.</div></aside>
+    </div>
+  </section>
+  <section class="home-section">
+    <div class="shell">
+      <div class="section-head"><div><h2 class="section-title">티켓 오픈</h2><p class="section-copy">가장 먼저 만나는 인기 공연 예매 정보</p></div><span>전체보기 ›</span></div>
+      <div class="poster-grid">
+        <article class="poster-card"><img th:src="@{/images/figma/home-05.jpg}" src="/images/figma/home-05.jpg" alt="악뮤 10주년 콘서트 포스터"><h3>악뮤 10주년 콘서트</h3><p>KSPO DOME · 2026.08.28 오픈</p></article>
+        <article class="poster-card"><img th:src="@{/images/figma/home-06.jpg}" src="/images/figma/home-06.jpg" alt="지킬 앤 하이드 포스터"><h3>뮤지컬 〈지킬 앤 하이드〉</h3><p>블루스퀘어 · 2026.08.29 오픈</p></article>
+        <article class="poster-card"><img th:src="@{/images/figma/home-07.jpg}" src="/images/figma/home-07.jpg" alt="연극 포스터"><h3>연극 〈폴링 노트〉</h3><p>대학로 아트센터 · 2026.09.02</p></article>
+        <article class="poster-card"><img th:src="@{/images/figma/home-08.jpg}" src="/images/figma/home-08.jpg" alt="클래식 포스터"><h3>조성진 피아노 리사이틀</h3><p>예술의전당 · 2026.09.12</p></article>
       </div>
     </div>
-
-    <div class="utility-bar">
-      <div class="content-row utility-inner">
-        <div class="brand-nav">
-          <a class="brand" href="#top" aria-label="StageOn 홈">
-            <strong>StageOn</strong><span>AI로 더 빠르고, 스마트하게</span>
-          </a>
-          <nav class="primary-categories" aria-label="서비스 종류">
-            <a class="active" href="#ticket-open">공연/전시</a><a href="#">스포츠</a>
-          </nav>
-        </div>
-        <form class="search-bar" role="search">
-          <input type="search" aria-label="통합 검색" placeholder="공연명, 아티스트, 장소, 날짜 검색">
-          <button type="submit" aria-label="검색"><img src="assets/search.svg" alt=""></button>
-        </form>
+  </section>
+  <section class="home-section home-section--dark">
+    <div class="shell">
+      <div class="section-head"><div><h2 class="section-title">장르별 랭킹</h2><p class="section-copy">지금 가장 많이 예매하는 공연</p></div><div class="tabs"><span class="tab is-active">뮤지컬</span><span class="tab">연극</span><span class="tab">콘서트</span></div></div>
+      <div class="poster-grid">
+        <article class="poster-card"><img th:src="@{/images/figma/home-09.jpg}" src="/images/figma/home-09.jpg" alt="공연 랭킹 1위"><h3>1. 뮤지컬 시카고</h3><p>2026.08.01 – 10.20</p></article>
+        <article class="poster-card"><img th:src="@{/images/figma/home-10.jpg}" src="/images/figma/home-10.jpg" alt="공연 랭킹 2위"><h3>2. 연극 폴링 노트</h3><p>2026.08.07 – 09.30</p></article>
+        <article class="poster-card"><img th:src="@{/images/figma/home-11.jpg}" src="/images/figma/home-11.jpg" alt="공연 랭킹 3위"><h3>3. 오페라 토스카</h3><p>2026.08.13 – 08.18</p></article>
+        <article class="poster-card"><img th:src="@{/images/figma/home-12.jpg}" src="/images/figma/home-12.jpg" alt="공연 랭킹 4위"><h3>4. 뮤지컬 팬텀</h3><p>2026.08.20 – 11.22</p></article>
       </div>
     </div>
-
-    <nav class="category-bar" aria-label="공연 장르">
-      <div class="content-row category-inner">
-        <a class="active" href="#">뮤지컬</a><a href="#">연극</a><a href="#">콘서트</a>
-        <a href="#">클래식/무용</a><a href="#">전시/행사</a><a href="#">레저/스포츠</a>
-      </div>
-    </nav>
-  </header>
-
-  <main id="top">
-    <section class="hero-section">
-      <div class="content-row hero-layout">
-        <aside class="weekly-panel">
-          <h2>이번 주 주목할 공연</h2>
-          <a class="weekly-item selected" href="#">
-            <img src="assets/sidebar-1.png" alt="뮤지컬 드라큘라 포스터">
-            <span><strong>뮤지컬 〈드라큘라〉</strong><small>2025.10.15 ~ 2026.01.05</small><small>샤롯데씨어터</small></span>
-          </a>
-          <a class="weekly-item" href="#">
-            <img src="assets/sidebar-2.png" alt="임영웅 콘서트 포스터">
-            <span><strong>콘서트 〈임영웅〉 서울</strong><small>2025.11.02 ~ 2025.11.05</small><small>KSPO DOME</small></span>
-          </a>
-          <a class="weekly-item" href="#">
-            <img src="assets/sidebar-3.png" alt="뮤지컬 시카고 포스터">
-            <span><strong>뮤지컬 〈시카고〉 내한</strong><small>2025.12.01 ~ 2025.12.25</small><small>블루스퀘어 신한카드홀</small></span>
-          </a>
-        </aside>
-
-        <div class="main-slider">
-          <div class="slide-visual">
-            <img class="slide-bg" src="assets/hero.png" alt="뮤지컬 드라큘라 공연 장면">
-            <div class="slide-overlay"></div>
-            <span class="exclusive-badge">단독 판매</span>
-            <div class="slide-copy">
-              <p>오리지널 브로드웨이 캐스팅 역사적 내한 공연</p>
-              <h1>뮤지컬 〈드라큘라〉<br>오리지널 내한</h1>
-              <small>2025.10.15 - 2026.01.05&nbsp;&nbsp; | &nbsp;&nbsp;샤롯데씨어터 (롯데월드)</small>
-              <a class="booking-button" href="#">실시간 예매하기 <img src="assets/chevron-right-alt.svg" alt=""></a>
-            </div>
-          </div>
-          <aside class="slide-info">
-            <div>
-              <h2>REALTIME BOOKING</h2>
-              <dl><div><dt>예매율 순위</dt><dd>뮤지컬 부문 1위</dd></div><div><dt>평점 및 리뷰</dt><dd>★ 4.9 / 5.0</dd></div></dl>
-            </div>
-            <div class="ai-promo"><img src="assets/zap.svg" alt=""><span>회원 연령대 92% 추천</span></div>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <section class="section ticket-open" id="ticket-open">
-      <div class="content-row section-inner">
-        <div class="section-header">
-          <div><h2>티켓오픈</h2><p>가장 먼저 선점하는 프리미엄 좌석 예매 정보</p></div>
-          <a class="more-link" href="#">전체보기 <img src="assets/chevron-right.svg" alt=""></a>
-        </div>
-        <div class="poster-grid">
-          <article class="poster-card"><div class="poster"><img src="assets/open-1.png" alt="악뮤 10주년 전국투어 포스터"><b>D-3</b></div><div class="poster-info"><em>콘서트</em><h3>악뮤 (AKMU) 10주년 전국투어</h3><p>오픈: 10월 28일 (월) 14:00</p><small>올림픽공원 체조경기장</small></div></article>
-          <article class="poster-card"><div class="poster"><img src="assets/open-2.png" alt="지킬앤하이드 포스터"><b>D-4</b></div><div class="poster-info"><em>뮤지컬</em><h3>뮤지컬 〈지킬앤하이드〉</h3><p>오픈: 10월 29일 (화) 11:00</p><small>샤롯데씨어터</small></div></article>
-          <article class="poster-card"><div class="poster"><img src="assets/open-3.png" alt="연극 클로저 포스터"><b>D-5</b></div><div class="poster-info"><em>연극</em><h3>연극 〈클로저〉 오리지널</h3><p>오픈: 10월 30일 (수) 15:00</p><small>플러스씨어터</small></div></article>
-          <article class="poster-card"><div class="poster"><img src="assets/open-4.png" alt="빛의 시어터 반 고흐전 포스터"></div><div class="poster-info"><em>전시</em><h3>빛의 시어터 : 반 고흐전</h3><p>오픈: 상시 예매가능</p><small>워커힐 호텔앤리조트</small></div></article>
-          <article class="poster-card"><div class="poster"><img src="assets/open-5.png" alt="조성진 피아노 리사이틀 포스터"><b>단독</b></div><div class="poster-info"><em>클래식</em><h3>조성진 피아노 리사이틀</h3><p>오픈: 11월 01일 (금) 10:00</p><small>예술의전당 콘서트홀</small></div></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section ranking-section">
-      <div class="content-row section-inner">
-        <div class="section-header ranking-header">
-          <div><h2>장르별 랭킹</h2><div class="filter-tabs"><button class="active" type="button">뮤지컬</button><button type="button">연극</button><button type="button">콘서트</button><button type="button">클래식</button><button type="button">전시</button></div></div>
-          <a class="more-link" href="#">랭킹 더보기 <img src="assets/chevron-right.svg" alt=""></a>
-        </div>
-        <div class="poster-grid ranking-grid">
-          <article class="poster-card"><div class="poster"><img src="assets/rank-1.png" alt="뮤지컬 시카고 포스터"><b class="rank">1</b></div><div class="poster-info rank-info"><h3>뮤지컬 〈시카고〉 대구공연</h3><p>2025.11.10 ~ 2025.11.24</p><small>대구 오페라하우스</small></div></article>
-          <article class="poster-card"><div class="poster"><img src="assets/rank-2.png" alt="뮤지컬 광화문연가 포스터"><b class="rank">2</b></div><div class="poster-info rank-info"><h3>뮤지컬 〈광화문연가〉</h3><p>2025.10.23 ~ 2026.01.05</p><small>디큐브 링크아트센터</small></div></article>
-          <article class="poster-card"><div class="poster"><img src="assets/rank-3.png" alt="오페라 토스카 포스터"><b class="rank">3</b></div><div class="poster-info rank-info"><h3>오페라 〈토스카〉 푸치니 서거</h3><p>2025.11.16 ~ 2025.11.19</p><small>예술의전당 오페라극장</small></div></article>
-          <article class="poster-card"><div class="poster empty-poster"><b class="rank">4</b></div><div class="poster-info rank-info"><h3>뮤지컬 〈알라딘〉 한국어 초연</h3><p>2025.11.22 ~ 2026.06.22</p><small>샤롯데씨어터</small></div></article>
-          <article class="poster-card"><div class="poster"><img src="assets/rank-4.png" alt="뮤지컬 베르사유의 장미 포스터"><b class="rank">5</b></div><div class="poster-info rank-info"><h3>뮤지컬 〈베르사유의 장미〉</h3><p>2025.10.01 ~ 2025.10.31</p><small>충무아트센터 대극장</small></div></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="recommend-section">
-      <div class="content-row section-inner">
-        <div class="recommend-heading"><h2>오늘의 추천 공연</h2><p>티켓파크가 엄선하여 추천하는 지금 가장 트렌디한 공연</p></div>
-        <div class="recommend-layout">
-          <article class="large-promo">
-            <img src="assets/promo.png" alt="데이식스 연말 단독 콘서트 공연장">
-            <div><em>콘서트 / LIVE</em><h3>밴드 〈데이식스〉 (DAY6) 연말 단독 콘서트</h3><p>지친 마음을 위로하는 위로와 성장의 보이스. 데이식스가 건네는 특별한 크리스마스 음악 선물. 전 좌석 지정석 실시간 좌석 예약 진행 중!</p><small>일시 : 2025.12.23 ~ 2025.12.25&nbsp;&nbsp; | &nbsp;&nbsp;장소 : 고척스카이돔</small></div>
-          </article>
-          <div class="recommend-list">
-            <a href="#"><img src="assets/recommend-1.png" alt="넬 콘서트 포스터"><span><strong>넬 (NELL) 크리스마스 콘서트 〈무제〉</strong><p>대한민국 대표 모던록 밴드 넬의 시그니처 단독 콘서트</p><small>2025.12.24 - 12.25&nbsp; | &nbsp;잠실학생체육관</small></span></a>
-            <a href="#"><img src="assets/recommend-2.png" alt="유자 왕 리사이틀 포스터"><span><strong>피아니스트 유자 왕 리사이틀</strong><p>폭발적 테크닉과 현대적 해석으로 만나는 쇼팽과 라흐마니노프</p><small>2025.11.20&nbsp; | &nbsp;예술의전당 콘서트홀</small></span></a>
-            <a href="#"><img src="assets/recommend-3.png" alt="레미제라블 포스터"><span><strong>뮤지컬 〈레미제라블〉 월드 투어</strong><p>웅장한 합창과 시대를 관통하는 감동 스토리 한국 상륙</p><small>2025.12.15 - 2026.02.10&nbsp; | &nbsp;블루스퀘어</small></span></a>
-            <a href="#"><img src="assets/recommend-4.png" alt="호두까기 인형 포스터"><span><strong>국립발레단 〈호두까기 인형〉</strong><p>겨울 시그니처 환상의 세계로의 초대 동화같은 무대 예술</p><small>2025.12.18 - 12.25&nbsp; | &nbsp;예술의전당 오페라극장</small></span></a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section venue-section">
-      <div class="content-row section-inner">
-        <div class="section-header"><div><h2>전용관 / 파트너 공연장 추천</h2><p>예술적 향기가 가득한 대한민국 대표 무대 전경</p></div></div>
-        <div class="venue-box">
-          <div class="venue-copy"><h3><i></i> 롯데콘서트홀 (LOTTE Concert Hall)</h3><p>국내 최초의 빈야드(Vineyard) 스타일 클래식 전문 공연장. 무대를 둘러싼 계단식 객석과 세계적 수준의 파이프 오르간이 전달하는 무결점 어쿠스틱 음향을 경험해보세요.</p><a href="#">전체 일정 보기</a></div>
-          <div class="venue-cards">
-            <article><img src="assets/venue-1.png" alt="롯데콘서트홀 전경"><h4>파리 오페라 오케스트라 내한</h4><p>일시 : 2025.11.23</p></article>
-            <article><img src="assets/venue-2.png" alt="공연 중인 롯데콘서트홀"><h4>조수미 &amp; 베를린 필 단원 협연</h4><p>일시 : 2025.12.02</p></article>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="content-row footer-inner">
-      <div class="footer-links"><nav><a href="#">이용약관</a><a class="important" href="#">개인정보처리방침</a><a href="#">청소년보호정책</a><a href="#">운영정책</a><a href="#">고객센터</a></nav><div class="socials"><a href="#" aria-label="페이스북"><img src="assets/facebook.svg" alt=""></a><a href="#" aria-label="인스타그램"><img src="assets/instagram.svg" alt=""></a><a href="#" aria-label="유튜브"><img src="assets/youtube.svg" alt=""></a></div></div>
-      <div class="footer-divider"></div>
-      <div class="corp-info"><p>주식회사 티켓파크 대표이사 : 홍길동 <span>서울특별시 강남구 테헤란로 123</span> <span>사업자등록번호 : 120-81-12345</span></p><p>통신판매업신고 : 제 2025-서울강남-1234호 <span>고객문의 : cs@stageon.co.kr&nbsp; | &nbsp;전화번호 : 1588-1234</span></p><small>© 2025 StageOn. All rights reserved. 본 서비스는 학습 및 포트폴리오용 시뮬레이션 인터페이스입니다.</small></div>
-    </div>
-  </footer>
-
-  <div class="floating-actions" aria-label="빠른 메뉴">
-    <button class="fab chatbot-fab" type="button" aria-label="AI 챗봇 열기"><img src="assets/bot.svg" alt=""></button>
-    <button class="fab top-fab" type="button" aria-label="맨 위로 이동"><img src="assets/chevron-up.svg" alt=""></button>
-  </div>
-  <div class="chat-panel" role="status" aria-live="polite"><strong>AI 티켓 도우미</strong><p>어떤 공연을 찾고 계신가요?</p></div>
-
-  <script>
-    document.querySelector('.search-bar').addEventListener('submit', event => event.preventDefault());
-    document.querySelector('.top-fab').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    const chatbotButton = document.querySelector('.chatbot-fab');
-    const chatPanel = document.querySelector('.chat-panel');
-    chatbotButton.addEventListener('click', () => {
-      const opened = chatPanel.classList.toggle('open');
-      document.querySelector('.floating-actions').classList.toggle('chat-open', opened);
-      chatbotButton.setAttribute('aria-expanded', String(opened));
-    });
-  </script>
+  </section>
+</main>
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
 </body>
 </html>

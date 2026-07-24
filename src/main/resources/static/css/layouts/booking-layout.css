@@ -1,0 +1,18 @@
+.booking-header { height: 120px; border-bottom: 1px solid var(--line); background: #fff; }
+.booking-header__top { height: 36px; color: #cbd5e1; background: var(--ink); }
+.booking-header__main { height: 84px; }
+.booking-header .shell { height: 100%; display: flex; align-items: center; justify-content: space-between; }
+.booking-title { display: flex; gap: 16px; align-items: center; }
+.booking-title strong { color: var(--brand); font-family: "Hanken Grotesk"; font-size: 25px; }
+.stepper { display: flex; align-items: center; gap: 10px; color: var(--subtle); font-size: 12px; }
+.stepper b { width: 26px; height: 26px; display: inline-grid; place-items: center; border-radius: 50%; background: var(--surface-2); }
+.stepper .is-active { color: var(--brand); font-weight: 800; }
+.stepper .is-active b { color: #fff; background: var(--brand); }
+.booking-page { min-height: calc(100vh - 120px); padding: 40px 0 80px; background: var(--surface); }
+.booking-grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; align-items: start; }
+.booking-summary { position: sticky; top: 20px; }
+.booking-summary dl { margin-top: 18px; display: grid; gap: 12px; }
+.booking-summary dl div { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 13px; }
+.booking-summary dd { color: var(--ink); font-weight: 700; text-align: right; }
+@media (max-width: 860px) { .booking-grid { grid-template-columns: 1fr; } .booking-summary { position: static; } .stepper { display: none; } }
+

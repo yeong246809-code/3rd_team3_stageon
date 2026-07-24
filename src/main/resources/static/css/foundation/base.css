@@ -1,0 +1,26 @@
+body {
+  min-width: 320px;
+  color: var(--ink);
+  background: var(--canvas);
+  font-family: "Noto Sans KR", sans-serif;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+.display, .brand, .admin-brand { font-family: "Hanken Grotesk", "Noto Sans KR", sans-serif; }
+.shell { width: min(calc(100% - 48px), var(--content)); margin-inline: auto; }
+.page { min-height: 620px; padding: 64px 0 96px; }
+.page--soft { background: var(--surface); }
+.page-heading { margin-bottom: 34px; }
+.page-heading h1 { font-size: clamp(28px, 3vw, 42px); letter-spacing: -.04em; }
+.page-heading p { margin-top: 8px; color: var(--muted); }
+.eyebrow { color: var(--brand); font-size: 13px; font-weight: 800; letter-spacing: .08em; }
+.section-title { font-size: 26px; letter-spacing: -.03em; }
+.section-copy { margin-top: 6px; color: var(--muted); font-size: 14px; }
+.stack { display: grid; gap: 20px; }
+.cluster { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+@media (max-width: 720px) {
+  .shell { width: min(calc(100% - 28px), var(--content)); }
+  .page { padding: 40px 0 72px; }
+}
+

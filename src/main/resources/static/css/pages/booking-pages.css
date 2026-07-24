@@ -1,0 +1,20 @@
+.schedule-list { display: grid; gap: 12px; }
+.schedule-item { padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.queue-box { width: min(calc(100% - 32px), 760px); margin: 0 auto; text-align: center; }
+.queue-count { margin: 18px 0; color: var(--brand); font-family: "Hanken Grotesk"; font-size: 58px; font-weight: 800; }
+.progress { height: 10px; overflow: hidden; border-radius: 999px; background: var(--surface-2); }
+.progress i { width: 44%; height: 100%; display: block; background: var(--brand); }
+.seat-stage { margin-bottom: 28px; padding: 12px; border-radius: 50% 50% 8px 8px; color: #fff; background: var(--ink); text-align: center; }
+.seat-map { display: grid; gap: 10px; justify-content: center; }
+.seat-row { display: flex; gap: 8px; }
+.seat { width: 28px; height: 28px; border: 0; border-radius: 6px 6px 3px 3px; background: #d1d5db; }
+.seat.is-selected { background: var(--brand); }
+.seat.is-held { background: #f59e0b; }
+.seat.is-disabled { background: #4b5563; }
+.payment-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.payment-method { padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fff; text-align: center; font-weight: 700; }
+.payment-method.is-active { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+.complete-card { width: min(calc(100% - 32px), 680px); margin: 0 auto; text-align: center; }
+.complete-check { width: 76px; height: 76px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--success); font-size: 36px; }
+@media (max-width: 620px) { .payment-methods { grid-template-columns: 1fr; } .seat { width: 22px; height: 22px; } }
+

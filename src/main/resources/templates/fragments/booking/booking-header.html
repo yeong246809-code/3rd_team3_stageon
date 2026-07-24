@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="bookingHeader" class="booking-header">
+  <div class="booking-header__top"><div class="shell"><small>안전한 예매를 위해 입장 토큰과 좌석 선점 시간을 확인해 주세요.</small><small>고객센터 1588-0000</small></div></div>
+  <div class="booking-header__main">
+    <div class="shell">
+      <div class="booking-title"><strong>StageOn</strong><span>뮤지컬 〈오페라의 유령〉</span></div>
+      <div th:replace="~{fragments/booking/booking-stepper :: stepper}"></div>
+    </div>
+  </div>
+</header>
+</body>
+</html>
+
