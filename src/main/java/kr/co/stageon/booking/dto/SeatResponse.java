@@ -3,7 +3,6 @@ package kr.co.stageon.booking.dto;
 import kr.co.stageon.booking.domain.ScheduleSeat;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /** 좌석 배치 화면에서 공개 가능한 회차 좌석 정보입니다. */
 public record SeatResponse(
@@ -14,10 +13,12 @@ public record SeatResponse(
         String number,
         String grade,
         String displayColor,
+        String seatsioObjectKey,
+        String objectType,
         BigDecimal price,
+        String currency,
         String status,
-        boolean accessible,
-        LocalDateTime holdExpiresAt
+        boolean accessible
 ) {
     public static SeatResponse from(ScheduleSeat scheduleSeat) {
         var seat = scheduleSeat.getSeat();
@@ -29,10 +30,12 @@ public record SeatResponse(
                 seat.getSeatNumber(),
                 seat.getSeatGrade().getName(),
                 seat.getSeatGrade().getDisplayColor(),
+                seat.getSeatsioObjectKey(),
+                seat.getObjectType().name(),
                 scheduleSeat.getPrice(),
+                scheduleSeat.getCurrency(),
                 scheduleSeat.getStatus().name(),
-                seat.isAccessible(),
-                scheduleSeat.getHoldExpiresAt()
+                seat.isAccessible()
         );
     }
 }

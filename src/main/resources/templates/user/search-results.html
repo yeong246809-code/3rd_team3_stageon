@@ -1,19 +1,55 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 검색 결과</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css"></head>
-<body id="top">
-<div th:replace="~{fragments/common/site-header :: header}"></div>
-<main class="page"><div class="shell">
-  <!-- 검색 조건과 장르 필터 -->
-  <header class="page-heading"><h1 th:text="${#strings.isEmpty(keyword) ? '전체 공연' : '‘' + keyword + '’ 검색 결과'}">‘오페라’ 검색 결과</h1><p>공연명, 출연진, 공연장을 통합 검색한 결과입니다.</p></header>
-  <div class="search-toolbar"><div class="tabs"><a class="tab is-active" th:href="@{/performances}" href="/performances">전체</a><a class="tab" th:href="@{/performances(genre='뮤지컬')}" href="/performances?genre=뮤지컬">뮤지컬</a><a class="tab" th:href="@{/performances(genre='연극')}" href="/performances?genre=연극">연극</a><a class="tab" th:href="@{/performances(genre='콘서트')}" href="/performances?genre=콘서트">콘서트</a></div><span>공연일순</span></div>
-  <div class="poster-grid">
-    <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/search-04.jpg}" src="/images/figma/search-04.jpg" alt="오페라의 유령 포스터"><h3>뮤지컬 〈오페라의 유령〉</h3><p>블루스퀘어 · 예매 가능</p></a>
-    <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/search-05.jpg}" src="/images/figma/search-05.jpg" alt="토스카 포스터"><h3>오페라 〈토스카〉</h3><p>예술의전당 · 예매 가능</p></a>
-    <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/search-06.jpg}" src="/images/figma/search-06.jpg" alt="팬텀 포스터"><h3>뮤지컬 〈팬텀〉</h3><p>샤롯데씨어터 · 오픈 예정</p></a>
-    <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail"><img th:src="@{/images/figma/search-07.jpg}" src="/images/figma/search-07.jpg" alt="클래식 포스터"><h3>오페라 갈라 콘서트</h3><p>롯데콘서트홀 · 예매 가능</p></a>
-  </div>
-</div></main>
-<div th:replace="~{fragments/common/site-footer :: footer}"></div><div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
-</body></html>
-
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn | 검색 결과</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
+  </head>
+  <body id="top">
+    <div th:replace="~{fragments/common/site-header :: header}"></div>
+    <main class="page">
+      <div class="shell">
+        <!-- 검색 조건과 장르 필터 -->
+        <header class="page-heading">
+          <h1 th:text="${#strings.isEmpty(keyword) ? '전체 공연' : '‘' + keyword + '’ 검색 결과'}">‘오페라’ 검색 결과</h1>
+          <p>공연명, 출연진, 공연장을 통합 검색한 결과입니다.</p>
+        </header>
+        <div class="search-toolbar">
+          <div class="tabs">
+            <a class="tab is-active" th:href="@{/performances}" href="/performances">전체</a>
+            <a class="tab" th:href="@{/performances(genre='뮤지컬')}" href="/performances?genre=뮤지컬">뮤지컬</a>
+            <a class="tab" th:href="@{/performances(genre='연극')}" href="/performances?genre=연극">연극</a>
+            <a class="tab" th:href="@{/performances(genre='콘서트')}" href="/performances?genre=콘서트">콘서트</a>
+          </div>
+          <span>공연일순</span>
+        </div>
+        <div class="poster-grid">
+          <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail">
+            <img th:src="@{/images/figma/search-04.jpg}" src="/images/figma/search-04.jpg" alt="오페라의 유령 포스터">
+            <h3>뮤지컬 〈오페라의 유령〉</h3>
+            <p>블루스퀘어 · 예매 가능</p>
+          </a>
+          <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail">
+            <img th:src="@{/images/figma/search-05.jpg}" src="/images/figma/search-05.jpg" alt="토스카 포스터">
+            <h3>오페라 〈토스카〉</h3>
+            <p>예술의전당 · 예매 가능</p>
+          </a>
+          <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail">
+            <img th:src="@{/images/figma/search-06.jpg}" src="/images/figma/search-06.jpg" alt="팬텀 포스터">
+            <h3>뮤지컬 〈팬텀〉</h3>
+            <p>샤롯데씨어터 · 오픈 예정</p>
+          </a>
+          <a class="poster-card" th:href="@{/performance-detail}" href="/performance-detail">
+            <img th:src="@{/images/figma/search-07.jpg}" src="/images/figma/search-07.jpg" alt="클래식 포스터">
+            <h3>오페라 갈라 콘서트</h3>
+            <p>롯데콘서트홀 · 예매 가능</p>
+          </a>
+        </div>
+      </div>
+    </main>
+    <div th:replace="~{fragments/common/site-footer :: footer}"></div>
+    <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+  </body>
+</html>

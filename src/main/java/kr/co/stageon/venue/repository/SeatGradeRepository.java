@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-/** 공연장별 좌석 등급 DAO입니다. */
+/** 좌석도별 좌석 등급 DAO입니다. */
 public interface SeatGradeRepository extends JpaRepository<SeatGrade, Long> {
-    List<SeatGrade> findByVenueIdOrderBySortOrderAsc(Long venueId);
+    List<SeatGrade> findBySeatChartIdOrderBySortOrderAsc(Long seatChartId);
 }

@@ -1,16 +1,66 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | AI 추천·FAQ</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css"></head>
-<body id="top">
-<div th:replace="~{fragments/common/site-header :: header}"></div>
-<main class="page page--soft"><div class="shell">
-  <!-- AI 장애가 일반 검색·예매 흐름에 영향을 주지 않는 독립 화면 -->
-  <header class="page-heading"><span class="eyebrow">STAGEON AI</span><h1>공연 추천 · FAQ</h1><p>자연어로 취향을 말하면 조건을 정리하고 공연을 추천합니다.</p></header>
-  <div class="notice notice--ai" style="margin-bottom:20px"><b>AI 사용 원칙</b> · 좌석 수, 가격, 결제 상태, 대기 순번은 AI가 만들지 않으며 Spring Boot의 실제 데이터만 설명합니다.</div>
-  <div class="ai-grid">
-    <aside class="card"><h2>빠른 질문</h2><div class="stack" style="margin-top:18px"><a class="btn" th:href="@{/performances(genre='뮤지컬')}" href="/performances?genre=뮤지컬">이번 주말 뮤지컬 보기</a><a class="btn" th:href="@{/performances}" href="/performances">공연 전체 검색</a><a class="btn" th:href="@{/schedule-select}" href="/schedule-select">예매 단계 확인</a></div><div class="notice notice--danger" style="margin-top:24px"><b>AI 서버 연결 지연</b><br>Ollama가 중단되어도 검색과 일반 예매는 정상 이용할 수 있습니다.</div></aside>
-    <section class="card chat-window"><div class="messages"><div class="message message--user">8월 주말에 부모님과 볼 공연 추천해 줘.</div><div class="message"><b>조건을 이렇게 이해했어요.</b><br>8월 · 주말 · 2인 · 가족 관람. 현재 등록된 공연 중 클래식과 뮤지컬을 우선 추천할게요.</div><div class="message"><b>추천 1 · 오페라의 유령</b><br>관람등급 만 7세 이상, 블루스퀘어 공연입니다. 실제 잔여 좌석과 가격은 상세 화면에서 확인해 주세요.<br><a th:href="@{/performance-detail}" href="/performance-detail">공연 상세 보기 →</a></div></div><div class="chat-compose"><label class="sr-only" for="ai-question">질문</label><input id="ai-question" class="input" placeholder="공연 취향이나 궁금한 점을 입력하세요"><button class="btn btn--primary" type="button">전송</button></div></section>
-  </div>
-</div></main>
-<div th:replace="~{fragments/common/site-footer :: footer}"></div><div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
-</body></html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn | AI 추천·FAQ</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
+  </head>
+  <body id="top">
+    <div th:replace="~{fragments/common/site-header :: header}"></div>
+    <main class="page page--soft">
+      <div class="shell">
+        <!-- AI 장애가 일반 검색·예매 흐름에 영향을 주지 않는 독립 화면 -->
+        <header class="page-heading">
+          <span class="eyebrow">STAGEON AI</span>
+          <h1>공연 추천 · FAQ</h1>
+          <p>자연어로 취향을 말하면 조건을 정리하고 공연을 추천합니다.</p>
+        </header>
+        <div class="notice notice--ai" style="margin-bottom:20px">
+          <b>AI 사용 원칙</b>
+          · 좌석 수, 가격, 결제 상태, 대기 순번은 AI가 만들지 않으며 Spring Boot의 실제 데이터만 설명합니다.
+        </div>
+        <div class="ai-grid">
+          <aside class="card">
+            <h2>빠른 질문</h2>
+            <div class="stack" style="margin-top:18px">
+              <a class="btn" th:href="@{/performances(genre='뮤지컬')}" href="/performances?genre=뮤지컬">이번 주말 뮤지컬 보기</a>
+              <a class="btn" th:href="@{/performances}" href="/performances">공연 전체 검색</a>
+              <a class="btn" th:href="@{/schedule-select}" href="/schedule-select">예매 단계 확인</a>
+            </div>
+            <div class="notice notice--danger" style="margin-top:24px">
+              <b>AI 서버 연결 지연</b>
+              <br>
+              Ollama가 중단되어도 검색과 일반 예매는 정상 이용할 수 있습니다.
+            </div>
+          </aside>
+          <section class="card chat-window">
+            <div class="messages">
+              <div class="message message--user">8월 주말에 부모님과 볼 공연 추천해 줘.</div>
+              <div class="message">
+                <b>조건을 이렇게 이해했어요.</b>
+                <br>
+                8월 · 주말 · 2인 · 가족 관람. 현재 등록된 공연 중 클래식과 뮤지컬을 우선 추천할게요.
+              </div>
+              <div class="message">
+                <b>추천 1 · 오페라의 유령</b>
+                <br>
+                관람등급 만 7세 이상, 블루스퀘어 공연입니다. 실제 잔여 좌석과 가격은 상세 화면에서 확인해 주세요.
+                <br>
+                <a th:href="@{/performance-detail}" href="/performance-detail">공연 상세 보기 →</a>
+              </div>
+            </div>
+            <div class="chat-compose">
+              <label class="sr-only" for="ai-question">질문</label>
+              <input id="ai-question" class="input" placeholder="공연 취향이나 궁금한 점을 입력하세요">
+              <button class="btn btn--primary" type="button">전송</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <div th:replace="~{fragments/common/site-footer :: footer}"></div>
+    <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+  </body>
+</html>

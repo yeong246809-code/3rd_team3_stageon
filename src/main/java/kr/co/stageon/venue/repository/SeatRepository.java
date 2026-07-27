@@ -7,5 +7,5 @@ import java.util.List;
 
 /** 물리 좌석 배치 DAO입니다. */
 public interface SeatRepository extends JpaRepository<Seat, Long> {
-    List<Seat> findByVenueIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(Long venueId);
+    List<Seat> findBySeatChartIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(Long seatChartId);
 }

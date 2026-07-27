@@ -1,12 +1,52 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn | 예매 완료</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css"></head>
-<body id="top">
-<div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
-<main class="booking-page"><section class="complete-card card card--shadow">
-  <!-- 결제 성공과 좌석 RESERVED 전환 결과 -->
-  <div class="complete-check">✓</div><span class="badge badge--success">RESERVED</span><h1 style="margin-top:14px">예매가 완료되었습니다</h1><p class="section-copy">결제가 성공하고 좌석이 최종 예약 상태로 변경되었습니다.</p>
-  <div class="card" style="margin-top:28px;text-align:left;background:var(--surface)"><dl class="info-list"><div><dt>예매번호</dt><dd><b>STG-260815-0012</b></dd></div><div><dt>공연</dt><dd>뮤지컬 〈오페라의 유령〉</dd></div><div><dt>일시</dt><dd>2026.08.15 (토) 19:00</dd></div><div><dt>좌석</dt><dd>VIP A구역 8열 12번</dd></div><div><dt>결제</dt><dd>162,000원 · SUCCESS</dd></div></dl></div>
-  <div class="cluster" style="justify-content:center;margin-top:24px"><a class="btn btn--primary" th:href="@{/mypage}" href="/mypage">예매내역 확인</a><a class="btn" th:href="@{/}" href="/">홈으로</a></div>
-</section></main>
-</body></html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn | 예매 완료</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
+  </head>
+  <body id="top">
+    <div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
+    <main class="booking-page">
+      <section class="complete-card card card--shadow">
+        <!-- 결제 성공과 좌석 RESERVED 전환 결과 -->
+        <div class="complete-check">✓</div>
+        <span class="badge badge--success">RESERVED</span>
+        <h1 style="margin-top:14px">예매가 완료되었습니다</h1>
+        <p class="section-copy">결제가 성공하고 좌석이 최종 예약 상태로 변경되었습니다.</p>
+        <div class="card" style="margin-top:28px;text-align:left;background:var(--surface)">
+          <dl class="info-list">
+            <div>
+              <dt>예매번호</dt>
+              <dd>
+                <b>STG-260815-0012</b>
+              </dd>
+            </div>
+            <div>
+              <dt>공연</dt>
+              <dd>뮤지컬 〈오페라의 유령〉</dd>
+            </div>
+            <div>
+              <dt>일시</dt>
+              <dd>2026.08.15 (토) 19:00</dd>
+            </div>
+            <div>
+              <dt>좌석</dt>
+              <dd>VIP A구역 8열 12번</dd>
+            </div>
+            <div>
+              <dt>결제</dt>
+              <dd>162,000원 · SUCCESS</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="cluster" style="justify-content:center;margin-top:24px">
+          <a class="btn btn--primary" th:href="@{/mypage}" href="/mypage">예매내역 확인</a>
+          <a class="btn" th:href="@{/}" href="/">홈으로</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

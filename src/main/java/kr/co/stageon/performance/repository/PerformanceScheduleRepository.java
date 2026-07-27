@@ -8,5 +8,5 @@ import java.util.List;
 /** 공연 회차 조회와 일정 관리를 위한 DAO입니다. */
 public interface PerformanceScheduleRepository extends JpaRepository<PerformanceSchedule, Long> {
     List<PerformanceSchedule> findByPerformanceIdOrderByStartsAtAsc(Long performanceId);
-    List<PerformanceSchedule> findByVenueIdOrderByStartsAtAsc(Long venueId);
+    List<PerformanceSchedule> findByVenueHallIdOrderByStartsAtAsc(Long venueHallId);
 }

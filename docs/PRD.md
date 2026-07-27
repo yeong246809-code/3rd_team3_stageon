@@ -289,19 +289,29 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 | 엔티티 | 핵심 필드 |
 | --- | --- |
 | Member | id, email, passwordHash, name, role |
-| Performance | id, kopisId, title, genre, status, venueSummary |
-| Venue | id, name, address |
-| Seat | id, venueId, section, row, number, gradeId |
-| SeatGrade | id, name, basePrice |
-| PerformanceSchedule | id, performanceId, venueId, startsAt, status |
-| ScheduleSeat | id, scheduleId, seatId, price, status, version |
-| Reservation | id, memberId, scheduleId, status, totalAmount, expiresAt |
-| ReservationSeat | id, reservationId, scheduleSeatId, price |
-| Payment | id, reservationId, idempotencyKey, amount, status, requestedAt |
+| Performance | id, kopisId, title, genre, runtimeMinutes, ageText, status |
+| Venue | id, kopisFacilityId, name, address, region |
+| VenueHall | id, venueId, kopisHallId, name, seatCapacity |
+| SeatChart | id, venueHallId, seatsioChartKey, version, active |
+| SeatGrade | id, seatChartId, name, displayColor |
+| Seat | id, seatChartId, seatsioObjectKey, section, row, number, gradeId |
+| PerformanceSchedule | id, performanceId, venueHallId, seatChartId, startsAt, seatsioEventKey, status |
+| ScheduleSeat | id, scheduleId, seatId, price, currency, status, version |
+| SeatHold | id, scheduleId, memberId, holdTokenHash, status, expiresAt |
+| SeatHoldItem | id, seatHoldId, scheduleSeatId |
+| Reservation | id, memberId, scheduleId, seatHoldId, status, totalAmount, expiresAt |
+| ReservationSeat | id, reservationId, scheduleSeatId, capturedSeat, capturedGrade, capturedUnitPrice |
+| Payment | id, reservationId, provider, idempotencyKey, amount, status, requestedAt |
 | WaitingQueueHistory | id, memberId, scheduleId, status, enteredAt |
 | AiChatHistory | id, memberId, question, responseType, createdAt |
 
-핵심 관계는 `Venue 1:N Seat`, `Performance 1:N PerformanceSchedule`, `PerformanceSchedule 1:N ScheduleSeat`, `Reservation 1:N ReservationSeat`, `ReservationSeat N:1 ScheduleSeat`, `Reservation 1:1 Payment`다. 물리 좌석 Seat와 회차별 판매 재고 ScheduleSeat를 반드시 분리한다.
+핵심 관계는 `Venue 1:N VenueHall`, `VenueHall 1:N SeatChart`, `SeatChart 1:N Seat`, `Performance 1:N PerformanceSchedule`, `PerformanceSchedule 1:N ScheduleSeat`, `SeatHold 1:N SeatHoldItem`, `Reservation 1:N ReservationSeat`, `ReservationSeat N:1 ScheduleSeat`, `Reservation 1:N Payment`다.
+
+물리 좌석 `Seat`와 회차별 판매 재고 `ScheduleSeat`를 반드시 분리한다. `SeatGrade`는 좌석도의 기본 구역만 나타내며 실제 판매 가격은 `ScheduleSeat.price`가 기준이다. `seatsioChartKey`, `seatsioEventKey`, `seatsioObjectKey`는 모두 선택값이며, 값이 없으면 로컬 좌석 방식으로 동작할 수 있다.
+
+`Performance.sourceType`은 두지 않는다. `kopisId`가 있으면 KOPIS 수집 공연, 없으면 관리자 등록 공연으로 판단한다.
+
+출연진, 소개 이미지, 외부 예매처, 가격 정책, 환불, 모바일 티켓, KOPIS 원본 스냅샷은 선택 테이블로 준비할 수 있으나 핵심 엔티티가 해당 행을 필수로 참조하지 않는다.
 
 ## 13. Redis Key 설계
 
@@ -312,21 +322,24 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 | `queue:entry:{queueToken}` | HASH | memberId, scheduleId, status | 대기열 TTL |
 | `queue:access:{entryToken}` | HASH | memberId, scheduleId | 5~10분 |
 | `seat:lock:{scheduleSeatId}` | Redisson Lock | lock owner | 수 초 lease |
-| `seat:hold:{scheduleSeatId}` | HASH | memberId, reservationId, expiresAt | 5분 |
+| `booking:session:{holdTokenHash}` | HASH | memberId, scheduleId | Seats.io hold TTL |
+| `seat:hold:{scheduleSeatId}` | HASH | memberId, seatHoldId, expiresAt | 로컬 좌석 모드 5분 |
 | `payment:idempotency:{key}` | STRING | paymentId 또는 처리 결과 | 24시간 이상 |
 
 대기열 ZSET에서 제거되더라도 WaitingQueueHistory는 DB에 최소 이벤트만 저장하여 테스트와 발표 근거로 사용한다.
 
+Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis에 동일 좌석 상태를 중복 저장하지 않는다. Redis는 대기열, 입장 토큰, 예매 세션 연결만 담당한다. 로컬 좌석 모드에서만 Redis TTL과 DB 상태를 함께 사용하여 선점을 구현한다. 두 모드 모두 최종 예약·결제 기록은 MySQL이 기준이다.
+
 ## 14. 동시성 제어 전략
 
-### 1차: JPA 비관적 락
+### 로컬 좌석 모드 1차: JPA 비관적 락
 
 - `ScheduleSeat`를 `PESSIMISTIC_WRITE`로 조회한다.
 - 트랜잭션 안에서 AVAILABLE 여부와 기존 선점 소유자를 재검증한다.
 - 선점 정보와 예약 상태를 같은 트랜잭션에서 갱신한다.
 - 구현이 단순하고 정합성 증명이 쉬워 MVP 기본 전략으로 사용한다.
 
-### 비교 실험: Redisson 분산락
+### 로컬 좌석 모드 비교 실험: Redisson 분산락
 
 - `seat:lock:{scheduleSeatId}`를 키로 제한 시간 내 락 획득을 시도한다.
 - 락 획득 후에도 DB 상태를 다시 확인한다.
@@ -336,6 +349,7 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 
 - 정확성, 평균·p95 응답시간, DB 락 대기, 실패율을 비교한다.
 - 1개월 MVP에서는 두 전략을 동시에 운영하지 않고 프로필 또는 구현체로 선택한다.
+- Seats.io 모드에서는 Seats.io hold/book/release를 좌석 선점의 기준으로 사용하고, MySQL 트랜잭션은 예약·결제 장부의 최종 정합성을 검증한다.
 
 ## 15. AI 역할과 제한
 

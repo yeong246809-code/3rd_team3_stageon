@@ -14,9 +14,14 @@ public record ReservationResponse(
         String performanceTitle,
         LocalDateTime startsAt,
         String status,
+        BigDecimal seatAmount,
+        BigDecimal feeAmount,
+        BigDecimal discountAmount,
         BigDecimal totalAmount,
         LocalDateTime expiresAt,
-        LocalDateTime reservedAt
+        LocalDateTime reservedAt,
+        LocalDateTime cancelledAt,
+        String cancelReason
 ) {
     public static ReservationResponse from(Reservation reservation) {
         return new ReservationResponse(
@@ -27,9 +32,14 @@ public record ReservationResponse(
                 reservation.getSchedule().getPerformance().getTitle(),
                 reservation.getSchedule().getStartsAt(),
                 reservation.getStatus().name(),
+                reservation.getSeatAmount(),
+                reservation.getFeeAmount(),
+                reservation.getDiscountAmount(),
                 reservation.getTotalAmount(),
                 reservation.getExpiresAt(),
-                reservation.getReservedAt()
+                reservation.getReservedAt(),
+                reservation.getCancelledAt(),
+                reservation.getCancelReason()
         );
     }
 }

@@ -1,3 +1,91 @@
-<!doctype html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>StageOn Admin | 대시보드</title><link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css"><link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css"></head>
-<body><div class="admin-page"><div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div><main class="admin-main"><div th:replace="~{fragments/admin/admin-header :: header}"></div><div class="admin-content"><header class="admin-title"><div><h1>통합 대시보드</h1><p>공연과 실시간 예매 운영 현황을 확인합니다.</p></div><button type="button" class="btn btn--dark">공연 등록</button></header><section class="stat-grid"><div class="card stat"><span>오늘 예매</span><strong>1,284</strong><small class="badge badge--success">+12.4%</small></div><div class="card stat"><span>대기 사용자</span><strong>842</strong><small class="badge badge--warning">WAITING</small></div><div class="card stat"><span>선점 좌석</span><strong>136</strong><small class="badge badge--warning">HELD</small></div><div class="card stat"><span>결제 성공률</span><strong>98.7%</strong><small class="badge badge--success">정상</small></div></section><section class="admin-grid" style="margin-top:18px"><div class="card"><h2>실시간 운영 상태</h2><div class="stack" style="margin-top:18px"><div class="cluster" style="justify-content:space-between"><span>Redis 대기열</span><span class="badge badge--success">정상</span></div><div class="cluster" style="justify-content:space-between"><span>Ollama AI</span><span class="badge badge--danger">연결 지연</span></div><div class="cluster" style="justify-content:space-between"><span>KOPIS 동기화</span><span class="badge badge--success">정상</span></div></div></div><div class="card"><h2>최근 예매</h2><div class="table-wrap" style="margin-top:18px"><table class="table"><tbody><tr><td>STG-0012</td><td>오페라의 유령</td><td><span class="badge badge--success">RESERVED</span></td></tr><tr><td>STG-0011</td><td>시카고</td><td><span class="badge badge--warning">PENDING</span></td></tr></tbody></table></div></div></section></div></main></div></body></html>
-
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 대시보드</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+  </head>
+  <body>
+    <div class="admin-page">
+      <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+      <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+          <header class="admin-title">
+            <div>
+              <h1>통합 대시보드</h1>
+              <p>공연과 실시간 예매 운영 현황을 확인합니다.</p>
+            </div>
+            <button type="button" class="btn btn--dark">공연 등록</button>
+          </header>
+          <section class="stat-grid">
+            <div class="card stat">
+              <span>오늘 예매</span>
+              <strong>1,284</strong>
+              <small class="badge badge--success">+12.4%</small>
+            </div>
+            <div class="card stat">
+              <span>대기 사용자</span>
+              <strong>842</strong>
+              <small class="badge badge--warning">WAITING</small>
+            </div>
+            <div class="card stat">
+              <span>선점 좌석</span>
+              <strong>136</strong>
+              <small class="badge badge--warning">HELD</small>
+            </div>
+            <div class="card stat">
+              <span>결제 성공률</span>
+              <strong>98.7%</strong>
+              <small class="badge badge--success">정상</small>
+            </div>
+          </section>
+          <section class="admin-grid" style="margin-top:18px">
+            <div class="card">
+              <h2>실시간 운영 상태</h2>
+              <div class="stack" style="margin-top:18px">
+                <div class="cluster" style="justify-content:space-between">
+                  <span>Redis 대기열</span>
+                  <span class="badge badge--success">정상</span>
+                </div>
+                <div class="cluster" style="justify-content:space-between">
+                  <span>Ollama AI</span>
+                  <span class="badge badge--danger">연결 지연</span>
+                </div>
+                <div class="cluster" style="justify-content:space-between">
+                  <span>KOPIS 동기화</span>
+                  <span class="badge badge--success">정상</span>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h2>최근 예매</h2>
+              <div class="table-wrap" style="margin-top:18px">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>STG-0012</td>
+                      <td>오페라의 유령</td>
+                      <td>
+                        <span class="badge badge--success">RESERVED</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>STG-0011</td>
+                      <td>시카고</td>
+                      <td>
+                        <span class="badge badge--warning">PENDING</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

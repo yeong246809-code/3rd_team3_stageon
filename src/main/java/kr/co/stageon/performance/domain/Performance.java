@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 public class Performance {
 
     public enum Status { UPCOMING, ON_SALE, ENDED, CANCELLED }
-    public enum SourceType { KOPIS, LOCAL, ADMIN }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,13 +39,30 @@ public class Performance {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    @Column(name = "runtime_minutes")
+    private Integer runtimeMinutes;
+
+    @Column(name = "age_text", length = 100)
+    private String ageText;
+
+    @Column(columnDefinition = "text")
+    private String story;
+
+    @Column(name = "raw_price_text", columnDefinition = "text")
+    private String rawPriceText;
+
+    @Column(name = "raw_schedule_text", columnDefinition = "text")
+    private String rawScheduleText;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "source_type", nullable = false, length = 20)
-    private SourceType sourceType;
+    @Column(name = "kopis_updated_at")
+    private LocalDateTime kopisUpdatedAt;
+
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
