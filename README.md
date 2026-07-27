@@ -26,19 +26,20 @@
 
 단순한 예매 서비스를 넘어 사용자의 취향과 이용 기록을 활용한 **AI 맞춤 추천**, 좌석 현황을 직관적으로 확인하는 **실시간 좌석 선택**, 신뢰할 수 있는 **티켓 거래**, 예매 내역을 모아 보는 **티켓 관리**까지 하나의 서비스 경험으로 연결하는 것을 목표로 합니다.
 
-> 현재 저장소에는 Figma 디자인을 기반으로 한 메인 페이지 UI와 Spring Boot 프로젝트 기반이 구현되어 있으며, 나머지 기능은 단계적으로 연동할 예정입니다.
+> 현재 저장소는 Figma 기반의 사용자·관리자 화면, 공연·회차·좌석·예매 조회 API, 핵심 JPA Entity와 MySQL 스키마를 중심으로 구성되어 있습니다. KOPIS, Redis, Seats.io와 AI 기능은 이 구조를 기준으로 단계적으로 연결합니다.
 
 ## ✨ 주요 기능
 
 | 기능 | 설명 | 상태 |
 | --- | --- | :---: |
-| 🔍 공연 탐색 및 검색 | 공연명, 아티스트, 장소, 날짜와 장르를 기준으로 콘텐츠 탐색 | 예정 |
-| 🤖 AI 맞춤 추천 | 사용자 취향과 탐색 이력을 기반으로 공연 큐레이션 제공 | 예정 |
-| 🎫 실시간 좌석 선택 | 공연장 좌석 배치와 잔여 좌석을 확인하고 좌석 선점 | 예정 |
-| 🔒 안전 티켓 거래 | 거래 상태를 추적할 수 있는 사용자 간 티켓 거래 환경 제공 | 예정 |
-| 👤 마이페이지 / 티켓 관리 | 예매 내역, 디지털 티켓과 거래 정보를 한곳에서 관리 | 예정 |
-| 💬 AI 티켓 도우미 | 원하는 공연을 빠르게 찾을 수 있는 챗봇 인터페이스 | UI 구현 |
-| 🖥️ 반응형 메인 페이지 | 티켓 오픈, 장르별 랭킹, 추천 공연과 공연장 콘텐츠 제공 | UI 구현 |
+| 🔍 공연 탐색 및 검색 | 공연명, 장소, 날짜와 장르를 기준으로 콘텐츠 탐색 |  |
+| ⏳ Redis 예매 대기열 | 회차별 대기 순번과 입장 토큰을 이용한 진입 제어 |  |
+| 🎫 실시간 좌석 선택 | 공연장 좌석 배치와 잔여 좌석을 확인하고 좌석 선점 |  |
+| 💳 예매 및 모의 결제 | 선택 좌석 확인, 예약 생성, 모의 결제와 결과 저장 |  |
+| 👤 마이페이지 / 예매 관리 | 회원 정보와 예매 내역을 한곳에서 확인 |  |
+| 💬 AI 공연 도우미 | 공연 추천과 예매 관련 FAQ를 제공하는 인터페이스 |  |
+| 🛠️ 관리자 운영 | 공연, 공연장, 회차, 좌석 재고와 주문 정보 관리 |  |
+| 🖥️ 반응형 화면 | 사용자와 관리자 예매 흐름에 필요한 화면 제공 |  |
 
 ## 🧭 서비스 구성
 
@@ -47,13 +48,15 @@ StageOn
 ├── Main                 메인 대시보드 및 추천 콘텐츠
 ├── Browse               공연 탐색 및 검색 필터
 ├── Performance Detail   공연·아티스트·일정 상세 정보
+├── Schedule Select      공연 회차 선택
+├── Waiting Queue        Redis 대기열 및 입장 처리
 ├── Seat Selector        실시간 좌석 조회 및 선택
 ├── Checkout             주문서 작성 및 결제
-├── Booking Complete     예매 완료 및 티켓 발급
+├── Booking Complete     예매 완료
 ├── My Page              회원 정보 및 예매 내역 관리
-├── Ticket Exchange      사용자 간 안전 티켓 거래
 ├── AI Recommend         사용자 맞춤 공연 큐레이션
-└── Support              FAQ 및 고객 문의
+├── Support              AI FAQ 및 예매 안내
+└── Admin                공연·공연장·회차·좌석·주문 관리
 ```
 
 ## 🛠️ 기술 스택
@@ -67,6 +70,7 @@ StageOn
 | Database / Cache | MySQL, Redis |
 | Realtime | Spring WebSocket |
 | AI | Spring AI 2.0.0, Ollama |
+| External Data / Seat | KOPIS API, Seats.io |
 | Build | Gradle Wrapper |
 | Design | Figma |
 
@@ -74,13 +78,26 @@ StageOn
 
 ```text
 3rd_team3_stageon/
+├── database/
+│   └── stageon-schema.sql               # MySQL 전체 스키마와 한글 COMMENT
+├── docs/
+│   ├── PRD.md                            # MVP 요구사항과 기술 설계
+│   └── sample-data.sql                   # 화면·조회 확인용 최소 데이터
 ├── gradle/                              # Gradle Wrapper 설정
 ├── src/
 │   ├── main/
-│   │   ├── java/kr/co/stageon/          # Spring Boot 애플리케이션
+│   │   ├── java/kr/co/stageon/
+│   │   │   ├── admin/                    # 관리자 화면
+│   │   │   ├── ai/                       # AI 화면과 대화 이력
+│   │   │   ├── booking/                  # 좌석·선점·예매
+│   │   │   ├── member/                   # 회원
+│   │   │   ├── payment/                  # 결제
+│   │   │   ├── performance/              # 공연과 회차
+│   │   │   ├── queue/                    # 대기열 이력
+│   │   │   └── venue/                    # 공연장·홀·좌석도
 │   │   └── resources/
-│   │       ├── static/css/              # 정적 스타일시트
-│   │       ├── templates/               # Thymeleaf 화면
+│   │       ├── static/                   # CSS와 화면 이미지
+│   │       ├── templates/                # 사용자·예매·관리자 화면
 │   │       └── application.properties
 │   └── test/                            # 테스트 코드
 ├── build.gradle
@@ -88,35 +105,21 @@ StageOn
 └── README.md
 ```
 
-## 🚀 시작하기
+## 🗄️ 데이터 구조
 
-### 요구 사항
+핵심 예매 데이터는 다음 흐름으로 연결됩니다.
 
-- JDK 21
-- Git
-
-### 저장소 복제
-
-```bash
-git clone https://github.com/yeong246809-code/3rd_team3_stageon.git
-cd 3rd_team3_stageon
+```text
+공연 → 공연 회차 → 회차별 판매 좌석 → 좌석 임시 선점 → 예매 → 결제
 ```
 
-### 애플리케이션 실행
+- `seats`는 공연장에 실제로 존재하는 좌석을 관리합니다.
+- `schedule_seats`는 특정 공연 회차에서 판매되는 좌석과 실제 판매 가격을 관리합니다.
+- `seat_holds`와 `seat_hold_items`는 사용자가 임시 선점한 좌석을 기록합니다.
+- `reservations`, `reservation_seats`, `payments`는 최종 예매 좌석과 결제 결과를 보관합니다.
+- KOPIS 공연 식별자와 Seats.io의 차트·이벤트·좌석 식별자는 선택값으로 저장할 수 있습니다.
 
-Windows:
-
-```powershell
-.\gradlew.bat bootRun
-```
-
-macOS / Linux:
-
-```bash
-./gradlew bootRun
-```
-
-실행 후 브라우저에서 `http://localhost:8080`으로 접속합니다.
+출연진, 공연 이미지, 외부 예매처, 공연별 가격 정책, 환불, 모바일 티켓, 외부 API 원본 스냅샷 테이블은 사용하지 않아도 핵심 예매 흐름에 영향을 주지 않는 선택 구조입니다.
 
 ## 👥 Team StageOn
 
