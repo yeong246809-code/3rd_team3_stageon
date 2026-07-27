@@ -1,7 +1,6 @@
 package kr.co.stageon.booking.domain;
 
 import jakarta.persistence.*;
-import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.performance.domain.PerformanceSchedule;
 import kr.co.stageon.venue.domain.Seat;
 import lombok.AccessLevel;
@@ -17,7 +16,14 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Entity
-@Table(name = "schedule_seats")
+@Table(
+        name = "schedule_seats",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_schedule_seat",
+                columnNames = {"schedule_id", "seat_id"}
+        ),
+        indexes = @Index(name = "idx_schedule_seat_status", columnList = "schedule_id,status")
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ScheduleSeat {
 
@@ -35,25 +41,15 @@ public class ScheduleSeat {
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "held_by_member_id")
-    private Member heldByMember;
-
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
+
+    @Column(nullable = false, length = 3)
+    private String currency;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
-
-    @Column(name = "hold_token_hash", unique = true, length = 64)
-    private String holdTokenHash;
-
-    @Column(name = "hold_started_at")
-    private LocalDateTime holdStartedAt;
-
-    @Column(name = "hold_expires_at")
-    private LocalDateTime holdExpiresAt;
 
     @Version
     @Column(nullable = false)

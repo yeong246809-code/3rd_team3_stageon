@@ -3,6 +3,7 @@ package kr.co.stageon.performance.dto;
 import kr.co.stageon.performance.domain.Performance;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /** 공연 상세 화면에서 사용하는 DTO입니다. */
 public record PerformanceDetailResponse(
@@ -13,8 +14,14 @@ public record PerformanceDetailResponse(
         String posterUrl,
         LocalDate startDate,
         LocalDate endDate,
+        Integer runtimeMinutes,
+        String ageText,
+        String story,
+        String rawPriceText,
+        String rawScheduleText,
         String status,
-        String sourceType
+        LocalDateTime kopisUpdatedAt,
+        LocalDateTime lastSyncedAt
 ) {
     public static PerformanceDetailResponse from(Performance performance) {
         return new PerformanceDetailResponse(
@@ -25,8 +32,14 @@ public record PerformanceDetailResponse(
                 performance.getPosterUrl(),
                 performance.getStartDate(),
                 performance.getEndDate(),
+                performance.getRuntimeMinutes(),
+                performance.getAgeText(),
+                performance.getStory(),
+                performance.getRawPriceText(),
+                performance.getRawScheduleText(),
                 performance.getStatus().name(),
-                performance.getSourceType().name()
+                performance.getKopisUpdatedAt(),
+                performance.getLastSyncedAt()
         );
     }
 }

@@ -10,20 +10,35 @@ public record ScheduleResponse(
         Long performanceId,
         Long venueId,
         String venueName,
+        Long venueHallId,
+        String venueHallName,
+        Long seatChartId,
+        Integer roundNumber,
         LocalDateTime startsAt,
         LocalDateTime salesOpenAt,
         LocalDateTime salesCloseAt,
+        LocalDateTime cancelCloseAt,
+        Integer maxTicketsPerMember,
+        String seatsioEventKey,
         String status
 ) {
     public static ScheduleResponse from(PerformanceSchedule schedule) {
+        var venueHall = schedule.getVenueHall();
         return new ScheduleResponse(
                 schedule.getId(),
                 schedule.getPerformance().getId(),
-                schedule.getVenue().getId(),
-                schedule.getVenue().getName(),
+                venueHall.getVenue().getId(),
+                venueHall.getVenue().getName(),
+                venueHall.getId(),
+                venueHall.getName(),
+                schedule.getSeatChart().getId(),
+                schedule.getRoundNumber(),
                 schedule.getStartsAt(),
                 schedule.getSalesOpenAt(),
                 schedule.getSalesCloseAt(),
+                schedule.getCancelCloseAt(),
+                schedule.getMaxTicketsPerMember(),
+                schedule.getSeatsioEventKey(),
                 schedule.getStatus().name()
         );
     }

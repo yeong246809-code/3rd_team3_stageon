@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/** 공연장별 VIP/R/S 등의 좌석 등급과 화면 표시 색상을 관리합니다. */
+/** 좌석도별 VIP/R/S 등의 기본 등급과 화면 표시 색상을 관리합니다. */
 @Getter
 @Entity
 @Table(name = "seat_grades")
@@ -19,8 +19,8 @@ public class SeatGrade {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "venue_id", nullable = false)
-    private Venue venue;
+    @JoinColumn(name = "seat_chart_id", nullable = false)
+    private SeatChart seatChart;
 
     @Column(nullable = false, length = 30)
     private String name;

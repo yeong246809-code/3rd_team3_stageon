@@ -1,15 +1,20 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<body>
-<!-- 예매 단계에서 홈 이동과 진행 상황을 제공하는 공통 헤더 -->
-<header th:fragment="bookingHeader" class="booking-header">
-  <div class="booking-header__top"><div class="shell"><small>안전한 예매를 위해 입장 토큰과 좌석 선점 시간을 확인해 주세요.</small><small>고객센터 1588-0000</small></div></div>
-  <div class="booking-header__main">
-    <div class="shell">
-      <a class="booking-title" th:href="@{/}" href="/"><strong>StageOn</strong><span>실시간 공연 예매</span></a>
-      <div th:replace="~{fragments/booking/booking-stepper :: stepper}"></div>
-    </div>
-  </div>
-</header>
-</body>
+  <body>
+    <!-- 예매 단계에서 홈 이동과 진행 상황을 제공하는 공통 헤더 -->
+    <header th:fragment="bookingHeader" class="booking-header">
+      <div class="booking-header__top">
+        <div class="shell">
+          <small>안전한 예매를 위해 입장 토큰과 좌석 선점 시간을 확인해 주세요.</small>
+          <small>고객센터 1588-0000</small>
+        </div>
+      </div>
+      <div class="booking-header__main">
+        <div class="shell">
+          <a class="booking-title" th:href="@{/}" href="/"><strong>StageOn</strong><span>실시간 공연 예매</span></a>
+          <div th:replace="~{fragments/booking/booking-stepper :: stepper}"></div>
+        </div>
+      </div>
+    </header>
+  </body>
 </html>

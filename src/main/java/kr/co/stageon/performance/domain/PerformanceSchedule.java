@@ -1,7 +1,8 @@
 package kr.co.stageon.performance.domain;
 
 import jakarta.persistence.*;
-import kr.co.stageon.venue.domain.Venue;
+import kr.co.stageon.venue.domain.SeatChart;
+import kr.co.stageon.venue.domain.VenueHall;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,8 +27,15 @@ public class PerformanceSchedule {
     private Performance performance;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "venue_id", nullable = false)
-    private Venue venue;
+    @JoinColumn(name = "venue_hall_id", nullable = false)
+    private VenueHall venueHall;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "seat_chart_id", nullable = false)
+    private SeatChart seatChart;
+
+    @Column(name = "round_number")
+    private Integer roundNumber;
 
     @Column(name = "starts_at", nullable = false)
     private LocalDateTime startsAt;
@@ -37,6 +45,15 @@ public class PerformanceSchedule {
 
     @Column(name = "sales_close_at", nullable = false)
     private LocalDateTime salesCloseAt;
+
+    @Column(name = "cancel_close_at")
+    private LocalDateTime cancelCloseAt;
+
+    @Column(name = "max_tickets_per_member", nullable = false)
+    private Integer maxTicketsPerMember;
+
+    @Column(name = "seatsio_event_key", unique = true, length = 100)
+    private String seatsioEventKey;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

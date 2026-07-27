@@ -5,9 +5,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/** 공연이 열리는 장소와 전체 좌석 규모를 나타냅니다. */
+/** 여러 공연장(홀)을 포함할 수 있는 공연시설입니다. */
 @Getter
 @Entity
 @Table(name = "venues")
@@ -18,6 +19,9 @@ public class Venue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "kopis_facility_id", unique = true, length = 50)
+    private String kopisFacilityId;
+
     @Column(nullable = false, length = 150)
     private String name;
 
@@ -27,8 +31,17 @@ public class Venue {
     @Column(nullable = false, length = 50)
     private String region;
 
-    @Column(name = "total_seat_count", nullable = false)
-    private Integer totalSeatCount;
+    @Column(precision = 10, scale = 7)
+    private BigDecimal latitude;
+
+    @Column(precision = 10, scale = 7)
+    private BigDecimal longitude;
+
+    @Column(length = 30)
+    private String phone;
+
+    @Column(name = "homepage_url", length = 500)
+    private String homepageUrl;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;

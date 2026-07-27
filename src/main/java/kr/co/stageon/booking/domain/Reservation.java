@@ -34,11 +34,24 @@ public class Reservation {
     @JoinColumn(name = "schedule_id", nullable = false)
     private PerformanceSchedule schedule;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seat_hold_id")
+    private SeatHold seatHold;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
 
-    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
+    @Column(name = "seat_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal seatAmount;
+
+    @Column(name = "fee_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal feeAmount;
+
+    @Column(name = "discount_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal discountAmount;
+
+    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalAmount;
 
     @Column(name = "expires_at", nullable = false)
@@ -49,6 +62,9 @@ public class Reservation {
 
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    @Column(name = "cancel_reason", length = 200)
+    private String cancelReason;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;

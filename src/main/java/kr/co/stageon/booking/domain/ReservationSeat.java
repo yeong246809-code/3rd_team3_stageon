@@ -11,7 +11,13 @@ import java.time.LocalDateTime;
 /** 예매 시점의 좌석과 가격을 보존하는 연결 엔티티입니다. */
 @Getter
 @Entity
-@Table(name = "reservation_seats")
+@Table(
+        name = "reservation_seats",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_reservation_schedule_seat",
+                columnNames = {"reservation_id", "schedule_seat_id"}
+        )
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReservationSeat {
 
@@ -27,8 +33,20 @@ public class ReservationSeat {
     @JoinColumn(name = "schedule_seat_id", nullable = false)
     private ScheduleSeat scheduleSeat;
 
-    @Column(name = "captured_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal capturedPrice;
+    @Column(name = "captured_section_name", nullable = false, length = 50)
+    private String capturedSectionName;
+
+    @Column(name = "captured_row_label", nullable = false, length = 20)
+    private String capturedRowLabel;
+
+    @Column(name = "captured_seat_number", nullable = false, length = 20)
+    private String capturedSeatNumber;
+
+    @Column(name = "captured_grade_name", nullable = false, length = 30)
+    private String capturedGradeName;
+
+    @Column(name = "captured_unit_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal capturedUnitPrice;
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;

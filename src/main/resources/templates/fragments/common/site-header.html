@@ -1,45 +1,45 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<body>
-<!-- 모든 사용자 화면에서 재사용하는 상단 탐색 영역 -->
-<header th:fragment="header" class="site-header">
-  <div class="utility">
-    <div class="shell">
-      <span><b>StageOn</b> · AI 기반 실시간 공연 예매 플랫폼</span>
-      <nav class="utility-menu" aria-label="회원 메뉴">
-        <a th:href="@{/login}" href="/login">로그인</a>
-        <a th:href="@{/signup}" href="/signup">회원가입</a>
-        <a th:href="@{/mypage}" href="/mypage">마이페이지</a>
-        <a th:href="@{/ai}" href="/ai">고객센터</a>
-      </nav>
-    </div>
-  </div>
-  <div class="main-header">
-    <div class="shell">
-      <div class="brand-wrap">
-        <a class="brand" th:href="@{/}" href="/">StageOn<small>AI로 더 빠르고, 스마트하게</small></a>
-        <nav class="main-nav" aria-label="주요 메뉴">
-          <a th:href="@{/performances}" href="/performances">공연/전시</a>
-          <a th:href="@{/performances(genre='스포츠')}" href="/performances?genre=스포츠">스포츠</a>
-        </nav>
+  <body>
+    <!-- 모든 사용자 화면에서 재사용하는 상단 탐색 영역 -->
+    <header th:fragment="header" class="site-header">
+      <div class="utility">
+        <div class="shell">
+          <span><b>StageOn</b>· AI 기반 실시간 공연 예매 플랫폼</span>
+          <nav class="utility-menu" aria-label="회원 메뉴">
+            <a th:href="@{/login}" href="/login">로그인</a>
+            <a th:href="@{/signup}" href="/signup">회원가입</a>
+            <a th:href="@{/mypage}" href="/mypage">마이페이지</a>
+            <a th:href="@{/ai}" href="/ai">고객센터</a>
+          </nav>
+        </div>
       </div>
-      <form class="search" role="search" method="get" th:action="@{/performances}" action="/performances">
-        <input name="keyword" type="search" aria-label="통합 검색" placeholder="공연명, 아티스트, 장소, 날짜 검색">
-        <button type="submit" aria-label="검색">⌕</button>
-      </form>
-    </div>
-  </div>
-  <nav class="subnav" aria-label="공연 장르">
-    <div class="shell">
-      <a th:href="@{/performances(genre='뮤지컬')}" href="/performances?genre=뮤지컬">뮤지컬</a>
-      <a th:href="@{/performances(genre='연극')}" href="/performances?genre=연극">연극</a>
-      <a th:href="@{/performances(genre='콘서트')}" href="/performances?genre=콘서트">콘서트</a>
-      <a th:href="@{/performances(genre='클래식/무용')}" href="/performances?genre=클래식%2F무용">클래식/무용</a>
-      <a th:href="@{/performances(genre='전시/행사')}" href="/performances?genre=전시%2F행사">전시/행사</a>
-      <a th:href="@{/ai}" href="/ai">AI 맞춤 추천</a>
-      <a th:href="@{/ai}" href="/ai">고객센터</a>
-    </div>
-  </nav>
-</header>
-</body>
+      <div class="main-header">
+        <div class="shell">
+          <div class="brand-wrap">
+            <a class="brand" th:href="@{/}" href="/">StageOn<small>AI로 더 빠르고, 스마트하게</small></a>
+            <nav class="main-nav" aria-label="주요 메뉴">
+              <a th:href="@{/performances}" href="/performances">공연/전시</a>
+              <a th:href="@{/performances(genre='스포츠')}" href="/performances?genre=스포츠">스포츠</a>
+            </nav>
+          </div>
+          <form class="search" role="search" method="get" th:action="@{/performances}" action="/performances">
+            <input name="keyword" type="search" aria-label="통합 검색" placeholder="공연명, 아티스트, 장소, 날짜 검색">
+            <button type="submit" aria-label="검색">⌕</button>
+          </form>
+        </div>
+      </div>
+      <nav class="subnav" aria-label="공연 장르">
+        <div class="shell">
+          <a th:href="@{/performances(genre='뮤지컬')}" href="/performances?genre=뮤지컬">뮤지컬</a>
+          <a th:href="@{/performances(genre='연극')}" href="/performances?genre=연극">연극</a>
+          <a th:href="@{/performances(genre='콘서트')}" href="/performances?genre=콘서트">콘서트</a>
+          <a th:href="@{/performances(genre='클래식/무용')}" href="/performances?genre=클래식%2F무용">클래식/무용</a>
+          <a th:href="@{/performances(genre='전시/행사')}" href="/performances?genre=전시%2F행사">전시/행사</a>
+          <a th:href="@{/ai}" href="/ai">AI 맞춤 추천</a>
+          <a th:href="@{/ai}" href="/ai">고객센터</a>
+        </div>
+      </nav>
+    </header>
+  </body>
 </html>
