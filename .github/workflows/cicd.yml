@@ -39,9 +39,6 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    concurrency:
-      group: stageon-production
-      cancel-in-progress: false
     steps:
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -60,119 +57,17 @@ jobs:
           scp -i private_key.pem \
             -o StrictHostKeyChecking=no \
             $JAR_FILE \
-            ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/home/${{ secrets.AWS_EC2_USER }}/app-new.jar
+            ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/home/${{ secrets.AWS_EC2_USER }}/
       
       - name: Restart Spring Application on EC2
         run: |
+          JAR_FILE=$(basename $(ls build/libs/*.jar | head -n 1))
           ssh -i private_key.pem \
             -o StrictHostKeyChecking=no \
-            ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
-            set -Eeuo pipefail
-
-            APP_DIR="$HOME"
-            NEW_JAR="$APP_DIR/app-new.jar"
-            CURRENT_JAR="$APP_DIR/app.jar"
-            PREVIOUS_JAR="$APP_DIR/app-previous.jar"
-            PID_FILE="$APP_DIR/app.pid"
-            LOG_FILE="$APP_DIR/app.log"
-            DEPLOY_STARTED=0
-
-            stop_application() {
-              if [ -f "$PID_FILE" ]; then
-                APP_PID=$(cat "$PID_FILE")
-                if kill -0 "$APP_PID" 2>/dev/null; then
-                  kill "$APP_PID"
-                  for _ in $(seq 1 10); do
-                    kill -0 "$APP_PID" 2>/dev/null || break
-                    sleep 1
-                  done
-                  kill -0 "$APP_PID" 2>/dev/null && kill -9 "$APP_PID"
-                fi
-                rm -f "$PID_FILE"
-                return
-              fi
-
-              LEGACY_PIDS=$(pgrep -f "java -jar $APP_DIR/" || true)
-              if [ -n "$LEGACY_PIDS" ]; then
-                echo "$LEGACY_PIDS" | xargs kill
-                sleep 3
-                LEGACY_PIDS=$(pgrep -f "java -jar $APP_DIR/" || true)
-                [ -z "$LEGACY_PIDS" ] || echo "$LEGACY_PIDS" | xargs kill -9
-              fi
-            }
-
-            start_application() {
-              nohup java -jar "$1" > "$LOG_FILE" 2>&1 &
-              echo $! > "$PID_FILE"
-            }
-
-            wait_for_health() {
-              for _ in $(seq 1 30); do
-                HEALTH_RESPONSE=$(curl -fsS http://127.0.0.1:8080/actuator/health 2>/dev/null || true)
-                if echo "$HEALTH_RESPONSE" | grep -q '"status":"UP"'; then
-                  return 0
-                fi
-                sleep 2
-              done
-              return 1
-            }
-
-            rollback() {
-              EXIT_CODE=$?
-              trap - ERR
-
-              if [ "$DEPLOY_STARTED" -eq 1 ] && [ -f "$PREVIOUS_JAR" ]; then
-                echo "Deployment failed. Rolling back to the previous version."
-                stop_application || true
-                cp -f "$PREVIOUS_JAR" "$CURRENT_JAR"
-                start_application "$CURRENT_JAR"
-
-                if wait_for_health; then
-                  echo "Rollback completed successfully."
-                else
-                  echo "Rollback started, but the previous version failed its health check."
-                fi
-              else
-                echo "Deployment failed and no previous version is available."
-              fi
-
-              exit "$EXIT_CODE"
-            }
-
-            trap rollback ERR
-
-            if [ ! -f "$NEW_JAR" ]; then
-              echo "New deployment JAR was not found."
-              false
-            fi
-
-            if [ -f "$CURRENT_JAR" ]; then
-              cp -f "$CURRENT_JAR" "$PREVIOUS_JAR"
-            else
-              LEGACY_JAR=$(find "$APP_DIR" -maxdepth 1 -type f -name '*.jar' \
-                ! -name 'app-new.jar' \
-                ! -name 'app.jar' \
-                ! -name 'app-previous.jar' \
-                | head -n 1)
-              if [ -n "$LEGACY_JAR" ]; then
-                cp -f "$LEGACY_JAR" "$PREVIOUS_JAR"
-              fi
-            fi
-
-            DEPLOY_STARTED=1
-            stop_application
-            mv -f "$NEW_JAR" "$CURRENT_JAR"
-            start_application "$CURRENT_JAR"
-
-            if ! wait_for_health; then
-              echo "New version failed the health check."
-              false
-            fi
-
-            DEPLOY_STARTED=0
-            trap - ERR
-            echo "Deployment completed successfully."
+            ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << EOF
+            pgrep java | xargs kill -9;
+            nohup java -jar /home/${{ secrets.AWS_EC2_USER }}/$JAR_FILE > app.log 2>&1 &
           EOF
+
       - name: Cleanup
-        if: always()
         run: rm -f private_key.pem
