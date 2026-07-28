@@ -1,0 +1,15 @@
+services:
+  redis:
+    image: redis:8-alpine
+    container_name: stageon-redis
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD}
+      - --maxmemory
+      - ${REDIS_MAXMEMORY}
+      - --maxmemory-policy
+      - allkeys-lru
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"
+    restart: unless-stopped
