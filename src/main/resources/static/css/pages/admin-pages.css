@@ -8,3 +8,69 @@
 .seat-legend span { display: inline-flex; gap: 7px; align-items: center; }
 .inventory-map { padding: 26px; display: grid; gap: 8px; justify-content: center; }
 @media (max-width: 800px) { .admin-login { grid-template-columns: 1fr; } .admin-login__brand { min-height: 220px; } .admin-grid, .admin-form-grid { grid-template-columns: 1fr; } }
+
+/* 공연 목록 카드/테이블 */
+.admin-content .card { border-radius: 16px; box-shadow: 0 4px 18px rgba(20,20,40,.06); overflow: hidden; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-table th, .admin-table td { padding: 16px; text-align: center; color: #1a1a1a; }
+.admin-table th {
+    color: #fff; font-weight: 700; font-size: 12px; letter-spacing: .03em;
+    background: linear-gradient(90deg, #1f2440, #333a63);
+}
+.admin-table tbody tr { border-bottom: 1px solid #eee; transition: background .15s ease; }
+.admin-table tbody tr:last-child { border-bottom: none; }
+.admin-table tbody tr:hover { background: #f3f5ff; }
+.admin-table .cell-title { font-weight: 700; text-align: center; }
+.admin-table .btn--sm {
+    padding: 7px 16px; font-size: 12px; border-radius: 8px; font-weight: 600;
+    background: #eef1ff; color: #2b3a9c; border: 1px solid #d7ddff; transition: all .15s ease;
+    display: inline-block; margin: 0 3px;
+}
+.admin-table .btn--sm:hover { background: #2b3a9c; color: #fff; transform: translateY(-1px); }
+
+/* 정보 보기 버튼: 수정과 다른 톤(청록/그레이 계열) */
+.btn--view { background: #eef7f6; color: #14807a; border: 1px solid #cdeeeb; }
+.btn--view:hover { background: #14807a; color: #fff; transform: translateY(-1px); }
+
+/* 임시저장 뱃지 */
+.badge { display: inline-block; margin-left: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.badge--draft { background: #fff3cd; color: #92700e; }
+
+/* 상태 뱃지 색상 */
+.badge--on-sale { background: #e4f7ec; color: #1a8a4a; }
+.badge--upcoming { background: #e8f0ff; color: #2757d6; }
+.badge--ended { background: #eee; color: #666; }
+.badge--cancelled { background: #fde8e8; color: #c0392b; }
+
+/* 공통 버튼 효과 (관리자 페이지 전역) */
+.admin-content .btn {
+    border-radius: 10px; font-weight: 600; transition: all .15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.admin-content .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,.10); }
+.admin-content .btn--dark {
+    background: linear-gradient(90deg, #1f2440, #333a63); color: #fff; border: none;
+}
+.admin-content .btn--dark:hover { filter: brightness(1.1); }
+
+/* 임시 저장 버튼 */
+.btn--draft { background: #fff3cd; color: #92700e; border: 1px solid #f0d98a; }
+.btn--draft:hover { background: #ffe9a8; }
+
+/* 정보 보기(readOnly) 폼: 모든 입력 잠금 + 손대려 하면 not-allowed 커서 */
+.form--readonly input,
+.form--readonly select,
+.form--readonly textarea {
+    cursor: not-allowed;
+    background: #f7f7f9;
+    color: #555;
+}
+.form--readonly input[readonly],
+.form--readonly textarea[readonly] {
+    pointer-events: none;
+}
+
+/* 포스터 업로드 */
+.poster-upload { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 24px; }
+.poster-preview { width: 140px; height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid #eee; background: #fafafa; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.poster-preview--empty { display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px; }

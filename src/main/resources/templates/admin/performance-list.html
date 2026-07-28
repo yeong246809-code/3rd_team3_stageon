@@ -1,0 +1,65 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 공연 목록</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>공연 등록·수정</h1>
+                    <p>등록된 공연 목록을 확인하고 관리합니다.</p>
+                </div>
+                <div class="cluster">
+                    <a class="btn btn--dark" th:href="@{/admin/performances/new}">신규 등록</a>
+                </div>
+            </header>
+            <div class="card">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th>공연명</th>
+                        <th>장르</th>
+                        <th>상태</th>
+                        <th>공연기간</th>
+                        <th>편집</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(performances)}">
+                        <td colspan="5">등록된 공연이 없습니다.</td>
+                    </tr>
+                    <tr th:each="p : ${performances}">
+                        <td class="cell-title">
+                            <span th:text="${p.title}">공연명</span>
+                            <span class="badge badge--draft" th:if="${p.draft}">임시저장됨</span>
+                        </td>
+                        <td th:text="${p.genre}">장르</td>
+                        <td>
+                    <span class="badge"
+                          th:classappend="${p.status.name() == 'ON_SALE'} ? 'badge--on-sale' : (${p.status.name() == 'UPCOMING'} ? 'badge--upcoming' : (${p.status.name() == 'ENDED'} ? 'badge--ended' : 'badge--cancelled'))"
+                          th:text="${p.status.name() == 'ON_SALE'} ? '판매중' : (${p.status.name() == 'UPCOMING'} ? '공개예정' : (${p.status.name() == 'ENDED'} ? '종료' : '취소'))">상태</span>
+                        </td>
+                        <td th:text="${p.startDate} + ' ~ ' + ${p.endDate}">기간</td>
+                        <td>
+                            <a class="btn btn--sm btn--view" th:href="@{'/admin/performances/' + ${p.id} + '/view'}">정보 보기</a>
+                            <a class="btn btn--sm" th:href="@{'/admin/performances/' + ${p.id} + '/edit'}">수정</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

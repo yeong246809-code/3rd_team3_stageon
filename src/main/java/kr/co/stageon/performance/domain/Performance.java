@@ -58,6 +58,10 @@ public class Performance {
     @Column(nullable = false, length = 20)
     private Status status;
 
+    /** 임시저장 여부입니다. true면 목록에서 "임시저장됨"으로 표시됩니다. */
+    @Column(name = "is_draft", nullable = false)
+    private boolean draft;
+
     @Column(name = "kopis_updated_at")
     private LocalDateTime kopisUpdatedAt;
 
@@ -69,4 +73,40 @@ public class Performance {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    /** 관리자 등록 폼에서 신규 생성 시 사용합니다. */
+    public static Performance create(String kopisId, String title, String genre, String posterUrl,
+                                     LocalDate startDate, LocalDate endDate, Integer runtimeMinutes,
+                                     String ageText, String story, Status status, boolean draft) {
+        Performance p = new Performance();
+        p.kopisId = kopisId;
+        p.title = title;
+        p.genre = genre;
+        p.posterUrl = posterUrl;
+        p.startDate = startDate;
+        p.endDate = endDate;
+        p.runtimeMinutes = runtimeMinutes;
+        p.ageText = ageText;
+        p.story = story;
+        p.status = status;
+        p.draft = draft;
+        return p;
+    }
+
+    /** 관리자 수정 폼에서 필드를 갱신할 때 사용합니다. */
+    public void update(String kopisId, String title, String genre, String posterUrl,
+                       LocalDate startDate, LocalDate endDate, Integer runtimeMinutes,
+                       String ageText, String story, Status status, boolean draft) {
+        this.kopisId = kopisId;
+        this.title = title;
+        this.genre = genre;
+        this.posterUrl = posterUrl;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.runtimeMinutes = runtimeMinutes;
+        this.ageText = ageText;
+        this.story = story;
+        this.status = status;
+        this.draft = draft;
+    }
 }
