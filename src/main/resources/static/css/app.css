@@ -6,3 +6,30 @@
 @import url("./layouts/booking-layout.css");
 @import url("./layouts/admin-layout.css");
 
+/* 관리자 로그인 효과 */
+.admin-login__form .field { position: relative; }
+.admin-login__form .input { transition: box-shadow .18s ease, border-color .18s ease; }
+.admin-login__form .input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.18);
+}
+.admin-login__form .pw-toggle {
+    position: absolute; right: 12px; top: 38px;
+    background: none; border: none; cursor: pointer;
+    font-size: 12px; color: #94a3b8;
+}
+.admin-login__form .auth-wrap.shake { animation: admin-login-shake .32s; }
+@keyframes admin-login-shake {
+    0%,100% { transform: translateX(0); }
+    20%,60% { transform: translateX(-6px); }
+    40%,80% { transform: translateX(6px); }
+}
+.admin-login__form button[type="submit"] { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.admin-login__form button[type="submit"] .spinner {
+    display: none; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+    border-radius: 50%; animation: admin-login-spin .6s linear infinite;
+}
+.admin-login__form button[type="submit"].is-loading .spinner { display: inline-block; }
+@keyframes admin-login-spin { to { transform: rotate(360deg); } }

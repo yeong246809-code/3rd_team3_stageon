@@ -8,4 +8,7 @@ import java.util.List;
 /** Redis 대기열 상태 전이 기록 DAO입니다. */
 public interface WaitingQueueHistoryRepository extends JpaRepository<WaitingQueueHistory, Long> {
     List<WaitingQueueHistory> findByScheduleIdAndMemberIdOrderByJoinedAtDesc(Long scheduleId, Long memberId);
+
+    /** 대시보드 - 특정 상태(예: WAITING)의 전체 인원 수 */
+    long countByStatus(WaitingQueueHistory.Status status);
 }

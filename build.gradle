@@ -49,6 +49,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-websocket-test'
     testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.1'
     testCompileOnly 'org.projectlombok:lombok'
+    implementation 'org.springframework.security:spring-security-crypto'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
 }

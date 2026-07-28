@@ -16,4 +16,7 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long> {
             SeatHold.Status status
     );
     List<SeatHold> findByStatusAndExpiresAtBefore(SeatHold.Status status, LocalDateTime expiresAt);
+
+    /** 대시보드 - 아직 유효기간이 남은 선점 좌석(ACTIVE) 수 */
+    long countByStatusAndExpiresAtAfter(SeatHold.Status status, LocalDateTime now);
 }

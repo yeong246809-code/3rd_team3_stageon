@@ -3,6 +3,7 @@ package kr.co.stageon.payment.repository;
 import kr.co.stageon.payment.domain.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,4 +11,10 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByReservationIdOrderByRequestedAtDesc(Long reservationId);
     Optional<Payment> findByProviderAndIdempotencyKey(Payment.Provider provider, String idempotencyKey);
+
+    /** 대시보드 - 기간 내 특정 상태(예: SUCCESS) 결제 건수 */
+    long countByStatusAndRequestedAtBetween(Payment.Status status, LocalDateTime start, LocalDateTime end);
+
+    /** 대시보드 - 기간 내 전체 결제 시도 건수 (성공률 분모) */
+    long countByRequestedAtBetween(LocalDateTime start, LocalDateTime end);
 }
