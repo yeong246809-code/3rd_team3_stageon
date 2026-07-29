@@ -1,17 +1,24 @@
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <body>
-    <!-- 관리자 기능 전체를 연결하는 공통 사이드바 -->
-    <aside th:fragment="sidebar" class="admin-sidebar">
-      <a class="admin-brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">StageOn<small>ADMIN CONSOLE</small></a>
-      <nav class="admin-nav" aria-label="관리자 메뉴">
-        <a class="is-active" th:href="@{/admin/dashboard}" href="/admin/dashboard">▦<span>통합 대시보드</span></a>
-        <a th:href="@{/admin/performances}" href="/admin/performances">◫<span>공연 등록·수정</span></a>
-        <a th:href="@{/admin/venues}" href="/admin/venues">⌂<span>공연장·좌석 관리</span></a>
-        <a th:href="@{/admin/schedules}" href="/admin/schedules">◷<span>일정·회차 관리</span></a>
-        <a th:href="@{/admin/seat-inventory}" href="/admin/seat-inventory">▥<span>좌석 재고·선점 현황</span></a>
-        <a th:href="@{/admin/orders}" href="/admin/orders">◎<span>예매·주문 조회</span></a>
-      </nav>
-    </aside>
-  </body>
+<body>
+<!-- 관리자 기능 전체를 연결하는 공통 사이드바 -->
+<aside th:fragment="sidebar" class="admin-sidebar">
+  <a class="admin-brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">StageOn<small>ADMIN CONSOLE</small></a>
+  <nav class="admin-nav" aria-label="관리자 메뉴">
+    <a th:href="@{/admin/dashboard}" href="/admin/dashboard"
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/dashboard')} ? 'is-active'">▦<span>통합 대시보드</span></a>
+    <a th:href="@{/admin/performances}" href="/admin/performances"
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/performances')} ? 'is-active'">◫<span>공연 등록·수정</span></a>
+    <a th:href="@{/admin/venues}" href="/admin/venues"
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/venues')} ? 'is-active'">⌂<span>공연장·좌석 관리</span></a>
+    <a th:href="@{/admin/schedules}" href="/admin/schedules"
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/schedules')} ? 'is-active'">◷<span>일정·회차 관리</span></a>
+    <a th:href="@{/admin/seat-inventory}" href="/admin/seat-inventory"
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/seat-inventory')} ? 'is-active'">▥<span>좌석 재고·선점 현황</span></a>
+    <a th:href="@{/admin/orders}" href="/admin/orders"
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/orders')} ? 'is-active'">◎<span>예매·주문 조회</span></a>
+  </nav>
+</aside>
+</body>
 </html>
