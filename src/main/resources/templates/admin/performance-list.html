@@ -51,8 +51,8 @@
                         </td>
                         <td th:text="${p.startDate} + ' ~ ' + ${p.endDate}">기간</td>
                         <td>
-                            <a class="btn btn--sm btn--view" th:href="@{'/admin/performances/' + ${p.id} + '/view'}">정보 보기</a>
-                            <a class="btn btn--sm" th:href="@{'/admin/performances/' + ${p.id} + '/edit'}">수정</a>
+                            <a class="btn btn--sm btn--view" th:href="@{'/admin/performances/' + ${p.id} + '/view'}">상세보기</a>
+                            <a class="btn btn--sm btn--edit" th:href="@{'/admin/performances/' + ${p.id} + '/edit'}">수정</a>
                         </td>
                     </tr>
                     </tbody>

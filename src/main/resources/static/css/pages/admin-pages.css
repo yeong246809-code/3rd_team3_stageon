@@ -23,14 +23,17 @@
 .admin-table .cell-title { font-weight: 700; text-align: center; }
 .admin-table .btn--sm {
     padding: 7px 16px; font-size: 12px; border-radius: 8px; font-weight: 600;
-    background: #eef1ff; color: #2b3a9c; border: 1px solid #d7ddff; transition: all .15s ease;
+    transition: all .15s ease;
     display: inline-block; margin: 0 3px;
 }
-.admin-table .btn--sm:hover { background: #2b3a9c; color: #fff; transform: translateY(-1px); }
 
-/* 정보 보기 버튼: 수정과 다른 톤(청록/그레이 계열) */
-.btn--view { background: #eef7f6; color: #14807a; border: 1px solid #cdeeeb; }
-.btn--view:hover { background: #14807a; color: #fff; transform: translateY(-1px); }
+/* 수정 버튼: 주황 계열 (.admin-table 접두로 우선순위를 .btn--sm과 동일하게 맞춰 뒤에 오는 규칙이 이기도록 함) */
+.admin-table .btn--edit { background: #fff1e6; color: #c2680a; border: 1px solid #ffdcbb; }
+.admin-table .btn--edit:hover { background: #c2680a; color: #fff; transform: translateY(-1px); }
+
+/* 상세보기 버튼: 청록 계열 */
+.admin-table .btn--view { background: #eef7f6; color: #14807a; border: 1px solid #cdeeeb; }
+.admin-table .btn--view:hover { background: #14807a; color: #fff; transform: translateY(-1px); }
 
 /* 임시저장 뱃지 */
 .badge { display: inline-block; margin-left: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
@@ -74,3 +77,47 @@
 .poster-upload { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 24px; }
 .poster-preview { width: 140px; height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid #eee; background: #fafafa; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 .poster-preview--empty { display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px; }
+.required-mark { color: #e0433d; margin-left: 2px; }
+
+/* * 표시 css */
+.section-heading { display: flex; align-items: baseline; gap: 10px; }
+.required-guide { font-size: 12px; color: #888; }
+
+
+/* 포스터 파일 업로드 버튼 꾸미기 */
+.file-input {
+    padding: 10px 14px;
+    cursor: pointer;
+}
+.file-input::file-selector-button {
+    padding: 8px 16px;
+    margin-right: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+    background: linear-gradient(90deg, #1f2440, #333a63);
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.file-input::file-selector-button:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+}
+/* 구형 웹킷 브라우저 대응 */
+.file-input::-webkit-file-upload-button {
+    padding: 8px 16px;
+    margin-right: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+    background: linear-gradient(90deg, #1f2440, #333a63);
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.file-input::-webkit-file-upload-button:hover {
+    filter: brightness(1.15);
+}
