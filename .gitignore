@@ -15,7 +15,6 @@ replay_pid*
 # Local environment and secrets
 .env
 .env.*
-!.env.example
 **/secrets/
 credentials.json
 service-account*.json
