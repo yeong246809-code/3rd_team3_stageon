@@ -21,10 +21,11 @@
         </div>
         <div class="cluster">
           <a class="btn" th:href="@{/admin/performances}">목록으로</a>
-          <button class="btn btn--draft" th:unless="${readOnly}" type="submit" form="performanceForm" name="draft" value="true">임시 저장</button>
+          <button class="btn btn--draft" th:unless="${readOnly}" type="submit" form="performanceForm" name="draft" value="true" formnovalidate>임시 저장</button>
           <button class="btn btn--dark" th:unless="${readOnly}" type="submit" form="performanceForm" name="draft" value="false">저장</button>
         </div>
       </header>
+
       <form id="performanceForm" class="card stack" method="post" enctype="multipart/form-data"
             th:classappend="${readOnly} ? ' form--readonly' : ''"
             th:object="${form}"
@@ -44,23 +45,27 @@
           </div>
           <div class="field" th:unless="${readOnly}">
             <label>포스터 이미지 업로드</label>
-            <input class="input" type="file" name="posterFile" accept="image/*" onchange="previewPoster(this)">
+            <input class="input file-input" type="file" name="posterFile" accept="image/*" onchange="previewPoster(this)">
           </div>
         </div>
 
-        <h2>기본 정보</h2>
+        <div class="section-heading">
+          <h2>기본 정보</h2>
+          <span class="required-guide" th:unless="${readOnly}"><span class="required-mark">*</span> 표시는 필수 항목입니다.</span>
+        </div>
         <div class="admin-form-grid">
           <div class="field">
-            <label>공연명</label>
-            <input class="input" th:field="*{title}" th:readonly="${readOnly}">
+            <label>공연명 <span class="required-mark" th:unless="${readOnly}">*</span></label>
+            <input class="input" th:field="*{title}" th:readonly="${readOnly}" th:required="${!readOnly}">
           </div>
           <div class="field">
             <label>KOPIS 공연 ID</label>
             <input class="input" th:field="*{kopisId}" th:readonly="${readOnly}">
           </div>
           <div class="field">
-            <label>장르</label>
-            <select class="select" th:field="*{genre}" th:disabled="${readOnly}">
+            <label>장르 <span class="required-mark" th:unless="${readOnly}">*</span></label>
+            <select class="select" th:field="*{genre}" th:disabled="${readOnly}" th:required="${!readOnly}">
+              <option value="">선택하세요</option>
               <option value="뮤지컬">뮤지컬</option>
               <option value="연극">연극</option>
               <option value="콘서트">콘서트</option>
@@ -69,8 +74,9 @@
             </select>
           </div>
           <div class="field">
-            <label>관람 등급</label>
-            <select class="select" th:field="*{ageText}" th:disabled="${readOnly}">
+            <label>관람 등급 <span class="required-mark" th:unless="${readOnly}">*</span></label>
+            <select class="select" th:field="*{ageText}" th:disabled="${readOnly}" th:required="${!readOnly}">
+              <option value="">선택하세요</option>
               <option value="전체 이용가">전체 이용가</option>
               <option value="7세 이용가">7세 이용가</option>
               <option value="12세 이용가">12세 이용가</option>
@@ -79,12 +85,12 @@
             </select>
           </div>
           <div class="field">
-            <label>공연 시작일</label>
-            <input class="input" type="date" th:field="*{startDate}" th:readonly="${readOnly}">
+            <label>공연 시작일 <span class="required-mark" th:unless="${readOnly}">*</span></label>
+            <input class="input" type="date" th:field="*{startDate}" th:readonly="${readOnly}" th:required="${!readOnly}">
           </div>
           <div class="field">
-            <label>공연 종료일</label>
-            <input class="input" type="date" th:field="*{endDate}" th:readonly="${readOnly}">
+            <label>공연 종료일 <span class="required-mark" th:unless="${readOnly}">*</span></label>
+            <input class="input" type="date" th:field="*{endDate}" th:readonly="${readOnly}" th:required="${!readOnly}">
           </div>
           <div class="field">
             <label>상영 시간(분)</label>
