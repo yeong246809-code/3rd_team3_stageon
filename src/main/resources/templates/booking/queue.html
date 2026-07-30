@@ -9,34 +9,64 @@
   </head>
   <body id="top">
     <div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
-    <main class="booking-page">
+    <main class="booking-page" th:with="status=${queueInfo != null ? queueInfo.status : 'WAITING'}">
       <section class="queue-box">
-        <!-- Redis/SSE 연동 전에도 전체 예매 흐름을 확인할 수 있는 대기열 시안 -->
         <header class="page-heading">
           <span class="eyebrow">REDIS WAITING QUEUE</span>
-          <h1>예매 대기 중입니다</h1>
-          <p>순서가 되면 입장 토큰이 발급되고 좌석 선택 화면으로 이동할 수 있습니다.</p>
+          <h1 th:text="${status == 'ENTERED' ? '입장 순서가 되었습니다!' : (status == 'EXPIRED' ? '대기열 토큰이 만료되었습니다' : '예매 대기 중입니다')}">예매 대기 중입니다</h1>
+          <p th:text="${status == 'ENTERED' ? '잠시 후 좌석 선택 화면으로 자동 이동합니다...' : (status == 'EXPIRED' ? '유효 시간이 지나 대기열에서 제외되었습니다. 회차를 다시 선택해주세요.' : '순서가 되면 입장 토큰이 발급되고 좌석 선택 화면으로 이동할 수 있습니다.')}">순서가 되면 입장 토큰이 발급되고 좌석 선택 화면으로 이동할 수 있습니다.</p>
         </header>
+
         <div class="card card--shadow">
-          <span class="badge badge--warning">WAITING</span>
-          <p style="margin-top:16px">현재 내 앞 대기 인원</p>
-          <div class="queue-count">1,284</div>
-          <div class="progress">
-            <i></i>
+          <span class="badge"
+                th:classappend="${status == 'WAITING' ? 'badge--warning' : (status == 'ENTERED' ? 'badge--success' : '')}"
+                th:text="${status}">WAITING</span>
+
+          <div th:if="${status == 'WAITING'}">
+            <p style="margin-top:16px">현재 내 앞 대기 인원</p>
+            <div class="queue-count" th:text="${#numbers.formatInteger(queueInfo?.waitingOrder ?: 1284, 1, 'COMMA')}">1,284</div>
+            <div class="progress">
+              <i th:style="'width:' + ${queueInfo?.progressPercentage ?: 30} + '%'"></i>
+            </div>
+            <p class="section-copy" style="margin-top:14px"
+               th:text="|예상 대기 시간 약 ${queueInfo?.estimatedMinutes ?: 4}분 · 화면을 닫지 마세요.|">예상 대기 시간 약 4분 · 화면을 닫지 마세요.</p>
           </div>
-          <p class="section-copy" style="margin-top:14px">예상 대기 시간 약 4분 · 화면을 닫지 마세요.</p>
+
+          <div th:if="${status == 'ENTERED'}" style="margin-top:24px; text-align:center;">
+            <p class="section-copy" style="font-size:1.1rem; color:#111; font-weight:600;">입장 권한이 확인되었습니다.</p>
+            <p class="section-copy" style="margin-top:8px;">좌석 배치도로 이동 중입니다. 잠시만 기다려주세요...</p>
+          </div>
+
+          <div th:if="${status == 'EXPIRED'}" style="margin-top:24px; text-align:center;">
+            <p class="section-copy" style="color:#d9534f;">입장 가능 시간이 초과되어 권한이 소멸되었습니다.</p>
+            <p class="section-copy" style="margin-top:8px;">원하는 좌석 선점을 위해 회차 선택부터 다시 시도해주세요.</p>
+          </div>
         </div>
-        <div class="cluster" style="justify-content:center;margin-top:18px">
-          <span class="badge badge--warning">WAITING</span>
-          <span class="badge badge--success">ENTERED</span>
-          <span class="badge">EXPIRED</span>
-        </div>
-        <div class="notice" style="margin-top:24px">동일 사용자는 같은 회차 대기열에 중복 등록되지 않습니다. Redis 장애 시에는 신규 진입을 잠시 제한하고 안내합니다.</div>
-        <div class="cluster" style="justify-content:center;margin-top:24px">
-          <a class="btn" th:href="@{/schedule-select}" href="/schedule-select">회차 다시 선택</a>
-          <a class="btn btn--primary" th:href="@{/seat-select}" href="/seat-select">입장 허가 시 좌석 선택</a>
+
+        <div th:if="${status != 'ENTERED'}" class="cluster" style="justify-content:center;margin-top:24px">
+          <a class="btn" th:href="@{/performances/{id}/schedules(id=${queueInfo?.performanceId ?: 1})}">회차 다시 선택</a>
         </div>
       </section>
     </main>
+
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+      const status = /*[[${queueInfo?.status ?: 'WAITING'}]]*/ 'WAITING';
+      const scheduleId = /*[[${queueInfo?.scheduleId ?: 1}]]*/ 1;
+      const token = /*[[${queueInfo?.queueToken ?: ''}]]*/ '';
+
+      if (status === 'ENTERED') {
+        // ENTERED 상태면 1.5초 뒤 좌석 선택 페이지로 자동 이동 (replace를 써서 뒤로가기 방지)
+        setTimeout(() => {
+          window.location.replace(`/schedules/${scheduleId}/seats?token=${token}`);
+        }, 1500);
+      } else if (status === 'WAITING') {
+        // WAITING 상태면 5초마다 현재 페이지를 새로고침하여 대기열 갱신
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
+      }
+      /*]]>*/
+    </script>
   </body>
 </html>
