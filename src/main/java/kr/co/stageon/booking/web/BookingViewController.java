@@ -16,11 +16,11 @@ public class BookingViewController {
 
     private final BookingQueryService bookingQueryService;
 
-    @GetMapping({"/booking/queue", "/queue"})
+    /*@GetMapping({"/booking/queue", "/queue"})
     public String queue(@RequestParam(required = false) Long scheduleId, Model model) {
         model.addAttribute("scheduleId", scheduleId);
         return "booking/queue";
-    }
+    }*/
 
     @GetMapping({"/booking/seats", "/seat-select"})
     public String seats(@RequestParam(required = false) Long scheduleId, Model model) {
