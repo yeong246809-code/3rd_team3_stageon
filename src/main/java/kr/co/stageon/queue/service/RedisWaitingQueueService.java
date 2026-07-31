@@ -86,7 +86,7 @@ public class RedisWaitingQueueService {
     }
 
     // 4. 백업 스케줄러: 10초마다 입장자들을 MySQL에 영구 기록
-    @Scheduled(fixedDelay = 10000)
+    //@Scheduled(fixedDelay = 10000)
     @Transactional
     public void backupEnteredUsersToDB() {
         Long scheduleId = 1L;
