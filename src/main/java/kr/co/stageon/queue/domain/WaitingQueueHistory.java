@@ -48,4 +48,14 @@ public class WaitingQueueHistory {
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @lombok.Builder
+    public WaitingQueueHistory(PerformanceSchedule schedule, Member member, String queueTokenHash, Status status, LocalDateTime joinedAt, LocalDateTime enteredAt) {
+        this.schedule = schedule;
+        this.member = member;
+        this.queueTokenHash = queueTokenHash;
+        this.status = status;
+        this.joinedAt = joinedAt;
+        this.enteredAt = enteredAt;
+    }
 }
