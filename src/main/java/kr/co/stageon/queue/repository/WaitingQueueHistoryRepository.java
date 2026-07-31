@@ -37,7 +37,7 @@ public interface WaitingQueueHistoryRepository extends JpaRepository<WaitingQueu
     //한 번에 10명씩 입장 처리하는 네이티브 쿼리
     @Modifying
     @Query(value = "UPDATE waiting_queue_history SET status = 'ENTERED', entered_at = NOW() " +
-            "WHERE schedule_id = :scheduleId AND status = 'WAITING'" +
+            "WHERE schedule_id = :scheduleId AND status = 'WAITING' AND id != 101 " +
             "ORDER BY joined_at ASC LIMIT :limit", nativeQuery = true)
     int admitFrontUsers(@Param("scheduleId") Long scheduleId, @Param("limit") int limit);
 }
