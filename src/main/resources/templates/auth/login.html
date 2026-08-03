@@ -1,35 +1,359 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn | 로그인</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
-  </head>
-  <body id="top">
-    <div th:replace="~{fragments/common/site-header :: header}"></div>
-    <main class="page page--soft">
-      <div class="auth-wrap card card--shadow auth-card">
-        <!-- 세션 인증 구현 시 POST /api/auth/login에 연결할 입력 화면 -->
-        <h1>로그인</h1>
-        <p class="section-copy" style="text-align:center">StageOn에서 빠르고 안전하게 예매하세요.</p>
-        <form>
-          <div class="field">
-            <label for="login-email">이메일</label>
-            <input id="login-email" class="input" type="email" autocomplete="email" placeholder="stageon@example.com">
-          </div>
-          <div class="field">
-            <label for="login-password">비밀번호</label>
-            <input id="login-password" class="input" type="password" autocomplete="current-password" placeholder="비밀번호 입력">
-          </div>
-          <label><input type="checkbox">로그인 상태 유지</label>
-          <a class="btn btn--primary btn--wide" th:href="@{/}" href="/">로그인 시안 진행</a>
-          <a class="btn btn--wide" th:href="@{/signup}" href="/signup">회원가입</a>
-        </form>
-      </div>
-    </main>
-    <div th:replace="~{fragments/common/site-footer :: footer}"></div>
-    <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>StageOn | 로그인</title>
+
+  <link rel="stylesheet"
+        th:href="@{/css/app.css}"
+        href="/css/app.css">
+
+  <link rel="stylesheet"
+        th:href="@{/css/pages/public-pages.css}"
+        href="/css/pages/public-pages.css">
+
+  <style>
+    /* 로그인 메인 */
+    .login-page {
+      width: min(calc(100% - 40px), 1180px);
+      margin: 0 auto;
+      padding: 48px 0 56px;
+    }
+
+    /* 로그인 카드 영역 */
+    .login-section {
+      display: flex;
+      justify-content: center;
+    }
+
+    .login-card {
+      width: 384px;
+      padding: 32px 36px 30px;
+      border: 1px solid #e1e4e8;
+      border-radius: 12px;
+      background: #fff;
+      text-align: center;
+    }
+
+    .login-card h1 {
+      margin: 0;
+      color: #171717;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .login-description {
+      margin: 16px 0 18px;
+      color: #777;
+      font-size: 13px;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .login-input {
+      width: 236px;
+      height: 36px;
+      margin-bottom: 12px;
+      padding: 0 13px;
+      border: 1px solid #d9dde3;
+      border-radius: 6px;
+      background: #fff;
+      color: #222;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .login-input:focus {
+      border-color: #e60012;
+      box-shadow: 0 0 0 2px rgba(230, 0, 18, 0.08);
+    }
+
+    .login-button {
+      min-width: 60px;
+      height: 36px;
+      margin-top: 2px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 7px;
+      background: #e60012;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .login-button:hover {
+      background: #c90010;
+    }
+
+    .login-links {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 17px;
+      color: #8a8a8a;
+      font-size: 11px;
+    }
+
+    .login-links a {
+      color: #666;
+      text-decoration: none;
+    }
+
+    .login-links a:hover {
+      color: #e60012;
+    }
+
+    /* 로그인 상태 메시지 */
+    .login-message {
+      width: 236px;
+      margin: 0 0 12px;
+      font-size: 12px;
+    }
+
+    .login-message--error {
+      color: #d93025;
+    }
+
+    .login-message--success {
+      color: #15803d;
+    }
+
+    /* 로그인 안내 영역 */
+    .login-benefits {
+      margin-top: 30px;
+      padding: 38px 24px 42px;
+      background: #f7f8f9;
+    }
+
+    .login-benefits h2 {
+      margin: 0;
+      color: #202020;
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .login-benefits__description {
+      margin: 12px 0 18px;
+      color: #777;
+      font-size: 13px;
+    }
+
+    .login-benefit-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .login-benefit-card {
+      min-height: 102px;
+      padding: 19px 17px;
+      border: 1px solid #e1e4e8;
+      background: #fff;
+    }
+
+    .login-benefit-card:first-child {
+      border-radius: 9px 0 0 9px;
+    }
+
+    .login-benefit-card:last-child {
+      border-radius: 0 9px 9px 0;
+    }
+
+    .login-benefit-card + .login-benefit-card {
+      border-left: 0;
+    }
+
+    .login-benefit-number {
+      color: #e60012;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .login-benefit-card h3 {
+      margin: 8px 0 8px;
+      color: #242424;
+      font-size: 15px;
+    }
+
+    .login-benefit-card p {
+      margin: 0;
+      color: #666;
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    /* 모바일 화면 */
+    @media (max-width: 700px) {
+      .login-page {
+        width: min(calc(100% - 24px), 1180px);
+        padding-top: 28px;
+      }
+
+      .login-card {
+        width: 100%;
+        padding: 28px 20px;
+      }
+
+      .login-input,
+      .login-message {
+        width: 100%;
+      }
+
+      .login-benefit-list {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .login-benefit-card,
+      .login-benefit-card:first-child,
+      .login-benefit-card:last-child {
+        border: 1px solid #e1e4e8;
+        border-radius: 9px;
+      }
+    }
+  </style>
+
+</head>
+
+<body id="top">
+
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+<main class="login-page">
+
+  <!-- 로그인 영역 -->
+  <section class="login-section">
+    <div class="login-card">
+
+      <h1>로그인</h1>
+
+      <p class="login-description">
+        StageOn 계정으로 빠르게 예매를 이어가세요.
+      </p>
+
+      <form class="login-form"
+            th:action="@{/login}"
+            action="/login"
+            method="post">
+
+        <!-- 로그인 실패 메시지 -->
+        <p class="login-message login-message--error"
+           th:if="${param.error}">
+          이메일 또는 비밀번호가 올바르지 않습니다.
+        </p>
+
+        <!-- 로그아웃 완료 메시지 -->
+        <p class="login-message login-message--success"
+           th:if="${param.logout}">
+          로그아웃되었습니다.
+        </p>
+
+        <input class="login-input"
+               type="email"
+               name="email"
+               aria-label="이메일 또는 아이디"
+               autocomplete="email"
+               placeholder="이메일 또는 아이디"
+               required>
+
+        <input class="login-input"
+               type="password"
+               name="password"
+               aria-label="비밀번호"
+               autocomplete="current-password"
+               placeholder="비밀번호"
+               required>
+
+        <button class="login-button"
+                type="submit">
+          로그인
+        </button>
+
+        <nav class="login-links"
+             aria-label="회원 계정 메뉴">
+
+          <a href="#"
+             aria-disabled="true">
+            아이디 찾기
+          </a>
+
+          <span>·</span>
+
+          <a href="#"
+             aria-disabled="true">
+            비밀번호 찾기
+          </a>
+
+          <span>·</span>
+
+          <a th:href="@{/signup/terms}"
+             href="/signup/terms">
+            회원가입
+          </a>
+        </nav>
+
+      </form>
+    </div>
+  </section>
+
+  <!-- 로그인 안내 영역 -->
+  <section class="login-benefits">
+
+    <h2>로그인하면 이어지는 StageOn 경험</h2>
+
+    <p class="login-benefits__description">
+      찜과 예매 선택을 안전하게 복원하고 개인화 기능을 제공합니다.
+    </p>
+
+    <div class="login-benefit-list">
+
+      <article class="login-benefit-card">
+        <span class="login-benefit-number">01</span>
+
+        <h3>선택 상태 복원</h3>
+
+        <p>
+          사용자가 다음 행동을 이해할 수 있도록
+          상태와 기준을 명확히 안내합니다.
+        </p>
+      </article>
+
+      <article class="login-benefit-card">
+        <span class="login-benefit-number">02</span>
+
+        <h3>예매·티켓 관리</h3>
+
+        <p>
+          사용자가 다음 행동을 이해할 수 있도록
+          상태와 기준을 명확히 안내합니다.
+        </p>
+      </article>
+
+      <article class="login-benefit-card">
+        <span class="login-benefit-number">03</span>
+
+        <h3>AI 취향 추천</h3>
+
+        <p>
+          사용자가 다음 행동을 이해할 수 있도록
+          상태와 기준을 명확히 안내합니다.
+        </p>
+      </article>
+
+    </div>
+  </section>
+
+</main>
+
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+</body>
 </html>

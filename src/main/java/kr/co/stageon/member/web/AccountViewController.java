@@ -32,4 +32,6 @@ public class AccountViewController {
                 memberId == null ? List.of() : bookingQueryService.findMemberReservations(memberId));
         return "user/mypage";
     }
+
+
 }
