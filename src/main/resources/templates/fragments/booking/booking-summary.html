@@ -1,31 +1,54 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <body>
-    <aside th:fragment="summary" class="card booking-summary">
-      <span class="eyebrow">BOOKING SUMMARY</span>
-      <h2 style="margin-top:8px">예매 정보</h2>
-      <dl>
-        <div>
-          <dt>공연</dt>
-          <dd>오페라의 유령</dd>
-        </div>
-        <div>
-          <dt>일시</dt>
-          <dd>2026.08.15 19:00</dd>
-        </div>
+<body>
+<!-- 🚨 th:fragment="summary"를 두 패널을 모두 감싸는 부모 div로 옮겼습니다! -->
+<div th:fragment="summary" style="display: contents;">
+
+  <!-- 1. 새로 추가된 좌석별 가격 패널 -->
+  <aside class="card seat-price-info" style="margin-bottom: 16px;">
+    <span class="eyebrow">PRICE INFO</span>
+    <h2 style="margin-top:8px">좌석별 가격</h2>
+    <dl>
+      <div th:each="entry : ${groupedSeats}" th:if="${!#lists.isEmpty(entry.value)}">
+        <dt th:text="${entry.key}">구역명</dt>
+        <dd th:text="${#numbers.formatInteger(entry.value[0].price, 3, 'COMMA')} + '원'">0원</dd>
+      </div>
+    </dl>
+  </aside>
+
+  <!-- 2. 기존 예매 정보 패널 -->
+  <aside class="card booking-summary">
+    <span class="eyebrow">BOOKING SUMMARY</span>
+    <h2 style="margin-top:8px">예매 정보</h2>
+    <dl>
+      <div>
+        <dt>공연</dt>
+        <dd th:text="${performanceTitle ?: '오페라의 유령'}">오페라의 유령</dd>
+      </div>
+      <div>
+        <dt>일시</dt>
+        <dd th:text="${scheduleTime ?: '2026.08.15 19:00'}">2026.08.15 19:00</dd>
+      </div>
+
+      <!-- JS가 여러 좌석을 넣을 컨테이너 -->
+      <div id="dynamic-seat-container" style="display: contents;">
         <div>
           <dt>좌석</dt>
-          <dd>VIP A구역 8열 12번</dd>
+          <dd style="color: #ff5252;">좌석을 선택해주세요</dd>
         </div>
-        <div>
-          <dt>매수</dt>
-          <dd>1매</dd>
-        </div>
-        <div>
-          <dt>결제 금액</dt>
-          <dd>162,000원</dd>
-        </div>
-      </dl>
-    </aside>
-  </body>
+      </div>
+
+      <div>
+        <dt>매수</dt>
+        <dd id="summary-seat-count">0매</dd>
+      </div>
+      <div>
+        <dt>결제 금액</dt>
+        <dd id="summary-seat-price" style="font-weight: bold;">0원</dd>
+      </div>
+    </dl>
+  </aside>
+
+</div>
+</body>
 </html>
