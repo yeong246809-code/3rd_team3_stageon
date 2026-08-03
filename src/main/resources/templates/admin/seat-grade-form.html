@@ -18,7 +18,7 @@
             <header class="admin-title">
                 <div>
                     <h1>좌석 등급 추가</h1>
-                    <p th:text="${hall.name} + '에 등급을 추가합니다. (예: VIP, R, S)'">홀에 등급을 추가합니다.</p>
+                    <p th:text="${hall.name} + '에 등급을 추가합니다.'">홀에 등급을 추가합니다.</p>
                 </div>
             </header>
 
@@ -27,19 +27,46 @@
                     <div class="admin-form-grid">
                         <div>
                             <label>등급명<span class="required-mark">*</span></label>
-                            <input type="text" th:field="*{name}" placeholder="VIP" required>
-                        </div>
-                        <div>
-                            <label>색상 코드<span class="required-mark">*</span></label>
-                            <input type="text" th:field="*{displayColor}" placeholder="#E8513D" required>
+                            <select th:field="*{presetName}">
+                                <option value="">-- 선택하세요 --</option>
+                                <option value="VIP">VIP</option>
+                                <option value="R">R</option>
+                                <option value="S">S</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="스탠딩">스탠딩</option>
+                                <option value="자유석">자유석</option>
+                            </select>
                         </div>
                         <div>
                             <label>정렬 순서</label>
                             <input type="number" min="1" th:field="*{sortOrder}" placeholder="비워두면 자동 지정">
                         </div>
                     </div>
+
+                    <div style="margin-top:18px">
+                        <label>목록에 없나요? 직접 입력</label>
+                        <input type="text" th:field="*{customName}" placeholder="예: VVIP, 프리미엄석 (입력 시 이 값이 우선 사용됩니다)">
+                    </div>
+
+                    <div style="margin-top:22px">
+                        <label>색상<span class="required-mark">*</span></label>
+                        <div class="color-picker">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#E8513D" title="레드" style="background-color:#E8513D">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#F2A93B" title="오렌지" style="background-color:#F2A93B">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#4C8BF5" title="블루" style="background-color:#4C8BF5">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#16A34A" title="그린" style="background-color:#16A34A">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#7C3AED" title="바이올렛" style="background-color:#7C3AED">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#EC4899" title="핑크" style="background-color:#EC4899">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#0D9488" title="틸" style="background-color:#0D9488">
+                            <input type="radio" class="color-radio" th:field="*{displayColor}" value="#6B7280" title="그레이" style="background-color:#6B7280">
+                        </div>
+                        <p style="font-size:12px;color:var(--subtle);margin-top:8px">선택하지 않으면 기본 회색으로 저장됩니다.</p>
+                    </div>
+
                     <div class="form-actions">
                         <button class="btn--venue-add" type="submit">등급 추가</button>
+                        <a class="btn--cancel" th:href="@{/admin/venues/halls/{hallId}/seats/bulk-new(hallId=${hall.id})}">다음: 좌석 일괄 생성하러 가기 →</a>
                         <a class="btn--cancel" th:href="@{/admin/venues(hallId=${hall.id})}">완료(목록으로)</a>
                     </div>
                 </form>
@@ -50,6 +77,11 @@
                 <span class="grade-preview__item" th:each="g : ${grades}">
                   <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
                   <span th:text="${g.name}">VIP</span>
+                  <form th:action="@{/admin/venues/halls/{hallId}/grades/{gradeId}/delete(hallId=${hall.id}, gradeId=${g.id})}"
+                        method="post" style="display:inline">
+                    <button type="submit" class="grade-preview__delete" title="삭제"
+                            onclick="return confirm('이 등급을 삭제할까요?');">×</button>
+                  </form>
                 </span>
                     </div>
                 </div>

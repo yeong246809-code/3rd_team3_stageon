@@ -62,4 +62,16 @@ public class Venue {
         v.homepageUrl = homepageUrl;
         return v;
     }
+
+    public void update(String kopisFacilityId, String name, String address, String region,
+                       BigDecimal latitude, BigDecimal longitude, String phone, String homepageUrl) {
+        this.kopisFacilityId = kopisFacilityId;
+        this.name = name;
+        this.address = address;
+        this.region = region;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.phone = phone;
+        this.homepageUrl = homepageUrl;
+    }
 }
