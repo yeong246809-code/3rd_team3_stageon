@@ -56,7 +56,8 @@
               </thead>
               <tbody>
               <tr th:each="row : ${dashboard.rows}"
-                  th:classappend="${row.hallId == selectedHallId} ? ' is-selected' : ''">
+                  th:classappend="${row.hallId == selectedHallId} ? ' is-selected' : ''"
+                  th:attrappend="data-hall-href=${row.hallId != null} ? @{/admin/venues(hallId=${row.hallId})} : null">
                 <td class="cell-title" th:text="${row.venueName}">공연장명</td>
                 <td>
                   <a class="row-link" th:if="${row.hallId != null}" th:text="${row.hallName}"
@@ -70,11 +71,31 @@
                               th:text="${row.configured} ? '설정완료' : '미설정'">상태</span>
                   <span th:if="${row.hallId == null}" class="badge badge--pending">미등록</span>
                 </td>
-                <td>
+                <td class="action-cell">
+                  <a class="btn-mini" th:href="@{/admin/venues/{venueId}/edit(venueId=${row.venueId})}">수정</a>
                   <a th:if="${row.hallId == null}" class="btn-mini"
                      th:href="@{/admin/venues/{venueId}/halls/new(venueId=${row.venueId})}">+ 홀 추가</a>
                   <a th:if="${row.hallId != null}" class="btn-mini"
                      th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${row.hallId})}">+ 등급 추가</a>
+                  <a th:if="${row.configured}" class="btn-mini"
+                     th:href="@{/admin/venues/halls/{hallId}/seats/bulk-new(hallId=${row.hallId})}">+ 좌석 생성</a>
+
+                  <form th:if="${row.hallId != null}"
+                        th:action="@{/admin/venues/halls/{hallId}/delete(hallId=${row.hallId})}"
+                        method="post" style="display:inline">
+                    <button type="submit" class="btn-mini btn-mini--danger"
+                            onclick="return confirm('이 홀을 삭제하면 등록된 좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?');">
+                      홀 삭제
+                    </button>
+                  </form>
+
+                  <form th:action="@{/admin/venues/{venueId}/delete(venueId=${row.venueId})}"
+                        method="post" style="display:inline">
+                    <button type="submit" class="btn-mini btn-mini--danger"
+                            onclick="return confirm('이 공연장을 삭제하면 등록된 홀·좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?');">
+                      공연장 삭제
+                    </button>
+                  </form>
                 </td>
               </tr>
               <tr th:if="${dashboard.rows.isEmpty()}">
@@ -85,14 +106,23 @@
           </div>
         </section>
 
+        <script>
+          document.querySelectorAll('.structure-table tbody tr[data-hall-href]').forEach(function (tr) {
+            tr.addEventListener('click', function (e) {
+              if (e.target.closest('a, button, form')) return;
+              window.location.href = tr.getAttribute('data-hall-href');
+            });
+          });
+        </script>
+
         <aside class="side-stack">
           <section class="side-card">
-            <h3>좌석도 설정 순서</h3>
+            <h3>공연장 설정 순서</h3>
             <ol class="step-list">
               <li><span class="step-num">1</span>공연장 등록</li>
-              <li><span class="step-num">2</span>홀·좌석도 등록</li>
-              <li><span class="step-num">3</span>좌석 등급 지정</li>
-              <li><span class="step-num">4</span>좌석 배치 확인</li>
+              <li><span class="step-num">2</span>홀 등록</li>
+              <li><span class="step-num">3</span>좌석 등급 등록 <span class="step-note">(좌석도 자동 생성)</span></li>
+              <li><span class="step-num">4</span>구역별 좌석 일괄 생성</li>
             </ol>
           </section>
           <section class="side-card side-card--info">
@@ -105,7 +135,7 @@
       <section class="grade-card" th:if="${selectedHallId != null}">
         <div class="grade-card__title">선택한 홀의 좌석 등급</div>
         <p class="grade-card__subtitle" th:if="${grades.isEmpty()}">
-          등록된 좌석 등급이 없습니다. 좌석도(seat_chart)와 등급(seat_grade) 데이터를 먼저 등록해주세요.
+          등록된 좌석 등급이 없습니다. "등급 추가" 버튼으로 먼저 등록해주세요.
         </p>
         <table class="grade-table" th:if="${!grades.isEmpty()}">
           <thead>

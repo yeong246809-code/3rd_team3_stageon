@@ -17,13 +17,14 @@
         <div class="admin-content">
             <header class="admin-title">
                 <div>
-                    <h1>공연장 추가</h1>
-                    <p>새 공연장(시설) 기본 정보를 등록합니다.</p>
+                    <h1 th:text="${isEdit} ? '공연장 수정' : '공연장 추가'">공연장 추가</h1>
+                    <p th:text="${isEdit} ? '공연장 기본 정보를 수정합니다.' : '새 공연장(시설) 기본 정보를 등록합니다.'">새 공연장(시설) 기본 정보를 등록합니다.</p>
                 </div>
             </header>
 
             <section class="venue-form-card">
-                <form th:action="@{/admin/venues}" th:object="${form}" method="post">
+                <form th:action="${isEdit} ? @{/admin/venues/{id}/edit(id=${form.id})} : @{/admin/venues}"
+                      th:object="${form}" method="post">
                     <div class="admin-form-grid">
                         <div>
                             <label>공연장명<span class="required-mark">*</span></label>
@@ -51,7 +52,7 @@
                         </div>
                     </div>
                     <div class="form-actions">
-                        <button class="btn--venue-add" type="submit">저장</button>
+                        <button class="btn--venue-add" type="submit" th:text="${isEdit} ? '수정 저장' : '저장'">저장</button>
                         <a class="btn--cancel" th:href="@{/admin/venues}">취소</a>
                     </div>
                 </form>
