@@ -6,776 +6,9 @@
   <title>StageOn | 회원가입</title>
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
-
-  <style>
-    /* 회원가입 페이지 */
-    .signup-page {
-      width: min(calc(100% - 40px), 1180px);
-      margin: 0 auto;
-      padding: 36px 0 64px;
-    }
-
-    .signup-heading {
-      margin-bottom: 22px;
-    }
-
-    .signup-heading h1 {
-      margin: 0;
-      color: #171717;
-      font-size: 27px;
-      font-weight: 800;
-    }
-
-    .signup-heading p {
-      margin: 7px 0 0;
-      color: #777;
-      font-size: 12px;
-    }
-
-    /* 회원가입 단계 */
-    .signup-stepper {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      margin: 0 0 24px;
-      padding: 0 36px;
-      border: 1px solid #e1e4e8;
-      border-radius: 10px;
-      background: #fff;
-      list-style: none;
-    }
-
-    .signup-stepper li {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      min-height: 68px;
-      color: #888;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .signup-stepper li:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: calc(50% + 64px);
-      width: calc(100% - 128px);
-      height: 2px;
-      background: #ef233c;
-      transform: translateY(-50%);
-    }
-
-    .signup-stepper span {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: #d8dce2;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .signup-stepper .is-active {
-      color: #222;
-    }
-
-    .signup-stepper .is-active span {
-      background: #e61e2a;
-    }
-
-    /* 전체 배치 */
-    .signup-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 350px;
-      gap: 24px;
-      align-items: start;
-    }
-
-    .signup-panel,
-    .signup-confirm-panel {
-      border: 1px solid #dde1e7;
-      border-radius: 12px;
-      background: #fff;
-    }
-
-    .signup-panel {
-      padding: 28px 30px;
-    }
-
-    .signup-confirm-panel {
-      padding: 24px 20px 20px;
-    }
-
-    .signup-section h2,
-    .signup-confirm-panel h2 {
-      margin: 0;
-      color: #222;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .signup-section__description {
-      margin: 8px 0 22px;
-      color: #888;
-      font-size: 12px;
-    }
-
-    .signup-divider {
-      margin: 28px 0;
-      border-top: 1px solid #e4e7eb;
-    }
-
-    /* 입력 영역 */
-    .signup-field {
-      margin-top: 18px;
-    }
-
-    /* 일반 입력 항목 간격 */
-    .signup-field {
-      margin-top: 18px;
-    }
-
-    /* 섹션의 첫 번째 단독 항목 */
-    .signup-section > .signup-field:first-of-type {
-      margin-top: 0;
-    }
-
-    /* 2열 입력 항목 높이 통일 */
-    .signup-field-grid .signup-field {
-      margin-top: 18px;
-    }
-
-    .signup-field label,
-    .signup-verification-box > label {
-      display: block;
-      margin-bottom: 8px;
-      color: #333;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .signup-field-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 20px;
-    }
-
-    .signup-input-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .signup-input-row .signup-input {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .signup-input {
-      width: 100%;
-      height: 44px;
-      padding: 0 14px;
-      border: 1px solid #d9dde3;
-      border-radius: 7px;
-      background: #fff;
-      color: #222;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .signup-input:focus {
-      border-color: #e61e2a;
-      box-shadow: 0 0 0 2px rgba(230, 30, 42, 0.08);
-    }
-
-    .signup-check-button {
-      flex-shrink: 0;
-      min-width: 104px;
-      height: 44px;
-      padding: 0 13px;
-      border: 1px solid #9fd8b3;
-      border-radius: 7px;
-      background: #effcf3;
-      color: #228b48;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .signup-message {
-      min-height: 16px;
-      margin: 7px 0 0;
-      color: #777;
-      font-size: 10px;
-      line-height: 1.5;
-    }
-
-    .signup-message--success {
-      color: #1f9d55;
-    }
-
-    /* 이메일 인증 */
-    .signup-verification-email {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 12px 14px;
-      border: 1px solid #b9d7ff;
-      border-radius: 8px;
-      background: #f2f8ff;
-    }
-
-    .signup-verification-email strong {
-      color: #222;
-      font-size: 12px;
-    }
-
-    .signup-send-button {
-      height: 38px;
-      padding: 0 22px;
-      border: 0;
-      border-radius: 6px;
-      background: #376ed9;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .signup-verification-box {
-      margin-top: 14px;
-      padding: 14px;
-      border: 1px solid #dfe3e8;
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .signup-code-row {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-    .signup-code-inputs {
-      display: flex;
-      gap: 7px;
-    }
-
-    .signup-code-input {
-      width: 38px;
-      height: 44px;
-      border: 1px solid #d9dde3;
-      border-radius: 7px;
-      text-align: center;
-      font-size: 15px;
-      font-weight: 700;
-      outline: none;
-    }
-
-    /* 인증번호 입력칸 */
-    .signup-code-input {
-      width: 38px;
-      height: 44px;
-      border: 1px solid #d9dde3;
-      border-radius: 7px;
-      background: #fff;
-      color: #222;
-      text-align: center;
-      font-size: 15px;
-      font-weight: 700;
-      outline: none;
-    }
-
-    /* 현재 입력해야 하는 칸 */
-    .signup-code-input.is-current {
-      border-color: #e61e2a;
-      box-shadow: 0 0 0 2px rgba(230, 30, 42, 0.08);
-    }
-
-    /* 입력 완료된 칸 */
-    .signup-code-input.is-filled {
-      border-color: #2e9556;
-      background: #f4fbf6;
-    }
-
-    /* 입력 비활성화 */
-    .signup-code-input:disabled {
-      background: #f5f6f8;
-      color: #aaa;
-      cursor: not-allowed;
-    }
-
-    /* 인증 유효 시간 */
-    .signup-timer {
-      min-width: 42px;
-      margin-left: 10px;
-      color: #e61e2a;
-      font-size: 11px;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    /* 시간 만료 */
-    .signup-timer.is-expired {
-      color: #888;
-    }
-
-    /* 비활성화 버튼 */
-    .signup-verify-button:disabled,
-    .signup-resend-button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .signup-timer {
-      margin-left: 10px;
-      color: #e61e2a;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .signup-verify-button {
-      height: 42px;
-      margin-left: auto;
-      padding: 0 22px;
-      border: 0;
-      border-radius: 7px;
-      background: #2e9556;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .signup-resend-button {
-      border: 0;
-      background: transparent;
-      color: #376ed9;
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .signup-security-notice {
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 8px;
-      background: #f5f6f8;
-    }
-
-    .signup-security-notice strong {
-      color: #333;
-      font-size: 11px;
-    }
-
-    .signup-security-notice p {
-      margin: 7px 0 0;
-      color: #777;
-      font-size: 10px;
-    }
-
-    /* 전체 약관 동의 */
-    .signup-terms-all {
-      margin-top: 18px;
-      padding: 14px;
-      border: 1px solid #ef5360;
-      border-radius: 8px;
-      background: #fff5f6;
-    }
-
-    .signup-terms-all label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #222;
-      font-size: 12px;
-    }
-
-    /* 개별 약관 */
-    .signup-agreement-list {
-      display: grid;
-      gap: 15px;
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    /* 개별 약관 목록 */
-    .signup-agreement-list {
-      display: grid;
-      gap: 16px;
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .signup-agreement-list li {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      min-height: 28px;
-    }
-
-    /* 체크박스와 약관명 */
-    .signup-agreement-label {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      min-width: 0;
-      color: #444;
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    .signup-agreement-label input {
-      flex-shrink: 0;
-      margin: 0;
-    }
-
-    /* 필수·선택 표시 */
-    .signup-term-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      min-width: 29px;
-      height: 17px;
-      padding: 0 5px;
-      border-radius: 4px;
-      font-size: 9px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .signup-term-badge--required {
-      background: #fff0f1;
-      color: #e61e2a;
-    }
-
-    .signup-term-badge--optional {
-      background: #f1f3f5;
-      color: #777;
-    }
-
-    .signup-term-name {
-      white-space: nowrap;
-    }
-
-    /* 내용 보기 버튼 */
-    .signup-term-view {
-      flex-shrink: 0;
-      margin-left: auto;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: #376ed9;
-      font-size: 10px;
-      cursor: pointer;
-    }
-
-    .signup-term-view:hover {
-      text-decoration: underline;
-    }
-
-
-    .signup-agreement-list label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .signup-agreement-list em {
-      color: #e61e2a;
-      font-size: 10px;
-      font-style: normal;
-    }
-
-    .signup-agreement-list .optional {
-      color: #777;
-    }
-
-    .signup-term-view {
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: #376ed9;
-      font-size: 10px;
-      cursor: pointer;
-    }
-
-    .signup-agreement-list {
-      display: grid;
-      gap: 15px;
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
-    }
-
-
-    .signup-agreement-list em {
-      color: #e61e2a;
-      font-size: 10px;
-      font-style: normal;
-    }
-
-    .signup-agreement-list .optional {
-      color: #777;
-    }
-
-    .signup-check-icon--optional {
-      background: #aaa;
-    }
-
-    .signup-terms-link {
-      display: block;
-      margin-top: 16px;
-      color: #376ed9;
-      font-size: 10px;
-      text-align: right;
-      text-decoration: none;
-    }
-
-    /* 가입 정보 */
-    .signup-summary-box {
-      margin-top: 22px;
-      padding: 16px;
-      border-radius: 8px;
-      background: #f5f6f8;
-    }
-
-    .signup-summary-box h3 {
-      margin: 0 0 12px;
-      font-size: 12px;
-    }
-
-    .signup-summary-list {
-      margin: 0;
-    }
-
-    .signup-summary-list div {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 6px 0;
-    }
-
-    .signup-summary-list dt {
-      color: #888;
-      font-size: 10px;
-    }
-
-    .signup-summary-list dd {
-      margin: 0;
-      color: #333;
-      font-size: 10px;
-      font-weight: 700;
-      text-align: right;
-      word-break: break-all;
-    }
-
-    .signup-summary-list .complete {
-      color: #159447;
-    }
-
-    .signup-ready-box {
-      margin-top: 16px;
-      padding: 16px;
-      border: 1px solid #a8dfb9;
-      border-radius: 8px;
-      background: #effcf3;
-    }
-
-    .signup-ready-box strong {
-      color: #198c45;
-      font-size: 12px;
-    }
-
-    .signup-ready-box ul {
-      margin: 10px 0 0;
-      padding: 0;
-      color: #43835a;
-      font-size: 10px;
-      list-style: none;
-    }
-
-    .signup-ready-box li::before {
-      content: "✓ ";
-    }
-
-    .signup-submit-button {
-      width: 100%;
-      height: 48px;
-      margin-top: 18px;
-      border: 0;
-      border-radius: 7px;
-      background: #e61e2a;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .signup-submit-notice {
-      margin: 10px 0 0;
-      color: #777;
-      font-size: 9px;
-      line-height: 1.5;
-      text-align: center;
-    }
-
-    .signup-login-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 44px;
-      margin-top: 16px;
-      border: 1px solid #b9d7ff;
-      border-radius: 7px;
-      background: #f4f9ff;
-      color: #376ed9;
-      font-size: 11px;
-      font-weight: 700;
-      text-decoration: none;
-    }
-
-    .signup-submit-button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    /* 반응형 */
-    @media (max-width: 900px) {
-      .signup-layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 650px) {
-      .signup-page {
-        width: min(calc(100% - 24px), 1180px);
-        padding-top: 24px;
-      }
-
-      .signup-stepper {
-        padding: 0 10px;
-      }
-
-      .signup-stepper li {
-        flex-direction: column;
-        gap: 5px;
-        font-size: 10px;
-      }
-
-      .signup-stepper li:not(:last-child)::after {
-        display: none;
-      }
-
-      .signup-panel {
-        padding: 22px 18px;
-      }
-
-      .signup-field-grid {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-
-      .signup-input-row {
-        flex-direction: column;
-      }
-
-      .signup-check-button {
-        width: 100%;
-      }
-
-      .signup-code-row {
-        flex-wrap: wrap;
-      }
-
-      .signup-code-input {
-        width: 34px;
-      }
-
-      .signup-verify-button {
-        margin-left: 0;
-      }
-    }
-
-    /* 약관 모달 */
-    .signup-terms-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.48);
-    }
-
-    .signup-terms-modal.is-open {
-      display: flex;
-    }
-
-    .signup-terms-modal__content {
-      width: min(100%, 680px);
-      max-height: 80vh;
-      overflow: hidden;
-      border-radius: 14px;
-      background: #fff;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
-    }
-
-    .signup-terms-modal__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .signup-terms-modal__header h2 {
-      margin: 0;
-      font-size: 20px;
-    }
-
-    .signup-terms-modal__close {
-      border: 0;
-      background: transparent;
-      font-size: 26px;
-      cursor: pointer;
-    }
-
-    .signup-terms-modal__body {
-      max-height: 55vh;
-      overflow-y: auto;
-      padding: 24px;
-      color: #444;
-      line-height: 1.75;
-    }
-
-    .signup-terms-modal__body h3 {
-      margin: 22px 0 8px;
-      font-size: 15px;
-    }
-
-    .signup-terms-modal__body h3:first-child {
-      margin-top: 0;
-    }
-
-    .signup-terms-modal__footer {
-      padding: 16px 24px 20px;
-      border-top: 1px solid #e5e7eb;
-    }
-
-  </style>
-
+  <link rel="stylesheet" th:href="@{/css/pages/signup.css}" href="/css/pages/signup.css">
 </head>
+
 <body id="top">
 <div th:replace="~{fragments/common/site-header :: header}"></div>
 <main class="signup-page">
@@ -837,10 +70,8 @@
               </button>
             </div>
 
-            <p class="signup-message signup-message--success"
-               id="email-check-message">
-              사용 가능한 이메일입니다.
-            </p>
+            <p class="signup-message"
+               id="email-check-message"></p>
           </div>
 
           <div class="signup-field-grid">
@@ -924,9 +155,8 @@
                 </button>
               </div>
 
-              <p class="signup-message signup-message--success">
-                가입에 사용되지 않은 휴대폰 번호입니다.
-              </p>
+              <p class="signup-message"
+                 id="phone-check-message"></p>
             </div>
 
           </div>
@@ -1636,6 +866,171 @@
 
   updateSignupSummary();
   updateTermsState();
+
+  const emailInput = document.getElementById("signup-email");
+  const phoneInput = document.getElementById("signup-phone");
+
+  const emailCheckButton =
+          document.getElementById("email-check-button");
+
+  const phoneCheckButton =
+          document.getElementById("phone-check-button");
+
+  const emailCheckMessage =
+          document.getElementById("email-check-message");
+
+  const phoneCheckMessage =
+          document.getElementById("phone-check-message");
+
+  let emailDuplicateChecked = false;
+  let phoneDuplicateChecked = false;
+
+  /* 결과 문구 표시 */
+  function showCheckMessage(element, message, success) {
+    element.textContent = message;
+    element.className = success
+            ? "signup-message signup-message--success"
+            : "signup-message signup-message--error";
+  }
+
+  /* 이메일 중복 확인 */
+  emailCheckButton.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+
+    if (!email) {
+      showCheckMessage(
+              emailCheckMessage,
+              "이메일을 입력해 주세요.",
+              false
+      );
+
+      emailInput.focus();
+      return;
+    }
+
+    if (!emailInput.checkValidity()) {
+      showCheckMessage(
+              emailCheckMessage,
+              "올바른 이메일 형식으로 입력해 주세요.",
+              false
+      );
+
+      emailInput.focus();
+      return;
+    }
+
+    emailCheckButton.disabled = true;
+    emailCheckButton.textContent = "확인 중";
+
+    try {
+      const response = await fetch(
+              `/api/members/check-email?email=${encodeURIComponent(email)}`
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "중복 확인에 실패했습니다.");
+      }
+
+      emailDuplicateChecked = !result.duplicated;
+
+      showCheckMessage(
+              emailCheckMessage,
+              result.message,
+              !result.duplicated
+      );
+    } catch (error) {
+      emailDuplicateChecked = false;
+
+      showCheckMessage(
+              emailCheckMessage,
+              error.message || "이메일 중복 확인 중 오류가 발생했습니다.",
+              false
+      );
+    } finally {
+      emailCheckButton.disabled = false;
+      emailCheckButton.textContent = "중복 확인";
+    }
+  });
+
+  /* 휴대전화 중복 확인 */
+  phoneCheckButton.addEventListener("click", async () => {
+    const phone = phoneInput.value.trim();
+
+    if (!phone) {
+      showCheckMessage(
+              phoneCheckMessage,
+              "휴대전화 번호를 입력해 주세요.",
+              false
+      );
+
+      phoneInput.focus();
+      return;
+    }
+
+    const phonePattern = /^010-?\d{4}-?\d{4}$/;
+
+    if (!phonePattern.test(phone)) {
+      showCheckMessage(
+              phoneCheckMessage,
+              "010-1234-5678 형식으로 입력해 주세요.",
+              false
+      );
+
+      phoneInput.focus();
+      return;
+    }
+
+    phoneCheckButton.disabled = true;
+    phoneCheckButton.textContent = "확인 중";
+
+    try {
+      const response = await fetch(
+              `/api/members/check-phone?phone=${encodeURIComponent(phone)}`
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "중복 확인에 실패했습니다.");
+      }
+
+      phoneDuplicateChecked = !result.duplicated;
+
+      showCheckMessage(
+              phoneCheckMessage,
+              result.message,
+              !result.duplicated
+      );
+    } catch (error) {
+      phoneDuplicateChecked = false;
+
+      showCheckMessage(
+              phoneCheckMessage,
+              error.message || "휴대전화 중복 확인 중 오류가 발생했습니다.",
+              false
+      );
+    } finally {
+      phoneCheckButton.disabled = false;
+      phoneCheckButton.textContent = "중복 확인";
+    }
+  });
+
+  /* 확인 후 이메일을 수정하면 결과 초기화 */
+  emailInput.addEventListener("input", () => {
+    emailDuplicateChecked = false;
+    emailCheckMessage.textContent = "";
+    emailCheckMessage.className = "signup-message";
+  });
+
+  /* 확인 후 휴대전화 번호를 수정하면 결과 초기화 */
+  phoneInput.addEventListener("input", () => {
+    phoneDuplicateChecked = false;
+    phoneCheckMessage.textContent = "";
+    phoneCheckMessage.className = "signup-message";
+  });
+
 </script>
 </body>
 </html>
