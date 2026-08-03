@@ -60,4 +60,11 @@ public class ScheduleSeat {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public void hold() {
+        if (this.status != Status.AVAILABLE) {
+            throw new IllegalStateException("이미 선택되었거나 선점된 좌석입니다.");
+        }
+        this.status = Status.HELD;
+    }
 }

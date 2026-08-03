@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** 좌석 현황과 사용자 예매내역을 읽기 전용으로 제공합니다. */
 @Service
@@ -26,6 +28,11 @@ public class BookingQueryService {
                 .stream().map(SeatResponse::from).toList();
     }
 
+    public Map<String, List<SeatResponse>> findGroupedSeats(Long scheduleId) {
+        return findSeats(scheduleId).stream()
+                .collect(Collectors.groupingBy(SeatResponse::section));
+    }
+
     public Optional<ReservationResponse> findReservation(Long reservationId) {
         return reservationRepository.findById(reservationId).map(ReservationResponse::from);
     }
@@ -35,3 +42,5 @@ public class BookingQueryService {
                 .stream().map(ReservationResponse::from).toList();
     }
 }
+
+

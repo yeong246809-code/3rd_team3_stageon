@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Collections;
 import java.util.List;
 
 /** 회차 선택 이후 예매 단계 화면을 순서대로 연결합니다. */
@@ -25,7 +26,13 @@ public class BookingViewController {
     @GetMapping({"/booking/seats", "/seat-select"})
     public String seats(@RequestParam(required = false) Long scheduleId, Model model) {
         model.addAttribute("scheduleId", scheduleId);
-        model.addAttribute("seats", scheduleId == null ? List.of() : bookingQueryService.findSeats(scheduleId));
+
+        if (scheduleId == null) {
+            model.addAttribute("groupedSeats", Collections.emptyMap());
+        } else {
+            model.addAttribute("groupedSeats", bookingQueryService.findGroupedSeats(scheduleId));
+        }
+
         return "booking/seat-select";
     }
 
