@@ -76,4 +76,21 @@ public class Seat {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public static Seat create(SeatChart seatChart, SeatGrade seatGrade, ObjectType objectType,
+                              String sectionName, String rowLabel, String seatNumber,
+                              Integer capacity, boolean accessible, boolean blockedDefault) {
+        Seat s = new Seat();
+        s.seatChart = seatChart;
+        s.seatGrade = seatGrade;
+        s.objectType = objectType;
+        s.sectionName = sectionName;
+        s.rowLabel = rowLabel;
+        s.seatNumber = seatNumber;
+        s.capacity = capacity;
+        s.accessible = accessible;
+        s.blockedDefault = blockedDefault;
+        s.active = true;
+        return s;
+    }
 }

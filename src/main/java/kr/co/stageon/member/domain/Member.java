@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * 로그인 사용자와 관리자 계정을 나타냅니다.
- * 비밀번호 원문은 저장하지 않고 BCrypt 등으로 해시한 값만 저장해야 합니다.
+ * 비밀번호 원문은 저장하지 않고 암호화된 값만 저장합니다.
  */
 @Getter
 @Entity
@@ -17,8 +17,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
-    public enum Role { USER, ADMIN }
-    public enum Status { ACTIVE, INACTIVE, WITHDRAWN }
+    public enum Role {
+        USER,
+        ADMIN
+    }
+
+    public enum Status {
+        ACTIVE,
+        INACTIVE,
+        WITHDRAWN
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,9 +52,38 @@ public class Member {
     @Column(nullable = false, length = 20)
     private Status status;
 
-    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    @Column(
+            name = "created_at",
+            nullable = false,
+            insertable = false,
+            updatable = false
+    )
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+    @Column(
+            name = "updated_at",
+            nullable = false,
+            insertable = false,
+            updatable = false
+    )
     private LocalDateTime updatedAt;
+
+    // 일반 회원 생성
+    public static Member createUser(
+            String email,
+            String passwordHash,
+            String name,
+            String phone
+    ) {
+        Member member = new Member();
+
+        member.email = email;
+        member.passwordHash = passwordHash;
+        member.name = name;
+        member.phone = phone;
+        member.role = Role.USER;
+        member.status = Status.ACTIVE;
+
+        return member;
+    }
 }

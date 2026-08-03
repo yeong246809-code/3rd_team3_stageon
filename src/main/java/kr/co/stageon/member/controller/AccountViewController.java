@@ -1,4 +1,4 @@
-package kr.co.stageon.member.web;
+package kr.co.stageon.member.controller;
 
 import kr.co.stageon.booking.service.BookingQueryService;
 import lombok.RequiredArgsConstructor;

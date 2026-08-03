@@ -1,0 +1,89 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 좌석 일괄 생성</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>좌석 일괄 생성</h1>
+                    <p th:text="${hall.name} + '에 구역 단위로 좌석을 한 번에 생성합니다.'">홀에 좌석을 생성합니다.</p>
+                </div>
+            </header>
+
+            <section class="venue-form-card" th:if="${grades.isEmpty()}">
+                <p class="grade-card__subtitle">
+                    등록된 좌석 등급이 없습니다. 좌석 등급을 먼저 등록해주세요.
+                </p>
+                <div class="form-actions">
+                    <a class="btn--venue-add" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">등급 등록하러 가기</a>
+                </div>
+            </section>
+
+            <section class="venue-form-card" th:if="${!grades.isEmpty()}">
+                <form th:action="@{/admin/venues/halls/{hallId}/seats/bulk(hallId=${hall.id})}" th:object="${form}" method="post">
+                    <div class="admin-form-grid">
+                        <div>
+                            <label>좌석 등급<span class="required-mark">*</span></label>
+                            <select th:field="*{seatGradeId}" required>
+                                <option value="">-- 선택하세요 --</option>
+                                <option th:each="g : ${grades}" th:value="${g.id}" th:text="${g.name} + ' (' + ${g.seatCount} + '석)'">VIP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>구역명<span class="required-mark">*</span></label>
+                            <input type="text" th:field="*{sectionName}" placeholder="예: A" required>
+                        </div>
+                        <div>
+                            <label>시작 열 번호</label>
+                            <input type="number" min="1" th:field="*{startRowNumber}" placeholder="기본값 1">
+                        </div>
+                        <div>
+                            <label>열 수<span class="required-mark">*</span></label>
+                            <input type="number" min="1" th:field="*{rowCount}" placeholder="예: 10" required>
+                        </div>
+                        <div>
+                            <label>시작 좌석 번호</label>
+                            <input type="number" min="1" th:field="*{startSeatNumber}" placeholder="기본값 1">
+                        </div>
+                        <div>
+                            <label>열당 좌석 수<span class="required-mark">*</span></label>
+                            <input type="number" min="1" th:field="*{seatsPerRow}" placeholder="예: 20" required>
+                        </div>
+                    </div>
+                    <p style="font-size:12px;color:var(--subtle);margin-top:14px">
+                        예) 구역 A, 열 수 10, 열당 좌석 20 → A구역 1~10열 × 1~20번 = 200석이 한 번에 생성됩니다.
+                        이미 존재하는 구역·열·번호와 겹치면 저장되지 않습니다.
+                    </p>
+                    <div class="form-actions">
+                        <button class="btn--venue-add" type="submit">좌석 생성</button>
+                        <a class="btn--cancel" th:href="@{/admin/venues(hallId=${hall.id})}">완료(목록으로)</a>
+                    </div>
+                </form>
+
+                <div class="grade-preview">
+                    <h4>현재 등급별 좌석 수</h4>
+                    <div class="grade-preview__list">
+                <span class="grade-preview__item" th:each="g : ${grades}">
+                  <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
+                  <span th:text="${g.name} + ' ' + ${g.seatCount} + '석'">VIP 0석</span>
+                </span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

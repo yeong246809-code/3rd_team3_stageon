@@ -55,6 +55,7 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.redisson:redisson:3.27.0'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 dependencyManagement {
