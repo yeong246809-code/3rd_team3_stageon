@@ -21,4 +21,11 @@ public interface ScheduleSeatRepository extends JpaRepository<ScheduleSeat, Long
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select ss from ScheduleSeat ss where ss.id = :id")
     Optional<ScheduleSeat> findByIdForUpdate(@Param("id") Long id);
+
+    @Query("SELECT ss FROM ScheduleSeat ss " +
+            "JOIN FETCH ss.seat s " +
+            "JOIN FETCH s.seatGrade g " +
+            "WHERE ss.schedule.id = :scheduleId " +
+            "ORDER BY s.sectionName ASC, s.rowLabel ASC, CAST(s.seatNumber AS int) ASC")
+    List<ScheduleSeat> findWithSeatInfoByScheduleId(@Param("scheduleId") Long scheduleId);
 }

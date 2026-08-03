@@ -19,4 +19,7 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long> {
 
     /** 대시보드 - 아직 유효기간이 남은 선점 좌석(ACTIVE) 수 */
     long countByStatusAndExpiresAtAfter(SeatHold.Status status, LocalDateTime now);
+
+    //특정 회차에 유저가 선점/예매 완료한 좌석의 총개수를 반환
+    int countByMemberIdAndScheduleIdAndStatusIn(Long memberId, Long scheduleId, List<SeatHold.Status> statuses);
 }

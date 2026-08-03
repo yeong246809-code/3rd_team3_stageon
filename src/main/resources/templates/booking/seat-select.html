@@ -9,9 +9,12 @@
   </head>
   <body id="top">
     <div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
+    <div th:if="${errorMessage}" class="notice notice--danger" style="margin-bottom:18px">
+      <b th:text="${errorMessage}">에러 메시지</b>
+    </div>
     <main class="booking-page">
       <div class="shell booking-grid">
-        <!-- STEP 02: 회차별 좌석 상태와 임시 선점 -->
+
         <section>
           <header class="page-heading">
             <div class="cluster" style="justify-content:space-between">
@@ -25,44 +28,41 @@
               </div>
             </div>
           </header>
+
           <div class="notice notice--danger" style="margin-bottom:18px">
             <b>좌석 선택 충돌</b>
             · 다른 사용자가 먼저 선점한 좌석은 최신 상태 조회 후 선택할 수 있습니다.
           </div>
+
           <div class="card">
             <div class="seat-stage">STAGE</div>
-            <div class="seat-map" aria-label="좌석 배치도">
-              <div class="seat-row">
-                <button class="seat" aria-label="A구역 8열 9번"></button>
-                <button class="seat" aria-label="A구역 8열 10번"></button>
-                <button class="seat is-held" aria-label="선점된 좌석"></button>
-                <button class="seat"></button>
-                <button class="seat is-disabled" aria-label="선택 불가 좌석"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
+
+            <th:block th:each="section : ${groupedSeats}">
+
+              <h3 style="text-align: center; margin: 20px 0 10px; font-size: 1.1rem;" th:text="${section.key}">A구역</h3>
+
+              <div class="seat-map" aria-label="좌석 배치도">
+
+                <th:block th:with="uniqueRows=${#sets.toSet(section.value.![row])}">
+                  <div class="seat-row" th:each="rowLabel : ${#lists.sort(uniqueRows)}">
+
+                    <th:block th:each="seat : ${section.value}">
+                      <button th:if="${seat.row == rowLabel}"
+                              class="seat"
+                              th:classappend="${seat.status == 'HELD'} ? 'is-held' : (${seat.status != 'AVAILABLE'} ? 'is-disabled' : '')"
+                              th:style="${seat.status == 'AVAILABLE'} ? 'background-color: ' + ${seat.displayColor} : ''"
+                              th:attr="aria-label=${seat.row + '열 ' + seat.number + '번'}, data-seat-id=${seat.id}"
+                              th:disabled="${seat.status != 'AVAILABLE'}"
+                              onclick="selectSeat(this)">
+                      </button>
+                    </th:block>
+
+                  </div>
+                </th:block>
+
               </div>
-              <div class="seat-row">
-                <button class="seat"></button>
-                <button class="seat is-selected" aria-label="선택한 좌석"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat is-held"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-              </div>
-              <div class="seat-row">
-                <button class="seat is-disabled"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat"></button>
-                <button class="seat is-disabled"></button>
-              </div>
-            </div>
+            </th:block>
+
             <div class="seat-legend cluster" style="justify-content:center;margin-top:26px">
               <span><i class="status-dot available"></i>선택 가능</span>
               <span><i class="status-dot held"></i>임시 선점</span>
@@ -71,11 +71,68 @@
             </div>
           </div>
         </section>
+
         <aside class="stack">
           <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
-          <a class="btn btn--primary btn--wide" th:href="@{/order-review}" href="/order-review">선택 좌석 선점하고 주문 확인</a>
+
+          <form id="holdForm" action="/booking/seats/hold" method="post" style="width: 100%;">
+            <input type="hidden" name="memberId" value="1"> <input type="hidden" name="scheduleId" th:value="${scheduleId}">
+            <input type="hidden" id="hiddenSeatId" name="scheduleSeatId" value="">
+
+            <button type="button" class="btn btn--primary btn--wide" onclick="submitHold()">선택 좌석 선점하고 주문 확인</button>
+          </form>
         </aside>
+
       </div>
+
+      <script>
+        let selectedSeatId = null;
+
+        function selectSeat(button) {
+          // 1. 기존에 선택된 좌석이 있다면 'is-selected' 클래스 제거
+          document.querySelectorAll('.seat.is-selected').forEach(btn => {
+            btn.classList.remove('is-selected');
+          });
+
+          // 2. 새로 클릭한 좌석에 'is-selected' 클래스 추가 (테두리 효과 등)
+          button.classList.add('is-selected');
+
+          // 3. 선택한 좌석 ID 저장 및 hidden input에 세팅
+          selectedSeatId = button.getAttribute('data-seat-id');
+          document.getElementById('hiddenSeatId').value = selectedSeatId;
+        }
+
+        function submitHold() {
+          if (!selectedSeatId) {
+            alert('좌석을 먼저 선택해주세요.');
+            return;
+          }
+          // 동시성 제어 락(Lock)을 처리할 백엔드 API 호출!
+          document.getElementById('holdForm').submit();
+        }
+
+        window.onload = function () {
+          let time = 600; // 10분 = 600초
+          let timerElement = document.querySelector('.timer');
+
+          let interval = setInterval(function () {
+            let minutes = Math.floor(time / 60);
+            let seconds = time % 60;
+
+            // 00:00 포맷 맞추기
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            timerElement.textContent = minutes + ":" + seconds;
+
+            if (--time < 0) {
+              clearInterval(interval);
+              alert("시간이 초과되었습니다. 좌석을 다시 선택해 주세요.");
+              window.location.reload(); // 페이지 새로고침
+            }
+          }, 1000); // 1초마다 실행
+        };
+      </script>
     </main>
   </body>
 </html>

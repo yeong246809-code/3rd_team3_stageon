@@ -71,7 +71,7 @@ public class RedisWaitingQueueService {
     }
 
     // 3. 스케줄러: 5초마다 10명씩 자동 입장 처리
-    @Scheduled(fixedDelay = 5000)
+    //@Scheduled(fixedDelay = 5000)
     public void processQueueAutomatically() {
         Long scheduleId = 1L; // 테스트용 회차
         String waitingKey = "queue:schedule:" + scheduleId + ":waiting";

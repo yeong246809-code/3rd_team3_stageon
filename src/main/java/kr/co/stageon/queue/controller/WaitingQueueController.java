@@ -25,7 +25,7 @@ public class WaitingQueueController {
     ) {
         QueueInfoResponse queueInfo = queueService.getQueueInfo(performanceId, scheduleId, queueToken);
 
-        model.addAttribute("queueInfo", queueInfo);
+       model.addAttribute("queueInfo", queueInfo);
 
         return "/booking/queue";
     }

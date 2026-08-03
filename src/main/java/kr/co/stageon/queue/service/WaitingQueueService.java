@@ -58,7 +58,7 @@ public class WaitingQueueService {
     }
 
     // 5초마다 딱 한 번 DB에 접근해서 10명을 통째로 입장 처리합니다.
-    @Scheduled(fixedDelay = 1000)
+    //@Scheduled(fixedDelay = 1000)
     @Transactional
     public void processQueueAutomatically() {
         Long scheduleId = 1L; // 테스트용 1번 회차 고정
