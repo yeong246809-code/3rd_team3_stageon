@@ -1,0 +1,212 @@
+/* 공연장·좌석 관리 전용 스타일입니다. tokens.css의 CSS 변수를 그대로 사용합니다. */
+
+/* 상단 통계 카드 3개 */
+.stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 22px; }
+@media (max-width: 900px) { .stat-row { grid-template-columns: 1fr; } }
+
+.stat-card {
+    background: var(--canvas);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.stat-card--highlight {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+}
+.stat-card__label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.stat-card--highlight .stat-card__label { color: var(--brand-dark); }
+.stat-card__value { font-size: 32px; font-weight: 800; color: var(--ink); }
+.stat-card--highlight .stat-card__value { color: var(--brand); }
+
+/* 좌: 공연장 구조 테이블 / 우: 안내 패널 */
+.structure-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 1000px) { .structure-layout { grid-template-columns: 1fr; } }
+
+.structure-card {
+    background: var(--canvas);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+}
+.structure-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.structure-card__head h2 { font-size: 18px; font-weight: 800; color: var(--ink); margin: 0; }
+
+.structure-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.structure-table th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    color: var(--muted);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+.structure-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+}
+.structure-table tbody tr:hover { background: var(--surface); }
+.structure-table tbody tr.is-selected { background: var(--brand-soft); }
+.structure-table .cell-title { font-weight: 700; }
+
+.row-link {
+    color: var(--info);
+    font-weight: 600;
+    text-decoration: none;
+}
+.row-link:hover { text-decoration: underline; }
+
+.badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.badge--complete { background: var(--success-soft); color: var(--success); }
+.badge--pending { background: var(--warning-soft); color: var(--warning); }
+
+.btn-mini {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    transition: all .15s ease;
+}
+.btn-mini:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+.grade-preview { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.grade-preview h4 { margin: 0 0 12px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.grade-preview__list { display: flex; flex-wrap: wrap; gap: 10px; }
+.grade-preview__item {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    font-size: 13px; font-weight: 600; color: var(--ink);
+}
+
+/* 사이드 패널 */
+.side-stack { display: flex; flex-direction: column; gap: 18px; }
+.side-card {
+    background: var(--canvas);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+}
+.side-card h3 { font-size: 15px; font-weight: 800; color: var(--ink); margin: 0 0 14px; }
+.side-card--info {
+    background: #eef4ff;
+    border-color: #dbe7ff;
+}
+.side-card--info h3 { color: var(--info); }
+.side-card--info p { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin: 0; }
+
+.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.step-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); font-weight: 600; }
+.step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--sidebar);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.step-list li:first-child .step-num { background: var(--brand); }
+
+.venue-empty { padding: 30px 10px; text-align: center; color: var(--subtle); font-size: 14px; }
+
+/* 좌석 등급 상세 카드 (홀 선택 시) */
+.grade-card {
+    background: var(--canvas);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    margin-top: 20px;
+}
+.grade-card__title { font-size: 18px; font-weight: 800; color: var(--ink); }
+.grade-card__subtitle { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+.grade-table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 14px; }
+.grade-table th {
+    text-align: left; padding: 12px 14px; font-size: 12px; font-weight: 700;
+    letter-spacing: .03em; color: var(--muted); background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+.grade-table td { padding: 14px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.grade-table tbody tr:last-child td { border-bottom: none; }
+.grade-table tbody tr:hover { background: var(--surface); }
+
+.grade-name { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.grade-swatch { display: inline-block; width: 16px; height: 16px; border-radius: 5px; border: 1px solid rgba(0,0,0,.06); }
+.grade-count {
+    display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px;
+    background: var(--surface-2); font-weight: 700; font-size: 13px; color: var(--ink-2);
+}
+
+/* 공연장 추가 버튼 */
+.btn--venue-add {
+    background: linear-gradient(90deg, var(--brand), var(--brand-dark));
+    color: #fff;
+    border: none;
+    padding: 12px 22px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    box-shadow: 0 6px 16px rgba(229, 72, 63, .25);
+    transition: all .15s ease;
+}
+.btn--venue-add:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+/* 공연장 추가 폼 */
+.venue-form-card {
+    background: var(--canvas);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+}
+.venue-form-card .admin-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.venue-form-card label { display: block; font-size: 13px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+.venue-form-card input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--surface);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.venue-form-card input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px var(--brand-soft);
+    background: var(--canvas);
+}
+@media (max-width: 800px) { .venue-form-card .admin-form-grid { grid-template-columns: 1fr; } }
+
+.form-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 26px; }
+.form-actions .btn--venue-add { width: 100%; justify-content: center; text-align: center; cursor: pointer; }
+.form-actions .btn--cancel {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--line);
+    background: var(--canvas);
+    color: var(--ink-2);
+    font-weight: 700;
+    text-decoration: none;
+    transition: all .15s ease;
+}
+.form-actions .btn--cancel:hover { background: var(--surface); }

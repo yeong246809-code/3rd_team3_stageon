@@ -36,4 +36,13 @@ public class SeatGrade {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public static SeatGrade create(SeatChart seatChart, String name, String displayColor, Integer sortOrder) {
+        SeatGrade g = new SeatGrade();
+        g.seatChart = seatChart;
+        g.name = name;
+        g.displayColor = displayColor;
+        g.sortOrder = sortOrder;
+        return g;
+    }
 }

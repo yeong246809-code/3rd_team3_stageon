@@ -8,4 +8,6 @@ import java.util.List;
 /** 물리 좌석 배치 DAO입니다. */
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     List<Seat> findBySeatChartIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(Long seatChartId);
+    long countBySeatGradeIdAndActiveTrue(Long seatGradeId);
+    long countByActiveTrue();
 }

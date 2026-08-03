@@ -54,8 +54,7 @@ public class AdminViewController {
         return "admin/performance-form";
     }
 
-    @GetMapping("/admin/venues")
-    public String venues() { return "admin/venue-seats"; }
+    // "/admin/venues" 관련 GET·POST 매핑은 AdminVenueController로 이동했습니다.
 
     @GetMapping("/admin/schedules")
     public String schedules() { return "admin/schedules"; }
