@@ -1,69 +1,134 @@
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn Admin | 공연장·좌석 관리</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
-  </head>
-  <body>
-    <div class="admin-page">
-      <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
-      <main class="admin-main">
-        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
-        <div class="admin-content">
-          <header class="admin-title">
-            <div>
-              <h1>공연장·좌석 관리</h1>
-              <p>공연장 구역, 좌석 번호와 등급을 관리합니다.</p>
-            </div>
-            <button class="btn btn--dark" type="button">공연장 추가</button>
-          </header>
-          <div class="admin-grid">
-            <section class="card">
-              <h2>블루스퀘어 신한카드홀</h2>
-              <p class="section-copy">서울 용산구 · 총 1,766석</p>
-              <div class="stack" style="margin-top:22px">
-                <button class="btn" type="button">1층 A구역 · 482석</button>
-                <button class="btn" type="button">1층 B구역 · 436석</button>
-                <button class="btn" type="button">2층 C구역 · 848석</button>
-              </div>
-            </section>
-            <section class="card">
-              <h2>좌석 등급·가격</h2>
-              <div class="table-wrap" style="margin-top:18px">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>등급</th>
-                      <th>좌석 수</th>
-                      <th>기본 가격</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>VIP</td>
-                      <td>420</td>
-                      <td>160,000원</td>
-                    </tr>
-                    <tr>
-                      <td>R</td>
-                      <td>610</td>
-                      <td>130,000원</td>
-                    </tr>
-                    <tr>
-                      <td>S</td>
-                      <td>736</td>
-                      <td>100,000원</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StageOn Admin | 공연장·좌석 관리</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+  <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+  <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+</head>
+<body>
+<div class="admin-page">
+  <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+  <main class="admin-main">
+    <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+    <div class="admin-content">
+      <header class="admin-title">
+        <div>
+          <h1>공연장·좌석도</h1>
+          <p>층·구역·좌석 구조와 접근성 좌석을 관리합니다.</p>
         </div>
-      </main>
+        <a class="btn--venue-add" th:href="@{/admin/venues/new}">공연장 추가</a>
+      </header>
+
+      <div class="stat-row">
+        <div class="stat-card stat-card--highlight">
+          <span class="stat-card__label">공연장</span>
+          <span class="stat-card__value" th:text="${dashboard.venueCount}">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__label">전체 홀</span>
+          <span class="stat-card__value" th:text="${dashboard.hallCount}">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__label">전체 좌석</span>
+          <span class="stat-card__value" th:text="${#numbers.formatInteger(dashboard.totalSeatCount, 0, 'COMMA')}">0</span>
+        </div>
+      </div>
+
+      <div class="structure-layout">
+        <section class="structure-card">
+          <div class="structure-card__head">
+            <h2>공연장 구조</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="structure-table">
+              <thead>
+              <tr>
+                <th>공연장</th>
+                <th>홀</th>
+                <th>등급 구성</th>
+                <th>좌석도 상태</th>
+                <th>관리</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="row : ${dashboard.rows}"
+                  th:classappend="${row.hallId == selectedHallId} ? ' is-selected' : ''">
+                <td class="cell-title" th:text="${row.venueName}">공연장명</td>
+                <td>
+                  <a class="row-link" th:if="${row.hallId != null}" th:text="${row.hallName}"
+                     th:href="@{/admin/venues(hallId=${row.hallId})}">홀명</a>
+                  <span th:if="${row.hallId == null}" style="color:var(--subtle)" th:text="${row.hallName}">홀 미등록</span>
+                </td>
+                <td th:text="${row.gradeSummary}">VIP·R·S</td>
+                <td>
+                        <span th:if="${row.hallId != null}" class="badge"
+                              th:classappend="${row.configured} ? 'badge--complete' : 'badge--pending'"
+                              th:text="${row.configured} ? '설정완료' : '미설정'">상태</span>
+                  <span th:if="${row.hallId == null}" class="badge badge--pending">미등록</span>
+                </td>
+                <td>
+                  <a th:if="${row.hallId == null}" class="btn-mini"
+                     th:href="@{/admin/venues/{venueId}/halls/new(venueId=${row.venueId})}">+ 홀 추가</a>
+                  <a th:if="${row.hallId != null}" class="btn-mini"
+                     th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${row.hallId})}">+ 등급 추가</a>
+                </td>
+              </tr>
+              <tr th:if="${dashboard.rows.isEmpty()}">
+                <td colspan="5" class="venue-empty">등록된 공연장·홀이 없습니다.</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="side-stack">
+          <section class="side-card">
+            <h3>좌석도 설정 순서</h3>
+            <ol class="step-list">
+              <li><span class="step-num">1</span>공연장 등록</li>
+              <li><span class="step-num">2</span>홀·좌석도 등록</li>
+              <li><span class="step-num">3</span>좌석 등급 지정</li>
+              <li><span class="step-num">4</span>좌석 배치 확인</li>
+            </ol>
+          </section>
+          <section class="side-card side-card--info">
+            <h3>운영 안내</h3>
+            <p>좌석도 변경은 이미 판매된 회차에 영향을 줄 수 있으므로 적용 범위를 반드시 확인하세요.</p>
+          </section>
+        </aside>
+      </div>
+
+      <section class="grade-card" th:if="${selectedHallId != null}">
+        <div class="grade-card__title">선택한 홀의 좌석 등급</div>
+        <p class="grade-card__subtitle" th:if="${grades.isEmpty()}">
+          등록된 좌석 등급이 없습니다. 좌석도(seat_chart)와 등급(seat_grade) 데이터를 먼저 등록해주세요.
+        </p>
+        <table class="grade-table" th:if="${!grades.isEmpty()}">
+          <thead>
+          <tr>
+            <th>등급</th>
+            <th>좌석 수</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="g : ${grades}">
+            <td>
+                    <span class="grade-name">
+                      <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
+                      <span th:text="${g.name}">VIP</span>
+                    </span>
+            </td>
+            <td><span class="grade-count" th:text="${g.seatCount} + '석'">0석</span></td>
+          </tr>
+          </tbody>
+        </table>
+      </section>
     </div>
-  </body>
+  </main>
+</div>
+</body>
 </html>

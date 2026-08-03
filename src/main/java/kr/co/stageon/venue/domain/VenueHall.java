@@ -48,4 +48,16 @@ public class VenueHall {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public static VenueHall create(Venue venue, String kopisHallId, String name,
+                                   Integer seatCapacity, Integer accessibleSeatCount) {
+        VenueHall h = new VenueHall();
+        h.venue = venue;
+        h.kopisHallId = kopisHallId;
+        h.name = name;
+        h.seatCapacity = seatCapacity;
+        h.accessibleSeatCount = accessibleSeatCount;
+        h.active = true;
+        return h;
+    }
 }

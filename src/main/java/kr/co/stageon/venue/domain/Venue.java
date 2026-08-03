@@ -48,4 +48,18 @@ public class Venue {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public static Venue create(String kopisFacilityId, String name, String address, String region,
+                               BigDecimal latitude, BigDecimal longitude, String phone, String homepageUrl) {
+        Venue v = new Venue();
+        v.kopisFacilityId = kopisFacilityId;
+        v.name = name;
+        v.address = address;
+        v.region = region;
+        v.latitude = latitude;
+        v.longitude = longitude;
+        v.phone = phone;
+        v.homepageUrl = homepageUrl;
+        return v;
+    }
 }

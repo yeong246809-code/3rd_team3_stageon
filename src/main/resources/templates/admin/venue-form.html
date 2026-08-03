@@ -1,0 +1,63 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 공연장 추가</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>공연장 추가</h1>
+                    <p>새 공연장(시설) 기본 정보를 등록합니다.</p>
+                </div>
+            </header>
+
+            <section class="venue-form-card">
+                <form th:action="@{/admin/venues}" th:object="${form}" method="post">
+                    <div class="admin-form-grid">
+                        <div>
+                            <label>공연장명<span class="required-mark">*</span></label>
+                            <input type="text" th:field="*{name}" required>
+                        </div>
+                        <div>
+                            <label>지역<span class="required-mark">*</span></label>
+                            <input type="text" th:field="*{region}" required>
+                        </div>
+                        <div>
+                            <label>주소<span class="required-mark">*</span></label>
+                            <input type="text" th:field="*{address}" required>
+                        </div>
+                        <div>
+                            <label>전화번호</label>
+                            <input type="text" th:field="*{phone}">
+                        </div>
+                        <div>
+                            <label>홈페이지 URL</label>
+                            <input type="text" th:field="*{homepageUrl}">
+                        </div>
+                        <div>
+                            <label>KOPIS 시설 ID</label>
+                            <input type="text" th:field="*{kopisFacilityId}">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn--venue-add" type="submit">저장</button>
+                        <a class="btn--cancel" th:href="@{/admin/venues}">취소</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -45,4 +45,13 @@ public class SeatChart {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public static SeatChart create(VenueHall venueHall, String name, Integer version) {
+        SeatChart c = new SeatChart();
+        c.venueHall = venueHall;
+        c.name = name;
+        c.version = version;
+        c.active = true;
+        return c;
+    }
 }
