@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -65,7 +66,6 @@
               <tr th:each="row : ${dashboard.rows}">
                 <td class="cell-title">
                   <span th:text="${row.venueName}">공연장명</span>
-                  <a class="edit-link" th:href="@{/admin/venues/{venueId}/edit(venueId=${row.venueId})}">수정</a>
                 </td>
                 <td>
                   <a class="row-link" th:if="${row.hallId != null}" th:text="${row.hallName}"
@@ -74,15 +74,15 @@
                 </td>
                 <td th:text="${row.gradeSummary}">VIP·R·S</td>
                 <td>
-                        <span th:if="${row.hallId != null}" class="badge"
-                              th:classappend="${row.configured} ? 'badge--complete' : 'badge--pending'"
+                        <span th:if="${row.hallId != null}" class="status-badge"
+                              th:classappend="${row.configured} ? 'status-badge--complete' : 'status-badge--pending'"
                               th:text="${row.configured} ? '설정완료' : '미설정'">상태</span>
-                  <span th:if="${row.hallId == null}" class="badge badge--pending">미등록</span>
+                  <span th:if="${row.hallId == null}" class="status-badge status-badge--pending">미등록</span>
                 </td>
                 <td class="action-cell">
                   <a th:if="${row.hallId == null}" class="btn-mini"
                      th:href="@{/admin/venues/{venueId}/halls/new(venueId=${row.venueId})}">+ 홀 추가</a>
-                  <span th:if="${row.hallId != null}" aria-hidden="true">&nbsp;</span>
+                  <a class="edit-link" th:href="@{/admin/venues/{venueId}/edit(venueId=${row.venueId})}">수정</a>
                 </td>
               </tr>
               <tr th:if="${dashboard.rows.isEmpty()}">
