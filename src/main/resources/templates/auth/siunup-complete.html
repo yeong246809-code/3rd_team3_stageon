@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn | 회원가입 완료</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/app.css}"
+          href="/css/app.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/pages/public-pages.css}"
+          href="/css/pages/public-pages.css">
+</head>
+<body>
+
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+<main class="public-page">
+    <section class="public-card">
+        <h1>회원가입이 완료되었습니다.</h1>
+
+        <p>
+            StageOn 회원이 되신 것을 환영합니다.
+            로그인 후 공연 예매 서비스를 이용할 수 있습니다.
+        </p>
+
+        <a th:href="@{/login}"
+           href="/login">
+            로그인하기
+        </a>
+    </section>
+</main>
+
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+
+</body>
+</html>
