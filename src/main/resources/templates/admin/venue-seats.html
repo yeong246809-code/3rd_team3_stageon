@@ -45,6 +45,13 @@
           </div>
           <div class="table-wrap">
             <table class="structure-table">
+              <colgroup>
+                <col style="width:22%">
+                <col style="width:18%">
+                <col style="width:20%">
+                <col style="width:16%">
+                <col style="width:24%">
+              </colgroup>
               <thead>
               <tr>
                 <th>공연장</th>
@@ -55,14 +62,15 @@
               </tr>
               </thead>
               <tbody>
-              <tr th:each="row : ${dashboard.rows}"
-                  th:classappend="${row.hallId == selectedHallId} ? ' is-selected' : ''"
-                  th:attrappend="data-hall-href=${row.hallId != null} ? @{/admin/venues(hallId=${row.hallId})} : null">
-                <td class="cell-title" th:text="${row.venueName}">공연장명</td>
+              <tr th:each="row : ${dashboard.rows}">
+                <td class="cell-title">
+                  <span th:text="${row.venueName}">공연장명</span>
+                  <a class="edit-link" th:href="@{/admin/venues/{venueId}/edit(venueId=${row.venueId})}">수정</a>
+                </td>
                 <td>
                   <a class="row-link" th:if="${row.hallId != null}" th:text="${row.hallName}"
-                     th:href="@{/admin/venues(hallId=${row.hallId})}">홀명</a>
-                  <span th:if="${row.hallId == null}" style="color:var(--subtle)" th:text="${row.hallName}">홀 미등록</span>
+                     th:href="@{/admin/venues/halls/{hallId}(hallId=${row.hallId})}">홀명</a>
+                  <span th:if="${row.hallId == null}" class="text-warn" th:text="${row.hallName}">홀 미등록</span>
                 </td>
                 <td th:text="${row.gradeSummary}">VIP·R·S</td>
                 <td>
@@ -72,30 +80,9 @@
                   <span th:if="${row.hallId == null}" class="badge badge--pending">미등록</span>
                 </td>
                 <td class="action-cell">
-                  <a class="btn-mini" th:href="@{/admin/venues/{venueId}/edit(venueId=${row.venueId})}">수정</a>
                   <a th:if="${row.hallId == null}" class="btn-mini"
                      th:href="@{/admin/venues/{venueId}/halls/new(venueId=${row.venueId})}">+ 홀 추가</a>
-                  <a th:if="${row.hallId != null}" class="btn-mini"
-                     th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${row.hallId})}">+ 등급 추가</a>
-                  <a th:if="${row.configured}" class="btn-mini"
-                     th:href="@{/admin/venues/halls/{hallId}/seats/bulk-new(hallId=${row.hallId})}">+ 좌석 생성</a>
-
-                  <form th:if="${row.hallId != null}"
-                        th:action="@{/admin/venues/halls/{hallId}/delete(hallId=${row.hallId})}"
-                        method="post" style="display:inline">
-                    <button type="submit" class="btn-mini btn-mini--danger"
-                            onclick="return confirm('이 홀을 삭제하면 등록된 좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?');">
-                      홀 삭제
-                    </button>
-                  </form>
-
-                  <form th:action="@{/admin/venues/{venueId}/delete(venueId=${row.venueId})}"
-                        method="post" style="display:inline">
-                    <button type="submit" class="btn-mini btn-mini--danger"
-                            onclick="return confirm('이 공연장을 삭제하면 등록된 홀·좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?');">
-                      공연장 삭제
-                    </button>
-                  </form>
+                  <span th:if="${row.hallId != null}" aria-hidden="true">&nbsp;</span>
                 </td>
               </tr>
               <tr th:if="${dashboard.rows.isEmpty()}">
@@ -105,15 +92,6 @@
             </table>
           </div>
         </section>
-
-        <script>
-          document.querySelectorAll('.structure-table tbody tr[data-hall-href]').forEach(function (tr) {
-            tr.addEventListener('click', function (e) {
-              if (e.target.closest('a, button, form')) return;
-              window.location.href = tr.getAttribute('data-hall-href');
-            });
-          });
-        </script>
 
         <aside class="side-stack">
           <section class="side-card">
@@ -127,36 +105,10 @@
           </section>
           <section class="side-card side-card--info">
             <h3>운영 안내</h3>
-            <p>좌석도 변경은 이미 판매된 회차에 영향을 줄 수 있으므로 적용 범위를 반드시 확인하세요.</p>
+            <p>홀 이름을 누르면 등급·좌석 관리를 한 곳에서 할 수 있는 상세 페이지로 이동합니다. 공연장 삭제는 "수정" 화면 안에서 할 수 있습니다.</p>
           </section>
         </aside>
       </div>
-
-      <section class="grade-card" th:if="${selectedHallId != null}">
-        <div class="grade-card__title">선택한 홀의 좌석 등급</div>
-        <p class="grade-card__subtitle" th:if="${grades.isEmpty()}">
-          등록된 좌석 등급이 없습니다. "등급 추가" 버튼으로 먼저 등록해주세요.
-        </p>
-        <table class="grade-table" th:if="${!grades.isEmpty()}">
-          <thead>
-          <tr>
-            <th>등급</th>
-            <th>좌석 수</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr th:each="g : ${grades}">
-            <td>
-                    <span class="grade-name">
-                      <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
-                      <span th:text="${g.name}">VIP</span>
-                    </span>
-            </td>
-            <td><span class="grade-count" th:text="${g.seatCount} + '석'">0석</span></td>
-          </tr>
-          </tbody>
-        </table>
-      </section>
     </div>
   </main>
 </div>
