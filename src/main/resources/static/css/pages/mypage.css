@@ -1,0 +1,600 @@
+/* 마이페이지 */
+.mypage-page {
+    min-height: 680px;
+    padding: 44px 0 76px;
+    background: #fff;
+}
+
+.mypage-shell {
+    width: min(calc(100% - 40px), 1180px);
+    margin: 0 auto;
+}
+
+.mypage-heading {
+    margin-bottom: 26px;
+}
+
+.mypage-heading h1 {
+    margin: 0;
+    color: #161d2b;
+    font-size: 34px;
+    font-weight: 850;
+    letter-spacing: -0.04em;
+}
+
+.mypage-heading p {
+    margin: 8px 0 0;
+    color: #8a929f;
+    font-size: 14px;
+}
+
+.mypage-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+}
+
+/* 공통 사이드 메뉴 */
+.mypage-sidebar {
+    overflow: hidden;
+    border: 1px solid #dfe3e9;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.mypage-sidebar__heading {
+    padding: 22px 20px 17px;
+    border-bottom: 1px solid #edf0f3;
+}
+
+.mypage-sidebar__heading strong {
+    display: block;
+    color: #202735;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.mypage-sidebar__heading span {
+    display: block;
+    margin-top: 5px;
+    color: #a0a7b2;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.mypage-sidebar__nav {
+    display: grid;
+    padding: 8px 0 12px;
+}
+
+.mypage-sidebar__nav a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 0 22px;
+    color: #4f5867;
+    font-size: 13px;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.mypage-sidebar__nav a:hover {
+    background: #fff7f8;
+    color: #e61e2a;
+}
+
+.mypage-sidebar__nav a.is-active {
+    background: #fff4f5;
+    color: #e61e2a;
+    font-weight: 800;
+}
+
+.mypage-sidebar__nav a.is-active::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: #e61e2a;
+}
+
+.mypage-content {
+    min-width: 0;
+}
+
+.mypage-summary {
+    display: grid;
+    grid-template-columns: 1.25fr repeat(3, 1fr);
+    gap: 14px;
+}
+
+.mypage-summary__member,
+.mypage-summary__card {
+    min-height: 104px;
+    padding: 20px 22px;
+    border: 1px solid #dfe3e9;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.mypage-summary__member p,
+.mypage-summary__card span {
+    margin: 0;
+    color: #687282;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.mypage-summary__member strong {
+    display: block;
+    margin-top: 11px;
+    color: #1d2533;
+    font-size: 18px;
+    font-weight: 850;
+}
+
+.mypage-summary__member span {
+    display: block;
+    margin-top: 4px;
+    overflow: hidden;
+    color: #969da8;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mypage-summary__card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: inherit;
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.mypage-summary__card:hover {
+    border-color: #f0aab0;
+    transform: translateY(-2px);
+}
+
+.mypage-summary__card strong {
+    color: #202735;
+    font-size: 20px;
+    font-weight: 850;
+}
+
+.mypage-summary__card small {
+    font-size: 12px;
+}
+
+.mypage-section,
+.mypage-activity,
+.mypage-recommendations {
+    margin-top: 18px;
+    border: 1px solid #dfe3e9;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.mypage-section {
+    padding: 26px;
+}
+
+.mypage-section__heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.mypage-section__heading h2 {
+    margin: 0;
+    color: #1b2331;
+    font-size: 20px;
+    font-weight: 850;
+}
+
+.mypage-section__heading p {
+    margin: 7px 0 0;
+    color: #8b939f;
+    font-size: 12px;
+}
+
+.mypage-section__heading > a {
+    color: #525d6e;
+    font-size: 12px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.mypage-section__heading > a::after {
+    content: " ›";
+    color: #e61e2a;
+}
+
+.mypage-reservation-list {
+    display: grid;
+    gap: 11px;
+    margin-top: 18px;
+}
+
+.mypage-reservation-card {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) 24px;
+    gap: 16px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #e1e5ea;
+    border-radius: 9px;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.mypage-reservation-card:hover {
+    border-color: #ef9ea6;
+    box-shadow: 0 8px 24px rgba(20, 27, 40, 0.06);
+}
+
+.mypage-ticket-mark {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    width: 72px;
+    height: 96px;
+    padding: 12px 9px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #e61e2a, #b90011);
+    color: #fff;
+}
+
+.mypage-ticket-mark span {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.mypage-ticket-mark strong {
+    font-size: 17px;
+    line-height: 1;
+}
+
+.mypage-reservation-card__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mypage-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #fff0f1;
+    color: #e61e2a;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.mypage-status--pending {
+    background: #fff6db;
+    color: #a16c00;
+}
+
+.mypage-status--cancelled {
+    background: #eff1f4;
+    color: #777f8b;
+}
+
+.mypage-booking-number {
+    color: #9aa1ac;
+    font-size: 10px;
+}
+
+.mypage-reservation-card h3 {
+    margin: 10px 0 5px;
+    color: #1e2634;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.mypage-reservation-card p {
+    margin: 0;
+    color: #6f7887;
+    font-size: 12px;
+}
+
+.mypage-price {
+    display: block;
+    margin-top: 8px;
+    color: #313b4b;
+    font-size: 12px;
+}
+
+.mypage-card-arrow {
+    color: #aab0ba;
+    font-size: 26px;
+}
+
+.mypage-empty {
+    display: grid;
+    justify-items: center;
+    padding: 48px 20px 36px;
+    text-align: center;
+}
+
+.mypage-empty__icon {
+    margin-bottom: 14px;
+    font-size: 34px;
+}
+
+.mypage-empty strong {
+    color: #333c4b;
+    font-size: 16px;
+}
+
+.mypage-empty p {
+    margin: 8px 0 18px;
+    color: #8c949f;
+    font-size: 12px;
+}
+
+.mypage-empty a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 18px;
+    border-radius: 7px;
+    background: #e61e2a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.mypage-activity {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 76px;
+    padding: 0 22px;
+}
+
+.mypage-activity span {
+    color: #8c949f;
+    font-size: 11px;
+}
+
+.mypage-activity strong {
+    display: block;
+    margin-top: 6px;
+    color: #303949;
+    font-size: 13px;
+}
+
+.mypage-activity a {
+    color: #3d70cf;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.mypage-recommendations {
+    padding: 28px 22px 24px;
+    background: #f7f8fa;
+}
+
+.mypage-recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.mypage-recommendation-grid > a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.mypage-poster {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border: 1px solid #ef5b68;
+    border-radius: 5px;
+    color: #fff;
+    text-align: center;
+}
+
+.mypage-poster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.35));
+}
+
+.mypage-poster span {
+    position: absolute;
+    z-index: 1;
+    top: 6px;
+    left: 6px;
+    padding: 3px 5px;
+    border-radius: 3px;
+    background: #e61e2a;
+    font-size: 7px;
+    font-weight: 800;
+}
+
+.mypage-poster strong {
+    position: relative;
+    z-index: 1;
+    max-width: 85%;
+    font-family: Georgia, serif;
+    font-size: 20px;
+}
+
+.mypage-poster--one {
+    background:
+            radial-gradient(circle at 50% 20%, #1458a7, transparent 35%),
+            linear-gradient(145deg, #0e1422, #9e101c);
+}
+
+.mypage-poster--two {
+    background: linear-gradient(150deg, #15182a, #46282c, #101521);
+}
+
+.mypage-poster--three {
+    background: linear-gradient(145deg, #c5a75a, #151515 55%, #806722);
+}
+
+.mypage-poster--four {
+    background:
+            radial-gradient(circle at 65% 20%, #e4ba78, transparent 35%),
+            linear-gradient(160deg, #17120f, #7a3c20);
+}
+
+.mypage-recommendation-grid small {
+    display: block;
+    margin-top: 8px;
+    color: #e61e2a;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.mypage-recommendation-grid h3 {
+    margin: 4px 0 0;
+    color: #252e3d;
+    font-size: 13px;
+}
+
+.mypage-recommendation-grid p {
+    margin: 4px 0 0;
+    color: #8b929d;
+    font-size: 10px;
+}
+
+/* 준비 중 화면 */
+.mypage-coming-soon {
+    display: grid;
+    justify-items: center;
+    min-height: 420px;
+    padding: 80px 24px;
+    border: 1px solid #dfe3e9;
+    border-radius: 11px;
+    background: #fff;
+    text-align: center;
+}
+
+.mypage-coming-soon > span {
+    color: #e61e2a;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.16em;
+}
+
+.mypage-coming-soon h2 {
+    margin: 14px 0 0;
+    color: #202938;
+    font-size: 26px;
+}
+
+.mypage-coming-soon p {
+    margin: 11px 0 22px;
+    color: #858e9b;
+    font-size: 13px;
+}
+
+.mypage-coming-soon a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 22px;
+    border-radius: 7px;
+    background: #e61e2a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+@media (max-width: 920px) {
+    .mypage-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .mypage-sidebar__nav {
+        grid-template-columns: repeat(3, 1fr);
+        padding: 8px;
+    }
+
+    .mypage-sidebar__nav a {
+        justify-content: center;
+        padding: 0 8px;
+    }
+
+    .mypage-sidebar__nav a.is-active::before {
+        top: auto;
+        right: 12px;
+        bottom: 0;
+        left: 12px;
+        width: auto;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+    }
+
+    .mypage-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 680px) {
+    .mypage-page {
+        padding-top: 28px;
+    }
+
+    .mypage-shell {
+        width: min(calc(100% - 24px), 1180px);
+    }
+
+    .mypage-sidebar__nav {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .mypage-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .mypage-recommendation-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mypage-reservation-card {
+        grid-template-columns: 58px minmax(0, 1fr);
+    }
+
+    .mypage-ticket-mark {
+        width: 58px;
+        height: 82px;
+    }
+
+    .mypage-card-arrow {
+        display: none;
+    }
+
+    .mypage-activity {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+        padding: 18px;
+    }
+}

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<aside th:fragment="sidebar(activeMenu)"
+       class="mypage-sidebar"
+       aria-label="마이페이지 메뉴">
+
+    <div class="mypage-sidebar__heading">
+        <strong>마이 StageOn</strong>
+        <span>MY STAGEON</span>
+    </div>
+
+    <nav class="mypage-sidebar__nav">
+        <a th:href="@{/mypage}"
+           href="/mypage"
+           th:classappend="${activeMenu == 'home'} ? ' is-active'">
+            마이 홈
+        </a>
+
+        <a th:href="@{/mypage/reservations}"
+           href="/mypage/reservations"
+           th:classappend="${activeMenu == 'reservations'} ? ' is-active'">
+            예매 내역
+        </a>
+
+        <a th:href="@{/mypage/tickets}"
+           href="/mypage/tickets"
+           th:classappend="${activeMenu == 'tickets'} ? ' is-active'">
+            보유 티켓
+        </a>
+
+        <a th:href="@{/mypage/reviews}"
+           href="/mypage/reviews"
+           th:classappend="${activeMenu == 'reviews'} ? ' is-active'">
+            관람 후기
+        </a>
+
+        <a th:href="@{/mypage/points}"
+           href="/mypage/points"
+           th:classappend="${activeMenu == 'points'} ? ' is-active'">
+            포인트·쿠폰
+        </a>
+
+        <a th:href="@{/mypage/profile}"
+           href="/mypage/profile"
+           th:classappend="${activeMenu == 'profile'} ? ' is-active'">
+            회원정보 수정
+        </a>
+    </nav>
+</aside>
+
+</body>
+</html>

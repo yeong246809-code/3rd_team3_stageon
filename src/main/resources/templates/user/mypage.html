@@ -1,70 +1,238 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn | 마이페이지</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
-  </head>
-  <body id="top">
-    <div th:replace="~{fragments/common/site-header :: header}"></div>
-    <main class="page page--soft">
-      <div class="shell">
-        <header class="page-heading">
-          <h1>마이페이지</h1>
-          <p>예매 내역과 회원 정보를 확인합니다.</p>
-        </header>
-        <div class="mypage-grid">
-          <aside class="card profile-card">
-            <div class="profile-avatar">김</div>
-            <h2>김스테이지</h2>
-            <p class="section-copy">stageon@example.com</p>
-            <a class="btn btn--wide" th:href="@{/signup}" href="/signup" style="margin-top:20px">회원정보 입력 화면</a>
-          </aside>
-          <section class="stack">
-            <a class="card" th:href="@{/performance-detail}" href="/performance-detail">
-              <div class="cluster" style="justify-content:space-between">
-                <div>
-                  <span class="badge badge--success">예매 완료</span>
-                  <h2 style="margin-top:12px">뮤지컬 〈오페라의 유령〉</h2>
-                  <p class="section-copy">2026.08.15 (토) 19:00 · VIP A구역 8열 12번</p>
-                </div>
-                <img th:src="@{/images/figma/home-05.jpg}" src="/images/figma/home-05.jpg" alt="공연 포스터" style="width:82px;height:108px;object-fit:cover;border-radius:8px">
-              </div>
-            </a>
-            <div class="card">
-              <h2>예매 내역</h2>
-              <div class="table-wrap" style="margin-top:18px">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>예매번호</th>
-                      <th>공연</th>
-                      <th>관람일</th>
-                      <th>상태</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <a th:href="@{/booking-complete}" href="/booking-complete">STG-260815-0012</a>
-                      </td>
-                      <td>오페라의 유령</td>
-                      <td>2026.08.15</td>
-                      <td>
-                        <span class="badge badge--success">RESERVED</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>StageOn | 마이페이지</title>
+
+  <link rel="stylesheet"
+        th:href="@{/css/app.css}"
+        href="/css/app.css">
+
+  <link rel="stylesheet"
+        th:href="@{/css/pages/mypage.css}"
+        href="/css/pages/mypage.css">
+</head>
+
+<body id="top">
+
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+<main class="mypage-page">
+
+  <div class="mypage-shell">
+
+    <header class="mypage-heading">
+      <h1>마이페이지</h1>
+      <p>예매와 혜택, 활동 내역을 한눈에 관리합니다.</p>
+    </header>
+
+    <div class="mypage-layout">
+
+      <div th:replace="~{fragments/mypage/mypage-sidebar :: sidebar('home')}"></div>
+
+      <section class="mypage-content">
+
+        <div class="mypage-summary">
+
+          <article class="mypage-summary__member">
+            <p>마이 StageOn</p>
+            <strong th:text="${memberName}">StageOn 회원</strong>
+            <span th:text="${memberEmail}">stageon@example.com</span>
+          </article>
+
+          <a class="mypage-summary__card"
+             th:href="@{/mypage/reservations}"
+             href="/mypage/reservations">
+            <span>다가오는 공연</span>
+            <strong th:text="${upcomingCount}">0</strong>
+          </a>
+
+          <a class="mypage-summary__card"
+             th:href="@{/mypage/coupons}"
+             href="/mypage/coupons">
+            <span>보유 쿠폰</span>
+            <strong>0</strong>
+          </a>
+
+          <a class="mypage-summary__card"
+             th:href="@{/mypage/points}"
+             href="/mypage/points">
+            <span>Stage 포인트</span>
+            <strong>0 <small>P</small></strong>
+          </a>
+
         </div>
-      </div>
-    </main>
-    <div th:replace="~{fragments/common/site-footer :: footer}"></div>
-    <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
-  </body>
+
+        <section class="mypage-section">
+
+          <div class="mypage-section__heading">
+            <div>
+              <h2>최근 예매 내역</h2>
+              <p>가장 최근에 예매한 공연을 확인할 수 있습니다.</p>
+            </div>
+
+            <a th:href="@{/mypage/reservations}"
+               href="/mypage/reservations">
+              전체보기
+            </a>
+          </div>
+
+          <div class="mypage-reservation-list"
+               th:if="${!#lists.isEmpty(reservations)}">
+
+            <a class="mypage-reservation-card"
+               th:each="reservation, stat : ${reservations}"
+               th:if="${stat.index < 3}"
+               th:href="@{/mypage/reservations/{id}(id=${reservation.id})}"
+               href="/mypage/reservations/1">
+
+              <div class="mypage-ticket-mark" aria-hidden="true">
+                <span>STAGE</span>
+                <strong>ON</strong>
+              </div>
+
+              <div class="mypage-reservation-card__body">
+
+                <div class="mypage-reservation-card__top">
+                  <span class="mypage-status"
+                        th:classappend="${reservation.status == 'CANCELLED'} ? ' mypage-status--cancelled' :
+                                        (${reservation.status == 'PENDING'} ? ' mypage-status--pending' : '')"
+                        th:text="${reservation.status == 'CANCELLED'} ? '예매 취소' :
+                                 (${reservation.status == 'PENDING'} ? '결제 대기' : '예매 완료')">
+                    예매 완료
+                  </span>
+
+                  <span class="mypage-booking-number"
+                        th:text="${reservation.bookingNumber}">
+                    STG-20260804-0001
+                  </span>
+                </div>
+
+                <h3 th:text="${reservation.performanceTitle}">
+                  뮤지컬 〈레드 커튼〉
+                </h3>
+
+                <p>
+                  <time th:text="${#temporals.format(reservation.startsAt, 'yyyy.MM.dd (E) HH:mm')}">
+                    2026.08.15 (토) 19:30
+                  </time>
+                </p>
+
+                <strong class="mypage-price"
+                        th:text="|${#numbers.formatInteger(reservation.totalAmount, 0, 'COMMA')}원|">
+                  124,000원
+                </strong>
+              </div>
+
+              <span class="mypage-card-arrow" aria-hidden="true">›</span>
+            </a>
+
+          </div>
+
+          <div class="mypage-empty"
+               th:if="${#lists.isEmpty(reservations)}">
+
+            <div class="mypage-empty__icon" aria-hidden="true">🎫</div>
+            <strong>아직 예매 내역이 없습니다.</strong>
+            <p>관심 있는 공연을 찾아 첫 예매를 시작해 보세요.</p>
+
+            <a th:href="@{/performances}"
+               href="/performances">
+              공연 둘러보기
+            </a>
+          </div>
+
+        </section>
+
+        <section class="mypage-activity">
+
+          <div>
+            <span>최근 활동</span>
+            <strong th:text="${reservationCount > 0
+                    ? '예매 내역 ' + reservationCount + '건'
+                    : '아직 등록된 활동이 없습니다.'}">
+              예매 내역 1건
+            </strong>
+          </div>
+
+          <a th:href="@{/mypage/reviews}"
+             href="/mypage/reviews">
+            관람 후기 관리
+          </a>
+        </section>
+
+        <section class="mypage-recommendations">
+
+          <div class="mypage-section__heading">
+            <div>
+              <h2>취향을 반영한 추천 공연</h2>
+              <p>예매 이력과 관심 장르를 바탕으로 추천 공연을 준비하고 있습니다.</p>
+            </div>
+
+            <a th:href="@{/performances}"
+               href="/performances">
+              공연 전체보기
+            </a>
+          </div>
+
+          <div class="mypage-recommendation-grid">
+
+            <a th:href="@{/performances}" href="/performances">
+              <div class="mypage-poster mypage-poster--one">
+                <span>D-3</span>
+                <strong>CLOSER</strong>
+              </div>
+              <small>뮤지컬</small>
+              <h3>클로저</h3>
+              <p>오픈 10.28 14:00</p>
+            </a>
+
+            <a th:href="@{/performances}" href="/performances">
+              <div class="mypage-poster mypage-poster--two">
+                <span>D-4</span>
+                <strong>SEONG-JIN CHO</strong>
+              </div>
+              <small>연주</small>
+              <h3>지휘 연 하이드</h3>
+              <p>오픈 10.29 14:00</p>
+            </a>
+
+            <a th:href="@{/performances}" href="/performances">
+              <div class="mypage-poster mypage-poster--three">
+                <span>D-6</span>
+                <strong>CHICAGO</strong>
+              </div>
+              <small>콘서트</small>
+              <h3>연극 〈클로저〉</h3>
+              <p>오픈 10.30 14:00</p>
+            </a>
+
+            <a th:href="@{/performances}" href="/performances">
+              <div class="mypage-poster mypage-poster--four">
+                <span>D-8</span>
+                <strong>Falling Notes</strong>
+              </div>
+              <small>클래식</small>
+              <h3>피아노 리사이틀</h3>
+              <p>오픈 10.31 14:00</p>
+            </a>
+
+          </div>
+
+        </section>
+
+      </section>
+
+    </div>
+
+  </div>
+
+</main>
+
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+</body>
 </html>
