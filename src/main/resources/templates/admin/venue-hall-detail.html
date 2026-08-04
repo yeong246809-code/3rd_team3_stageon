@@ -1,83 +1,89 @@
 
-<!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn Admin | 홀 상세</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
-    <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
-</head>
-<body>
-<div class="admin-page">
-    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
-    <main class="admin-main">
-        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
-        <div class="admin-content">
-            <a class="back-link" th:href="@{/admin/venues}">← 공연장 목록으로</a>
 
-            <header class="admin-title" style="margin-top:10px">
-                <div>
-                    <h1 th:text="${hall.name}">홀 이름</h1>
-                    <p th:text="${hall.venue.name} + ' · ' + ${hall.seatCapacity} + '석'">공연장 · 좌석수</p>
-                </div>
-            </header>
+    <!doctype html>
+    <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>StageOn Admin | 홀 상세</title>
+        <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+        <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+        <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+    </head>
+    <body>
+    <div class="admin-page">
+        <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+        <main class="admin-main">
+            <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+            <div class="admin-content">
+                <a class="back-link" th:href="@{/admin/venues}">← 공연장 목록으로</a>
 
-            <div class="structure-layout">
-                <section class="structure-card">
-                    <div class="structure-card__head">
-                        <h2>좌석 등급</h2>
-                        <a class="btn-mini" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">+ 등급 관리</a>
+                <header class="admin-title" style="margin-top:10px">
+                    <div>
+                        <h1 th:text="${hall.name}">홀 이름</h1>
+                        <p th:text="${hall.venue.name} + ' · ' + ${hall.seatCapacity} + '석'">공연장 · 좌석수</p>
                     </div>
+                </header>
 
-                    <p class="grade-card__subtitle" th:if="${grades.isEmpty()}">
-                        등록된 좌석 등급이 없습니다. "등급 관리"에서 먼저 등록해주세요.
-                    </p>
+                <div class="structure-layout structure-layout--stretch">
+                    <section class="structure-card">
+                        <div class="structure-card__head">
+                            <h2>좌석 등급</h2>
+                        </div>
 
-                    <table class="grade-table" th:if="${!grades.isEmpty()}">
-                        <thead>
-                        <tr>
-                            <th>등급</th>
-                            <th>좌석 수</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="g : ${grades}">
-                            <td>
-                      <span class="grade-name">
-                        <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
-                        <span th:text="${g.name}">VIP</span>
-                      </span>
-                            </td>
-                            <td><span class="grade-count" th:text="${g.seatCount} + '석'">0석</span></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </section>
+                        <p class="grade-card__subtitle" th:if="${grades.isEmpty()}">
+                            등록된 좌석 등급이 없습니다. "등급 관리"에서 먼저 등록해주세요.
+                        </p>
 
-                <aside class="side-stack">
-                    <section class="side-card">
-                        <h3>좌석 관리</h3>
-                        <a class="btn--venue-add" style="width:100%;justify-content:center;margin-bottom:10px"
-                           th:href="@{/admin/venues/halls/{hallId}/seats/bulk-new(hallId=${hall.id})}">구역별 좌석 일괄 생성</a>
-                        <a class="btn--cancel" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">좌석 등급 등록/삭제</a>
+                        <table class="grade-table" th:if="${!grades.isEmpty()}">
+                            <thead>
+                            <tr>
+                                <th>등급</th>
+                                <th>좌석 수</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="g : ${grades}">
+                                <td>
+                          <span class="grade-name">
+                            <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
+                            <span th:text="${g.name}">VIP</span>
+                          </span>
+                                </td>
+                                <td><span class="grade-count" th:text="${g.seatCount} + '석'">0석</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="structure-card__footer">
+                            <a class="btn-mini" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">+ 등급 관리</a>
+                        </div>
                     </section>
 
-                    <section class="side-card danger-zone">
-                        <h3>위험 구역</h3>
-                        <p>홀을 삭제하면 연결된 좌석도·등급·좌석이 모두 함께 삭제되며 되돌릴 수 없습니다.</p>
-                        <form th:action="@{/admin/venues/halls/{hallId}/delete(hallId=${hall.id})}" method="post">
-                            <button type="submit" class="btn-mini btn-mini--danger" style="width:100%;padding:10px"
-                                    onclick="return confirm('이 홀을 삭제하면 등록된 좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?');">
-                                홀 삭제
-                            </button>
-                        </form>
-                    </section>
-                </aside>
+                    <aside class="side-stack">
+                        <section class="side-card">
+                            <h3>좌석 관리</h3>
+                            <div class="side-card__actions">
+                                <a class="btn--venue-add"
+                                   th:href="@{/admin/venues/halls/{hallId}/seats/bulk-new(hallId=${hall.id})}">구역별 좌석 일괄 생성</a>
+                                <a class="btn--cancel" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">좌석 등급 등록/삭제</a>
+                            </div>
+                        </section>
+
+                        <section class="side-card danger-zone">
+                            <h3>위험 구역</h3>
+                            <p>홀을 삭제하면 연결된 좌석도·등급·좌석이 모두 함께 삭제되며 되돌릴 수 없습니다.</p>
+                            <form class="danger-zone__actions" th:action="@{/admin/venues/halls/{hallId}/delete(hallId=${hall.id})}" method="post">
+                                <button type="submit" class="btn-mini btn-mini--danger"
+                                        onclick="return confirm('이 홀을 삭제하면 등록된 좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?');">
+                                    홀 삭제
+                                </button>
+                            </form>
+                        </section>
+                    </aside>
+                </div>
             </div>
-        </div>
-    </main>
-</div>
-</body>
-</html>
+        </main>
+    </div>
+    </body>
+    </html>

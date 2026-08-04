@@ -14,6 +14,9 @@ import java.util.Optional;
 public interface ScheduleSeatRepository extends JpaRepository<ScheduleSeat, Long> {
     List<ScheduleSeat> findByScheduleIdOrderBySeatSectionNameAscSeatRowLabelAscSeatSeatNumberAsc(Long scheduleId);
 
+    /** 일정·회차 관리 화면의 잔여석(AVAILABLE 개수) 계산용입니다. */
+    long countByScheduleIdAndStatus(Long scheduleId, ScheduleSeat.Status status);
+
     /**
      * 선점 시 동일 좌석을 직렬화하기 위한 비관적 잠금 조회입니다.
      * 실제 선점 Service는 이 조회 후 AVAILABLE 상태를 다시 검증해야 합니다.
