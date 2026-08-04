@@ -1,23 +1,23 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
   <body>
-    <ol th:fragment="stepper" class="stepper">
-      <li class="is-active">
+    <ol th:fragment="stepper(step)" class="stepper">
+      <li th:classappend="${step == 1} ? 'is-active'">
         <b>1</b>
         회차
       </li>
       <li>›</li>
-      <li>
+      <li th:classappend="${step == 2} ? 'is-active'">
         <b>2</b>
         좌석
       </li>
       <li>›</li>
-      <li>
+      <li th:classappend="${step == 3} ? 'is-active'">
         <b>3</b>
         주문
       </li>
       <li>›</li>
-      <li>
+      <li th:classappend="${step == 4} ? 'is-active'">
         <b>4</b>
         결제
       </li>

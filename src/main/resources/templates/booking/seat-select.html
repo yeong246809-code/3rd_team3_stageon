@@ -8,7 +8,7 @@
     <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
   </head>
   <body id="top">
-    <div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
+    <div th:replace="~{fragments/booking/booking-header :: bookingHeader(2)}"></div>
     <div th:if="${errorMessage}" class="notice notice--danger" style="margin-bottom:18px">
       <b th:text="${errorMessage}">에러 메시지</b>
     </div>
