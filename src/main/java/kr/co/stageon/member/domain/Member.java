@@ -86,4 +86,9 @@ public class Member {
 
         return member;
     }
+
+    // 암호화된 새 비밀번호로 변경
+    public void changePassword(String encodedPassword) {
+        this.passwordHash = encodedPassword;
+    }
 }

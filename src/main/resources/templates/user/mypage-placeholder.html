@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title th:text="|StageOn | ${pageTitle}|">StageOn | 마이페이지</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/app.css}"
+          href="/css/app.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/pages/mypage.css}"
+          href="/css/pages/mypage.css">
+</head>
+
+<body id="top">
+
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+<main class="mypage-page">
+
+    <div class="mypage-shell">
+
+        <header class="mypage-heading">
+            <h1 th:text="${pageTitle}">마이페이지</h1>
+            <p th:text="${pageDescription}">해당 기능을 준비하고 있습니다.</p>
+        </header>
+
+        <div class="mypage-layout">
+
+            <div th:replace="~{fragments/mypage/mypage-sidebar :: sidebar(${activeMenu})}"></div>
+
+            <section class="mypage-content">
+
+                <div class="mypage-coming-soon">
+                    <span>COMING SOON</span>
+                    <h2 th:text="${pageTitle}">서비스 준비 중</h2>
+                    <p>
+                        이 메뉴의 상세 화면은 다음 작업에서 실제 데이터와 연결할 예정입니다.
+                    </p>
+
+                    <a th:href="@{/mypage}" href="/mypage">
+                        마이 홈으로 돌아가기
+                    </a>
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+
+</main>
+
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+</body>
+</html>

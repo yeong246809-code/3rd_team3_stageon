@@ -27,4 +27,21 @@ public interface MemberRepository
             nativeQuery = true
     )
     long countByNormalizedPhone(@Param("phone") String phone);
+
+    // 이름과 휴대전화 번호가 모두 일치하는 활성 회원 조회
+    @Query(
+            value = """
+                    SELECT *
+                    FROM members
+                    WHERE name = :name
+                      AND REPLACE(REPLACE(phone, '-', ''), ' ', '') = :phone
+                      AND status = 'ACTIVE'
+                    LIMIT 1
+                    """,
+            nativeQuery = true
+    )
+    Optional<Member> findActiveMemberByNameAndNormalizedPhone(
+            @Param("name") String name,
+            @Param("phone") String phone
+    );
 }

@@ -3,14 +3,13 @@ package kr.co.stageon.member.controller;
 import kr.co.stageon.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * 회원가입 중복 확인 요청을 처리합니다.
+ * 회원 정보 확인 요청을 처리합니다.
  */
 @RestController
 @RequiredArgsConstructor
@@ -70,5 +69,58 @@ public class MemberApiController {
                                 : "사용 가능한 휴대전화 번호입니다."
                 )
         );
+    }
+
+    // 이름과 휴대전화 번호로 가입 이메일 찾기
+    @PostMapping("/api/members/find-id")
+    public ResponseEntity<Map<String, Object>> findId(
+            @RequestBody FindIdRequest request
+    ) {
+        if (request.name() == null || request.name().isBlank()) {
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "success", false,
+                            "message", "이름을 입력해 주세요."
+                    )
+            );
+        }
+
+        if (request.phone() == null || request.phone().isBlank()) {
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "success", false,
+                            "message", "휴대전화 번호를 입력해 주세요."
+                    )
+            );
+        }
+
+        Optional<String> email =
+                memberService.findEmailByNameAndPhone(
+                        request.name(),
+                        request.phone()
+                );
+
+        if (email.isEmpty()) {
+            return ResponseEntity.status(404).body(
+                    Map.of(
+                            "success", false,
+                            "message", "입력한 정보와 일치하는 회원을 찾을 수 없습니다."
+                    )
+            );
+        }
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "success", true,
+                        "email", email.get(),
+                        "message", "가입 이메일을 확인했습니다."
+                )
+        );
+    }
+
+    public record FindIdRequest(
+            String name,
+            String phone
+    ) {
     }
 }

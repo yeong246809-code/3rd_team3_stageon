@@ -54,6 +54,12 @@
           로그아웃되었습니다.
         </p>
 
+        <!-- 로그인 요청 메시지 -->
+        <p class="login-message"
+           th:if="${param.required}">
+          로그인 후 이용할 수 있는 페이지입니다.
+        </p>
+
         <input class="login-input"
                type="email"
                name="email"
@@ -78,15 +84,15 @@
         <nav class="login-links"
              aria-label="회원 계정 메뉴">
 
-          <a href="#"
-             aria-disabled="true">
+          <a th:href="@{/find-id}"
+             href="/find-id">
             아이디 찾기
           </a>
 
           <span>·</span>
 
-          <a href="#"
-             aria-disabled="true">
+          <a th:href="@{/password-reset}"
+             href="/password-reset">
             비밀번호 찾기
           </a>
 
