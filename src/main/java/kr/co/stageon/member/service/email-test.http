@@ -1,0 +1,16 @@
+### 인증번호 발송
+POST http://localhost:8080/api/members/email-verification/send
+Content-Type: application/json
+
+{
+  "email": "luckysuah@naver.com"
+}
+
+### 인증번호 확인
+POST http://localhost:8080/api/members/email-verification/verify
+Content-Type: application/json
+
+{
+  "email": "luckysuah@naver.com",
+  "code": "327987"
+}
