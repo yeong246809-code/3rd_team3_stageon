@@ -27,13 +27,17 @@
 .structure-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .structure-card__head h2 { font-size: 18px; font-weight: 800; color: var(--ink); margin: 0; }
 
-.structure-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.structure-card .table-wrap { display: block !important; width: 100% !important; overflow-x: auto; }
+.structure-table { width: 100% !important; table-layout: fixed; border-collapse: collapse !important; font-size: 14px; empty-cells: show; }
+.structure-table th, .structure-table td { vertical-align: middle !important; }
+.structure-table th,
+.structure-table td { border-left: none !important; border-right: none !important; border-top: none !important; }
 .structure-table th {
     text-align: left; padding: 12px 14px; font-size: 12px; font-weight: 700;
     letter-spacing: .03em; color: var(--muted); background: var(--surface);
     border-bottom: 1px solid var(--line);
 }
-.structure-table td { padding: 14px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.structure-table td { padding: 14px; border-bottom: 1px solid var(--line); color: var(--ink); overflow-wrap: break-word; }
 .structure-table th:last-child,
 .structure-table td:last-child { text-align: center; }
 .structure-table tbody tr:hover { background: var(--surface); }
@@ -43,12 +47,29 @@
 .row-link { color: var(--ink); font-weight: 600; text-decoration: none; }
 .row-link:hover { color: var(--brand); text-decoration: underline; }
 
+.cell-title { display: flex; align-items: center; gap: 10px; }
+.edit-link {
+    font-size: 12px; font-weight: 600; color: var(--subtle);
+    text-decoration: none; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--line); flex-shrink: 0;
+    transition: all .15s ease;
+}
+.edit-link:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+
+.back-link { display: inline-block; font-size: 13px; color: var(--muted); text-decoration: none; font-weight: 600; }
+.back-link:hover { color: var(--brand); }
+
+.danger-zone { border-color: #fbd5d5 !important; background: #fff8f8; }
+.danger-zone h3 { color: var(--danger); margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+.danger-zone p { font-size: 13px; color: var(--ink-2); margin: 0 0 14px; line-height: 1.6; }
+
 /* 행 전체 클릭 가능 표시(실제 클릭 처리는 JS) */
 .structure-table tbody tr[data-hall-href] { cursor: pointer; }
 
 .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .badge--complete { background: var(--success-soft); color: var(--success); }
 .badge--pending { background: var(--warning-soft); color: var(--warning); }
+.text-warn { color: var(--warning); font-weight: 600; }
 
 /* 미니 액션 버튼 (홀 추가/등급 추가/삭제) */
 .action-cell { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
