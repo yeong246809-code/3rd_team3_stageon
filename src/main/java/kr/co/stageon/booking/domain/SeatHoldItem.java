@@ -34,4 +34,5 @@ public class SeatHoldItem {
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
 }

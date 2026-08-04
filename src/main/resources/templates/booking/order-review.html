@@ -8,43 +8,67 @@
     <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
   </head>
   <body id="top">
-    <div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
+  <div th:replace="~{fragments/booking/booking-header :: bookingHeader(3)}"></div>
+
     <main class="booking-page">
       <div class="shell booking-grid">
-        <!-- STEP 03: 예매자와 주문 내용 최종 확인 -->
         <section class="stack">
           <header class="page-heading">
             <span class="eyebrow">STEP 03</span>
             <h1>주문 내용을 확인하세요</h1>
           </header>
+
           <div class="card">
             <h2>예매자 정보</h2>
             <div class="info-list" style="margin-top:18px">
               <div>
                 <b>이름</b>
-                <span>김스테이지</span>
+                <span th:text="${member.name}">김스테이지</span>
               </div>
               <div>
                 <b>이메일</b>
-                <span>stageon@example.com</span>
+                <span th:text="${member.email}">stageon@example.com</span>
               </div>
               <div>
                 <b>연락처</b>
-                <span>010-1234-5678</span>
+                <span th:text="${member.phone}">010-1234-5678</span>
               </div>
             </div>
           </div>
+
           <div class="card">
             <h2>취소 및 유의사항</h2>
             <p class="section-copy">결제 실패 또는 선점 만료 시 예약과 좌석은 자동 복구됩니다.</p>
-            <label style="display:block;margin-top:18px"><input type="checkbox">주문 내용과 유의사항을 확인했습니다.</label>
+            <label style="display:block;margin-top:18px">
+              <input type="checkbox" id="agreeCheck">
+              주문 내용과 유의사항을 확인했습니다.
+            </label>
           </div>
         </section>
+
         <aside class="stack">
           <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
-          <a class="btn btn--primary btn--wide" th:href="@{/mock-payment}" href="/mock-payment">모의 결제로 이동</a>
+
+          <form id="paymentForm" th:action="@{/payment/process}" method="post">
+            <input type="hidden" name="holdTokenHash" th:value="${seatHold != null ? seatHold.holdTokenHash : ''}">
+            <input type="hidden" name="seatHoldId" th:value="${seatHold != null ? seatHold.id : ''}">
+
+            <button type="submit" class="btn btn--primary btn--wide" id="payBtn">
+              모의 결제로 이동
+            </button>
+          </form>
         </aside>
       </div>
     </main>
+
+    <script>
+      document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        const agreeCheck = document.getElementById('agreeCheck');
+        if (!agreeCheck.checked) {
+          e.preventDefault();
+          alert('주문 내용과 유의사항 동의에 체크해 주세요.');
+        }
+      });
+    </script>
   </body>
 </html>

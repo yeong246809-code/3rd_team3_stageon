@@ -67,4 +67,8 @@ public class ScheduleSeat {
         }
         this.status = Status.HELD;
     }
+
+    public void release() {
+        this.status = Status.AVAILABLE;
+    }
 }

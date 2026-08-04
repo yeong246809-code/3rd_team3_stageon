@@ -51,4 +51,10 @@ public class SeatHold {
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public void expire() {
+        this.status = Status.EXPIRED;
+        this.releasedAt = LocalDateTime.now();
+    }
+
 }
