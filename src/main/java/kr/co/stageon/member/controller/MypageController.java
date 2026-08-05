@@ -58,19 +58,17 @@ public class MypageController {
     ) {
         Member member = findLoginMember(authentication);
 
-        model.addAttribute(
-                "reservations",
+        List<ReservationResponse> reservations =
                 bookingQueryService.findMemberReservations(
                         member.getId()
-                )
-        );
+                );
 
-        return placeholder(
-                model,
-                "reservations",
-                "예매 내역",
-                "예매 상태와 관람 일정을 확인합니다."
-        );
+        model.addAttribute("memberName", member.getName());
+        model.addAttribute("memberEmail", member.getEmail());
+        model.addAttribute("reservations", reservations);
+        model.addAttribute("activeMenu", "reservations");
+
+        return "user/mypage-reservations";
     }
 
     @GetMapping("/reservations/{reservationId}")

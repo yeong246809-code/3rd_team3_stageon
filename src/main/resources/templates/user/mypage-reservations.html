@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn | 예매 내역</title>
+
+    <!-- 사이트 공통 CSS -->
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+
+    <!-- 마이페이지 공통 CSS -->
+    <link rel="stylesheet" th:href="@{/css/pages/mypage.css}" href="/css/pages/mypage.css">
+
+    <!-- 예매 내역 화면 전용 CSS -->
+    <link rel="stylesheet"
+          th:href="@{/css/pages/mypage-reservations.css}" href="/css/pages/mypage-reservations.css">
+</head>
+
+<body id="top">
+
+<!-- 공통 헤더 -->
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+<main class="mypage-page">
+    <div class="mypage-shell">
+
+        <!-- 페이지 제목 -->
+        <header class="mypage-heading">
+            <h1>예매 내역</h1>
+            <p>예매한 공연과 관람 일정을 확인할 수 있습니다.</p>
+        </header>
+
+        <div class="mypage-layout">
+
+            <!-- 마이페이지 사이드바 -->
+            <div th:replace="~{fragments/mypage/mypage-sidebar :: sidebar('reservations')}"></div>
+
+            <!-- 예매 내역 본문 -->
+            <section class="mypage-content">
+                <section class="reservation-panel">
+
+                    <!-- 목록 제목 -->
+                    <div class="reservation-panel__heading">
+                        <div>
+                            <h2>전체 예매 내역</h2>
+                            <p th:text="|${memberName}님의 예매 내역입니다.|">회원님의 예매 내역입니다.</p>
+                        </div>
+
+                        <span class="reservation-count"
+                              th:text="|총 ${#lists.size(reservations)}건|">총 0건</span>
+                    </div>
+
+                    <!-- 예매 목록 -->
+                    <div class="reservation-list"
+                         th:if="${!#lists.isEmpty(reservations)}">
+
+                        <a class="reservation-card"
+                           th:each="reservation : ${reservations}"
+                           th:href="@{/mypage/reservations/{id}(id=${reservation.id})}">
+
+                            <!-- 티켓 표시 -->
+                            <div class="reservation-ticket" aria-hidden="true">
+                                <span>STAGE</span>
+                                <strong>ON</strong>
+                            </div>
+
+                            <!-- 예매 정보 -->
+                            <div class="reservation-card__body">
+                                <div class="reservation-card__meta">
+                                    <span class="reservation-status"
+                                          th:classappend="${reservation.status == 'CANCELLED'} ? ' reservation-status--cancelled' :
+                                                         (${reservation.status == 'PENDING'} ? ' reservation-status--pending' :
+                                                         (${reservation.status == 'EXPIRED'} ? ' reservation-status--expired' : ''))"
+                                          th:text="${reservation.status == 'CANCELLED'} ? '예매 취소' :
+                                                   (${reservation.status == 'PENDING'} ? '결제 대기' :
+                                                   (${reservation.status == 'EXPIRED'} ? '결제 만료' : '예매 완료'))">
+                                        예매 완료
+                                    </span>
+
+                                    <span class="reservation-number"
+                                          th:text="${reservation.bookingNumber}">예매번호</span>
+                                </div>
+
+                                <h3 th:text="${reservation.performanceTitle}">공연명</h3>
+
+                                <time th:datetime="${reservation.startsAt}"
+                                      th:text="${#temporals.format(reservation.startsAt, 'yyyy.MM.dd (E) HH:mm')}">
+                                    2026.08.15 (토) 19:00
+                                </time>
+
+                                <strong class="reservation-price"
+                                        th:text="|${#numbers.formatInteger(reservation.totalAmount, 0, 'COMMA')}원|">
+                                    0원
+                                </strong>
+                            </div>
+
+                            <span class="reservation-arrow" aria-hidden="true">›</span>
+                        </a>
+                    </div>
+
+                    <!-- 빈 목록 -->
+                    <div class="reservation-empty"
+                         th:if="${#lists.isEmpty(reservations)}">
+                        <div class="reservation-empty__icon" aria-hidden="true">🎫</div>
+                        <strong>아직 예매 내역이 없습니다.</strong>
+                        <p>관심 있는 공연을 찾아 첫 예매를 시작해 보세요.</p>
+                        <a th:href="@{/performances}" href="/performances">공연 둘러보기</a>
+                    </div>
+
+                </section>
+            </section>
+
+        </div>
+    </div>
+</main>
+
+<!-- 공통 푸터 -->
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+
+<!-- 플로팅 버튼 -->
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+</body>
+</html>
