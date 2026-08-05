@@ -17,4 +17,14 @@ public class ScheduleListItemDto {
     /** 같은 공연장 홀에서 시간대가 겹치는 회차인지 여부입니다. */
     private final boolean conflict;
     private final String statusCode;
+
+    /** "이 회차 정보로 추가" / "수정" 모달을 채우기 위한 원본 값들입니다. */
+    private final Long performanceId;
+    private final Long venueHallId;
+    private final Integer roundNumber;
+    private final Integer maxTicketsPerMember;
+    private final String startsAtIso;
+    private final String salesOpenAtIso;
+    private final String salesCloseAtIso;
+    private final String cancelCloseAtIso;
 }

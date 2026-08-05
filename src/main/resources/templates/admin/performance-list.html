@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -35,10 +36,10 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:if="${#lists.isEmpty(performances)}">
+                    <tr th:if="${performances.content.isEmpty()}">
                         <td colspan="5">등록된 공연이 없습니다.</td>
                     </tr>
-                    <tr th:each="p : ${performances}">
+                    <tr th:each="p : ${performances.content}">
                         <td class="cell-title">
                             <span th:text="${p.title}">공연명</span>
                             <span class="badge badge--draft" th:if="${p.draft}">임시저장됨</span>
@@ -51,15 +52,105 @@
                         </td>
                         <td th:text="${p.startDate} + ' ~ ' + ${p.endDate}">기간</td>
                         <td>
-                            <a class="btn btn--sm btn--view" th:href="@{'/admin/performances/' + ${p.id} + '/view'}">상세보기</a>
+                            <button type="button" class="btn btn--sm btn--view"
+                                    th:attr="data-title=${p.title},
+                                              data-poster=${p.posterUrl != null ? p.posterUrl : ''},
+                                              data-genre=${p.genre},
+                                              data-status=${p.status.name()},
+                                              data-start=${p.startDate},
+                                              data-end=${p.endDate},
+                                              data-runtime=${p.runtimeMinutes != null ? p.runtimeMinutes : ''},
+                                              data-age=${p.ageText != null ? p.ageText : ''},
+                                              data-story=${p.story != null ? p.story : ''}"
+                                    onclick="openPosterModal(this)">상세보기</button>
                             <a class="btn btn--sm btn--edit" th:href="@{'/admin/performances/' + ${p.id} + '/edit'}">수정</a>
                         </td>
                     </tr>
                     </tbody>
                 </table>
+
+                <!-- 페이지네이션: 한 페이지에 5개씩 -->
+                <div class="pagination" th:if="${performances.totalPages > 1}">
+                    <a th:each="i : ${#numbers.sequence(1, performances.totalPages)}"
+                       th:href="@{/admin/performances(page=${i})}"
+                       th:text="${i}"
+                       th:classappend="${i == performances.number + 1} ? ' active'"
+                       class="page-link"></a>
+                </div>
             </div>
         </div>
     </main>
 </div>
+
+<!-- 포스터 확인용 팝업 (수정 불가, 조회 전용) -->
+<div id="posterModal" class="poster-modal">
+    <div class="poster-modal__backdrop" onclick="closePosterModal()"></div>
+    <div class="poster-modal__content">
+        <button type="button" class="poster-modal__close" onclick="closePosterModal()" aria-label="닫기">&times;</button>
+        <div class="poster-modal__body">
+            <div class="poster-modal__poster">
+                <img id="posterModalImage" src="" alt="포스터 미리보기" style="display:none"
+                     onerror="document.getElementById('posterModalImage').style.display='none'; document.getElementById('posterModalEmpty').style.display='flex';">
+                <div id="posterModalEmpty" class="poster-modal__empty" style="display:none">등록된 포스터가 없습니다.</div>
+            </div>
+            <div class="poster-modal__info">
+                <span id="posterModalStatus" class="badge"></span>
+                <h3 id="posterModalTitle" class="poster-modal__title"></h3>
+                <dl class="poster-modal__list">
+                    <div><dt>장르</dt><dd id="posterModalGenre"></dd></div>
+                    <div><dt>공연 기간</dt><dd id="posterModalPeriod"></dd></div>
+                    <div><dt>상영 시간</dt><dd id="posterModalRuntime"></dd></div>
+                    <div><dt>관람 등급</dt><dd id="posterModalAge"></dd></div>
+                </dl>
+                <p id="posterModalStory" class="poster-modal__story"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var POSTER_MODAL_STATUS_LABEL = {
+        ON_SALE: '판매중', UPCOMING: '공개예정', ENDED: '종료', CANCELLED: '취소'
+    };
+    var POSTER_MODAL_STATUS_CLASS = {
+        ON_SALE: 'badge--on-sale', UPCOMING: 'badge--upcoming', ENDED: 'badge--ended', CANCELLED: 'badge--cancelled'
+    };
+
+    function openPosterModal(btn) {
+        var d = btn.dataset;
+
+        document.getElementById('posterModalTitle').textContent = d.title || '';
+        document.getElementById('posterModalGenre').textContent = d.genre || '-';
+        document.getElementById('posterModalPeriod').textContent =
+            (d.start && d.end) ? (d.start + ' ~ ' + d.end) : '-';
+        document.getElementById('posterModalRuntime').textContent = d.runtime ? (d.runtime + '분') : '-';
+        document.getElementById('posterModalAge').textContent = d.age || '-';
+        document.getElementById('posterModalStory').textContent = d.story || '공연 소개가 등록되지 않았습니다.';
+
+        var statusEl = document.getElementById('posterModalStatus');
+        statusEl.textContent = POSTER_MODAL_STATUS_LABEL[d.status] || d.status || '';
+        statusEl.className = 'badge ' + (POSTER_MODAL_STATUS_CLASS[d.status] || '');
+
+        var img = document.getElementById('posterModalImage');
+        var empty = document.getElementById('posterModalEmpty');
+        if (d.poster) {
+            img.style.display = 'block';
+            empty.style.display = 'none';
+            img.src = d.poster; // onerror가 있으면 로드 실패 시 자동으로 '없음' 상태로 전환됨
+        } else {
+            img.removeAttribute('src');
+            img.style.display = 'none';
+            empty.style.display = 'flex';
+        }
+
+        document.getElementById('posterModal').classList.add('is-open');
+    }
+    function closePosterModal() {
+        document.getElementById('posterModal').classList.remove('is-open');
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closePosterModal();
+    });
+</script>
 </body>
 </html>
