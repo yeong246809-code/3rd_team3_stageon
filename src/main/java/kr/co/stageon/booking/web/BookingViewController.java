@@ -36,11 +36,11 @@ public class BookingViewController {
         return "booking/seat-select";
     }
 
-    @GetMapping({"/booking/order", "/order-review"})
+    /*@GetMapping({"/booking/order", "/order-review"})
     public String order(@RequestParam(required = false) Long reservationId, Model model) {
         addReservation(reservationId, model);
         return "booking/order-review";
-    }
+    }*/
 
     @GetMapping({"/booking/payment", "/mock-payment"})
     public String payment(@RequestParam(required = false) Long reservationId, Model model) {

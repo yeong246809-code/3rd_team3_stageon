@@ -22,4 +22,6 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long> {
 
     //특정 회차에 유저가 선점/예매 완료한 좌석의 총개수를 반환
     int countByMemberIdAndScheduleIdAndStatusIn(Long memberId, Long scheduleId, List<SeatHold.Status> statuses);
+
+    Optional<SeatHold> findByMemberIdAndScheduleIdAndStatus(Long memberId, Long scheduleId, SeatHold.Status status);
 }

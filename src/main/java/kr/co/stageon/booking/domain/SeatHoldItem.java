@@ -35,4 +35,11 @@ public class SeatHoldItem {
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    public static SeatHoldItem create(SeatHold seatHold, ScheduleSeat scheduleSeat) {
+        SeatHoldItem item = new SeatHoldItem();
+        item.seatHold = seatHold;
+        item.scheduleSeat = scheduleSeat;
+        return item;
+    }
+
 }

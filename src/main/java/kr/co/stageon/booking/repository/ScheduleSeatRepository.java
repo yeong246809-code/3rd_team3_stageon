@@ -4,6 +4,7 @@ import jakarta.persistence.LockModeType;
 import kr.co.stageon.booking.domain.ScheduleSeat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -31,4 +32,8 @@ public interface ScheduleSeatRepository extends JpaRepository<ScheduleSeat, Long
             "WHERE ss.schedule.id = :scheduleId " +
             "ORDER BY s.sectionName ASC, s.rowLabel ASC, CAST(s.seatNumber AS int) ASC")
     List<ScheduleSeat> findWithSeatInfoByScheduleId(@Param("scheduleId") Long scheduleId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update ScheduleSeat s set s.status = 'AVAILABLE' where s.id in :seatIds")
+    void bulkReleaseSeats(@Param("seatIds") List<Long> seatIds);
 }

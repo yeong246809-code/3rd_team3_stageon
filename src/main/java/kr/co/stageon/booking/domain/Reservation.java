@@ -71,4 +71,21 @@ public class Reservation {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    public static Reservation create(String bookingNumber, Member member, PerformanceSchedule schedule,
+                                     SeatHold seatHold, BigDecimal seatAmount, BigDecimal totalAmount) {
+        Reservation reservation = new Reservation();
+        reservation.bookingNumber = bookingNumber;
+        reservation.member = member;
+        reservation.schedule = schedule;
+        reservation.seatHold = seatHold;
+        reservation.status = Status.RESERVED;
+        reservation.seatAmount = seatAmount;
+        reservation.feeAmount = BigDecimal.ZERO; // 수수료 면제 가정
+        reservation.discountAmount = BigDecimal.ZERO; // 할인 없음 가정
+        reservation.totalAmount = totalAmount;
+        reservation.expiresAt = LocalDateTime.now().plusDays(1);
+        reservation.reservedAt = LocalDateTime.now();
+        return reservation;
+    }
 }
