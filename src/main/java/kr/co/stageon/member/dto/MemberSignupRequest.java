@@ -13,6 +13,10 @@ public record MemberSignupRequest(
 
         @NotBlank(message = "이메일을 입력해 주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
+        @Pattern(
+                regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+                message = "example@email.com 형식으로 입력해 주세요."
+        )
         @Size(max = 190)
         String email,
 
@@ -47,7 +51,7 @@ public record MemberSignupRequest(
         @AssertTrue(message = "만 14세 이상만 가입할 수 있습니다.")
         boolean ageConfirmed,
 
-        boolean marketingTerms
+        Boolean marketingTerms
 
 ) {
 
