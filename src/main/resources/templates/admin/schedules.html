@@ -8,6 +8,7 @@
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
   <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+  <link rel="stylesheet" th:href="@{/css/pages/schedule.css}" href="/css/pages/schedule.css">
 </head>
 <body>
 <div class="admin-page">
@@ -20,20 +21,26 @@
           <h1>일정·회차 관리</h1>
           <p>공연 날짜, 회차와 판매 상태를 설정합니다.</p>
         </div>
-        <button class="btn btn--dark" type="button">회차 추가</button>
+        <button class="btn--venue-add" type="button" onclick="document.getElementById('scheduleModal').classList.add('is-open')">
+          회차 추가
+        </button>
       </header>
+
+      <div class="alert alert--success" th:if="${message}" th:text="${message}"></div>
+      <div class="alert alert--error" th:if="${error}" th:text="${error}"></div>
 
       <!-- 통계 카드 3개 -->
       <div class="stat-row">
-        <div class="stat-card">
+        <div class="stat-card stat-card--brand">
           <span class="stat-card__label">운영 회차</span>
           <span class="stat-card__value" th:text="${stats.operatingCount}">36</span>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card--info">
           <span class="stat-card__label">예정 회차</span>
           <span class="stat-card__value" th:text="${stats.upcomingCount}">12</span>
         </div>
-        <div class="stat-card" th:classappend="${stats.conflictCount > 0} ? 'stat-card--highlight' : ''">
+        <div class="stat-card"
+             th:classappend="${stats.conflictCount > 0} ? 'stat-card--highlight' : 'stat-card--warn'">
           <span class="stat-card__label">일정 충돌</span>
           <span class="stat-card__value" th:text="${stats.conflictCount}">2</span>
         </div>
@@ -43,10 +50,23 @@
       <div class="structure-layout">
         <div class="structure-card">
           <div class="structure-card__head">
-            <h2>회차 운영 현황</h2>
-            <a href="#full-list" class="back-link">전체 보기 &gt;</a>
+            <h2 th:text="${overviewConflictOnly} ? '회차 운영 현황 (충돌 ' + ${#lists.size(overview)} + '건)' : (${overviewAll} ? '회차 운영 현황 (전체 ' + ${#lists.size(overview)} + '건)' : '회차 운영 현황')">회차 운영 현황</h2>
+            <span class="head-links">
+                  <a th:if="${!overviewConflictOnly}"
+                     th:href="@{/admin/schedules(all=false, conflictOnly=true, performanceId=${selectedPerformanceId}, month=${selectedMonth})}"
+                     class="back-link back-link--danger">충돌만 보기</a>
+                  <a th:if="${overviewConflictOnly}"
+                     th:href="@{/admin/schedules(all=false, conflictOnly=false, performanceId=${selectedPerformanceId}, month=${selectedMonth})}"
+                     class="back-link">전체로 돌아가기</a>
+                  <a th:if="${!overviewAll and !overviewConflictOnly}"
+                     th:href="@{/admin/schedules(all=true, conflictOnly=false, performanceId=${selectedPerformanceId}, month=${selectedMonth})}"
+                     class="back-link">전체 보기 &gt;</a>
+                  <a th:if="${overviewAll}"
+                     th:href="@{/admin/schedules(all=false, conflictOnly=false, performanceId=${selectedPerformanceId}, month=${selectedMonth})}"
+                     class="back-link">접기 &gt;</a>
+                </span>
           </div>
-          <div class="table-wrap">
+          <div class="table-wrap" th:classappend="${overviewAll or overviewConflictOnly} ? 'scroll-tall' : ''">
             <table class="structure-table">
               <thead>
               <tr>
@@ -57,13 +77,14 @@
               </thead>
               <tbody>
               <tr th:if="${#lists.isEmpty(overview)}">
-                <td colspan="3" class="venue-empty">등록된 회차가 없습니다.</td>
+                <td colspan="3" class="venue-empty" th:text="${overviewConflictOnly} ? '충돌하는 회차가 없습니다.' : '등록된 회차가 없습니다.'">등록된 회차가 없습니다.</td>
               </tr>
-              <tr th:each="item : ${overview}">
+              <tr th:each="item : ${overview}" th:classappend="${item.conflict} ? 'is-conflict' : ''">
                 <td class="cell-title" th:text="${item.performanceTitle}">공연명</td>
                 <td th:text="${item.dateTimeText}">08.16 20:30</td>
                 <td>
                   <span class="badge" th:classappend="${item.badgeClass}" th:text="${item.statusText}">판매 중</span>
+                  <span class="conflict-tag" th:if="${item.conflict}">⚠ 충돌</span>
                 </td>
               </tr>
               </tbody>
@@ -95,7 +116,7 @@
             <option th:each="p : ${performances}"
                     th:value="${p.id}"
                     th:text="${p.title}"
-                    th:selected="${p.id == selectedPerformanceId}">공연명</option>
+                    th:selected="${selectedPerformanceId != null and p.id.equals(selectedPerformanceId)}">공연명</option>
           </select>
           <input class="input" type="month" name="month" th:value="${selectedMonth}" style="max-width:180px">
           <button class="btn btn--dark" type="submit">조회</button>
@@ -109,20 +130,46 @@
               <th>시작 시간</th>
               <th>판매 상태</th>
               <th>잔여석</th>
+              <th>관리</th>
             </tr>
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(scheduleList)}">
-              <td colspan="5" class="venue-empty">해당 월에 등록된 회차가 없습니다.</td>
+              <td colspan="6" class="venue-empty">해당 월에 등록된 회차가 없습니다.</td>
             </tr>
-            <tr th:each="row : ${scheduleList}">
+            <tr th:each="row : ${scheduleList}" th:classappend="${row.conflict} ? 'is-conflict' : ''">
               <td th:text="${row.dateText}">2026.08.15</td>
               <td th:text="${row.roundText}">1회</td>
               <td th:text="${row.timeText}">14:00</td>
               <td>
                 <span class="badge" th:classappend="${row.badgeClass}" th:text="${row.statusText}">판매 중</span>
+                <span class="conflict-tag" th:if="${row.conflict}">⚠ 충돌</span>
               </td>
               <td th:text="${row.remainingSeats}">219</td>
+              <td class="action-cell">
+                <form method="post" th:if="${row.statusCode == 'SCHEDULED'}"
+                      th:action="@{/admin/schedules/{id}/status(id=${row.id})}">
+                  <input type="hidden" name="status" value="OPEN">
+                  <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+                  <input type="hidden" name="month" th:value="${selectedMonth}">
+                  <button type="submit" class="btn-mini">판매 시작</button>
+                </form>
+                <form method="post" th:if="${row.statusCode == 'OPEN'}"
+                      th:action="@{/admin/schedules/{id}/status(id=${row.id})}">
+                  <input type="hidden" name="status" value="CLOSED">
+                  <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+                  <input type="hidden" name="month" th:value="${selectedMonth}">
+                  <button type="submit" class="btn-mini">판매 종료</button>
+                </form>
+                <form method="post" th:if="${row.statusCode != 'CANCELLED'}"
+                      th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
+                      onsubmit="return confirm('이 회차를 취소하시겠습니까? 취소 후에는 되돌릴 수 없습니다.')">
+                  <input type="hidden" name="status" value="CANCELLED">
+                  <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+                  <input type="hidden" name="month" th:value="${selectedMonth}">
+                  <button type="submit" class="btn-mini btn-mini--danger">취소</button>
+                </form>
+              </td>
             </tr>
             </tbody>
           </table>
@@ -131,5 +178,226 @@
     </div>
   </main>
 </div>
+
+<!-- 회차 추가 모달 -->
+<div class="modal-overlay" id="scheduleModal">
+  <div class="modal-card">
+    <h2>회차 추가</h2>
+    <form method="post" th:action="@{/admin/schedules}" th:object="${form}" id="scheduleForm">
+      <div class="modal-section">
+        <h4>기본 정보</h4>
+        <div class="modal-grid">
+          <div class="full">
+            <label>공연 <span class="required-mark">*</span></label>
+            <select name="performanceId" required>
+              <option value="">선택하세요</option>
+              <option th:each="p : ${performances}" th:value="${p.id}" th:text="${p.title}">공연명</option>
+            </select>
+          </div>
+          <div class="full">
+            <label>공연장 · 홀 <span class="required-mark">*</span></label>
+            <select name="venueHallId" required>
+              <option value="">선택하세요</option>
+              <option th:each="h : ${hallOptions}" th:value="${h.id}" th:text="${h.label}">공연장 - 홀</option>
+            </select>
+          </div>
+          <div>
+            <label>회차 번호</label>
+            <input type="number" name="roundNumber" min="1" placeholder="예: 1">
+          </div>
+          <div>
+            <label>1인 최대 매수</label>
+            <input type="number" name="maxTicketsPerMember" min="1" placeholder="기본 4매">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-section modal-section--timeline">
+        <h4>일정 (순서대로 입력)</h4>
+        <div class="timeline-field">
+          <span class="timeline-num">1</span>
+          <div class="timeline-body">
+            <label>공연 시작 시간 <span class="required-mark">*</span></label>
+            <div class="dt-group" data-prefix="startsAt">
+              <input type="date" class="dt-date" required>
+              <select class="dt-hour"></select>
+              <span class="dt-colon">:</span>
+              <select class="dt-minute"></select>
+              <input type="hidden" name="startsAt" class="dt-hidden">
+            </div>
+          </div>
+        </div>
+        <div class="timeline-field">
+          <span class="timeline-num">2</span>
+          <div class="timeline-body">
+            <label>판매 시작</label>
+            <div class="dt-group" data-prefix="salesOpenAt">
+              <input type="date" class="dt-date">
+              <select class="dt-hour"></select>
+              <span class="dt-colon">:</span>
+              <select class="dt-minute"></select>
+              <input type="hidden" name="salesOpenAt" class="dt-hidden">
+            </div>
+            <p class="field-hint">비워두면 공연 시작 14일 전으로 자동 설정됩니다.</p>
+          </div>
+        </div>
+        <div class="timeline-field">
+          <span class="timeline-num">3</span>
+          <div class="timeline-body">
+            <label>판매 종료</label>
+            <div class="dt-group" data-prefix="salesCloseAt">
+              <input type="date" class="dt-date">
+              <select class="dt-hour"></select>
+              <span class="dt-colon">:</span>
+              <select class="dt-minute"></select>
+              <input type="hidden" name="salesCloseAt" class="dt-hidden">
+            </div>
+            <p class="field-hint">비워두면 공연 시작 시각으로 자동 설정됩니다.</p>
+          </div>
+        </div>
+        <div class="timeline-field">
+          <span class="timeline-num">4</span>
+          <div class="timeline-body">
+            <label>예매 취소 마감</label>
+            <div class="dt-group" data-prefix="cancelCloseAt">
+              <input type="date" class="dt-date">
+              <select class="dt-hour"></select>
+              <span class="dt-colon">:</span>
+              <select class="dt-minute"></select>
+              <input type="hidden" name="cancelCloseAt" class="dt-hidden">
+            </div>
+            <p class="field-hint">비워두면 판매 종료 시각까지 취소가 가능합니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="modal-error" id="modalError" style="display:none"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn--cancel" style="width:auto;padding:11px 20px"
+                onclick="document.getElementById('scheduleModal').classList.remove('is-open')">취소</button>
+        <button type="submit" class="btn--venue-add">등록</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div th:if="${error != null or message != null}">
+  <script>document.getElementById('scheduleModal').classList.remove('is-open');</script>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('scheduleForm');
+    var errorBox = document.getElementById('modalError');
+    var groups = {};
+
+    // 시(00~23) 10분 단위 분 옵션을 모든 dt-group에 채워 넣는다.
+    document.querySelectorAll('.dt-group').forEach(function (group) {
+      var hourSel = group.querySelector('.dt-hour');
+      var minuteSel = group.querySelector('.dt-minute');
+      for (var h = 0; h < 24; h++) {
+        var opt = document.createElement('option');
+        opt.value = String(h).padStart(2, '0');
+        opt.textContent = String(h).padStart(2, '0') + '시';
+        hourSel.appendChild(opt);
+      }
+      for (var m = 0; m < 60; m += 10) {
+        var mopt = document.createElement('option');
+        mopt.value = String(m).padStart(2, '0');
+        mopt.textContent = String(m).padStart(2, '0') + '분';
+        minuteSel.appendChild(mopt);
+      }
+      var prefix = group.getAttribute('data-prefix');
+      groups[prefix] = {
+        date: group.querySelector('.dt-date'),
+        hour: hourSel,
+        minute: minuteSel,
+        hidden: group.querySelector('.dt-hidden')
+      };
+    });
+
+    function syncHidden(prefix) {
+      var g = groups[prefix];
+      if (g.date.value) {
+        g.hidden.value = g.date.value + 'T' + g.hour.value + ':' + g.minute.value;
+      } else {
+        g.hidden.value = '';
+      }
+    }
+
+    function getDate(prefix) {
+      var g = groups[prefix];
+      if (!g.date.value) return null;
+      return new Date(g.date.value + 'T' + g.hour.value + ':' + g.minute.value);
+    }
+
+    function setDate(prefix, date) {
+      var g = groups[prefix];
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+      g.date.value = date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+      g.hour.value = pad(date.getHours());
+      var roundedMinute = Math.round(date.getMinutes() / 10) * 10;
+      if (roundedMinute === 60) roundedMinute = 0;
+      g.minute.value = pad(roundedMinute);
+      syncHidden(prefix);
+    }
+
+    Object.keys(groups).forEach(function (prefix) {
+      var g = groups[prefix];
+      [g.date, g.hour, g.minute].forEach(function (el) {
+        el.addEventListener('change', function () { syncHidden(prefix); });
+      });
+    });
+
+    // 공연 시작 시간을 입력하면, 아직 비어 있는 판매 시작/종료를 자동으로 채워준다.
+    groups.startsAt.date.addEventListener('change', autoFillSales);
+    groups.startsAt.hour.addEventListener('change', autoFillSales);
+    groups.startsAt.minute.addEventListener('change', autoFillSales);
+
+    function autoFillSales() {
+      var starts = getDate('startsAt');
+      if (!starts) return;
+      if (!groups.salesCloseAt.date.value) {
+        setDate('salesCloseAt', starts);
+      }
+      if (!groups.salesOpenAt.date.value) {
+        setDate('salesOpenAt', new Date(starts.getTime() - 14 * 24 * 60 * 60 * 1000));
+      }
+    }
+
+    // 제출 전 시간 순서(판매시작 <= 판매종료 <= 공연시작) 검증.
+    form.addEventListener('submit', function (e) {
+      errorBox.style.display = 'none';
+      Object.keys(groups).forEach(syncHidden);
+
+      var starts = getDate('startsAt');
+      if (!starts) return;
+      var open = getDate('salesOpenAt');
+      var close = getDate('salesCloseAt');
+      if (open && close) {
+        if (open > close) {
+          e.preventDefault();
+          errorBox.textContent = '판매 시작이 판매 종료보다 늦을 수 없습니다.';
+          errorBox.style.display = 'block';
+          return;
+        }
+        if (close > starts) {
+          e.preventDefault();
+          errorBox.textContent = '판매 종료는 공연 시작 시간보다 늦을 수 없습니다.';
+          errorBox.style.display = 'block';
+          return;
+        }
+      }
+
+      var cancelClose = getDate('cancelCloseAt');
+      if (cancelClose && cancelClose > starts) {
+        e.preventDefault();
+        errorBox.textContent = '예매 취소 마감은 공연 시작 시간보다 늦을 수 없습니다.';
+        errorBox.style.display = 'block';
+        return;
+      }
+    });
+  })();
+</script>
 </body>
 </html>

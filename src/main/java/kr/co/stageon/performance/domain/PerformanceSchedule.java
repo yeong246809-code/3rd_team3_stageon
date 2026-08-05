@@ -64,4 +64,32 @@ public class PerformanceSchedule {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    /** 관리자 "회차 추가" 화면에서 신규 회차를 생성할 때 사용합니다. */
+    public static PerformanceSchedule create(Performance performance, VenueHall venueHall, SeatChart seatChart,
+                                             Integer roundNumber, LocalDateTime startsAt,
+                                             LocalDateTime salesOpenAt, LocalDateTime salesCloseAt,
+                                             LocalDateTime cancelCloseAt, Integer maxTicketsPerMember,
+                                             Status status) {
+        PerformanceSchedule s = new PerformanceSchedule();
+        s.performance = performance;
+        s.venueHall = venueHall;
+        s.seatChart = seatChart;
+        s.roundNumber = roundNumber;
+        s.startsAt = startsAt;
+        s.salesOpenAt = salesOpenAt;
+        s.salesCloseAt = salesCloseAt;
+        s.cancelCloseAt = cancelCloseAt;
+        s.maxTicketsPerMember = maxTicketsPerMember;
+        s.status = status;
+        return s;
+    }
+
+    /** 판매 상태를 변경합니다. 이미 취소된 회차는 되돌릴 수 없습니다. */
+    public void changeStatus(Status newStatus) {
+        if (this.status == Status.CANCELLED) {
+            throw new IllegalStateException("이미 취소된 회차입니다. 상태를 변경할 수 없습니다.");
+        }
+        this.status = newStatus;
+    }
 }

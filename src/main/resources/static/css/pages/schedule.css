@@ -1,0 +1,115 @@
+/* 일정·회차 관리(AD07) 전용 스타일입니다. tokens.css 변수를 사용합니다. */
+
+/* 통계 카드 색상 악센트 */
+.stat-card--brand { border-top: 4px solid var(--brand); }
+.stat-card--info { border-top: 4px solid var(--info); }
+.stat-card--warn { border-top: 4px solid var(--warning); }
+
+/* 회차 추가 버튼 (venue-seats.css의 .btn--venue-add 재사용, 여기선 크기만 보정) */
+.admin-title .btn--venue-add { padding: 11px 20px; }
+
+/* 상단 요약 테이블 뱃지 살짝 강조 */
+.structure-table .badge { font-weight: 700; }
+
+/* 하단 상세 목록 테이블 줄무늬 + 헤더 색상 */
+#full-list .table thead th {
+    background: linear-gradient(90deg, var(--sidebar), #333a63);
+    color: #fff;
+}
+#full-list .table tbody tr:nth-child(even) { background: var(--surface); }
+#full-list .table tbody tr:hover { background: var(--brand-soft); }
+
+/* 알림 배너 */
+.alert { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; margin-bottom: 16px; }
+.alert--success { background: var(--success-soft); color: var(--success); }
+.alert--error { background: #fde8e8; color: var(--danger); }
+
+/* 회차 추가 모달 */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(17, 24, 39, .55);
+    display: none; align-items: center; justify-content: center; z-index: 200;
+}
+.modal-overlay.is-open { display: flex; }
+.modal-card {
+    background: var(--canvas); border-radius: var(--radius-lg); padding: 30px;
+    width: min(560px, 92vw); max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow);
+}
+.modal-card h2 { margin: 0 0 20px; font-size: 18px; font-weight: 800; color: var(--ink); }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.modal-grid .full { grid-column: 1 / -1; }
+.modal-grid label { display: block; font-size: 12px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+.modal-grid input, .modal-grid select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--ink); background: var(--surface); box-sizing: border-box;
+    font-family: inherit; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.modal-grid input:focus, .modal-grid select:focus {
+    outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); background: var(--canvas);
+}
+.modal-hint { grid-column: 1 / -1; font-size: 12px; color: var(--subtle); margin-top: -4px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+
+/* 모달 섹션 구분 */
+.modal-section { margin-bottom: 22px; }
+.modal-section h4 {
+    font-size: 12px; font-weight: 800; color: var(--muted); letter-spacing: .03em;
+    text-transform: uppercase; margin: 0 0 12px; padding-left: 10px; border-left: 3px solid var(--brand);
+}
+
+/* 일정 섹션: 순서 번호가 붙은 세로 타임라인 형태 */
+.modal-section--timeline { display: flex; flex-direction: column; gap: 14px; }
+.timeline-field { display: flex; gap: 12px; align-items: flex-start; }
+.timeline-num {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--brand-soft); color: var(--brand); font-size: 12px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center; margin-top: 2px;
+}
+.timeline-body { flex: 1; }
+.timeline-body label { display: block; font-size: 13px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+.timeline-body input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--ink); background: var(--surface); box-sizing: border-box;
+}
+.timeline-body input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); background: var(--canvas); }
+.field-hint { font-size: 11px; color: var(--subtle); margin: 6px 0 0; }
+.modal-error { font-size: 13px; font-weight: 700; color: var(--danger); background: #fde8e8; padding: 10px 14px; border-radius: var(--radius-sm); margin: 0 0 4px; }
+
+/* 회차 운영 현황 "전체 보기" 시 스크롤 영역 */
+.scroll-tall { max-height: 420px; overflow-y: auto; }
+
+/* 날짜 + 시/분 드롭다운 조합 (브라우저 기본 datetime-local 대체) */
+.dt-group { display: flex; align-items: center; gap: 8px; }
+.dt-group .dt-date { flex: 1 1 160px; min-width: 0; }
+.dt-group .dt-hour,
+.dt-group .dt-minute {
+    flex: 0 0 76px; padding: 10px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--ink); background: var(--surface); box-sizing: border-box; font-family: inherit;
+}
+.dt-group .dt-hour:focus,
+.dt-group .dt-minute:focus,
+.dt-group .dt-date:focus {
+    outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); background: var(--canvas);
+}
+.dt-group .dt-colon { font-weight: 700; color: var(--muted); }
+
+/* 충돌 회차 표시 태그 */
+.conflict-tag {
+    display: inline-flex; align-items: center; margin-left: 6px;
+    padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800;
+    color: var(--danger); background: #fde8e8; white-space: nowrap;
+}
+
+/* 충돌 행 배경 강조 */
+.structure-table tbody tr.is-conflict,
+#full-list .table tbody tr.is-conflict { background: #fff5f5; }
+.structure-table tbody tr.is-conflict:hover,
+#full-list .table tbody tr.is-conflict:hover { background: #fde8e8; }
+
+/* 구조 카드 헤더 링크 묶음 */
+.head-links { display: flex; align-items: center; gap: 14px; }
+.back-link--danger { color: var(--danger); }
+.back-link--danger:hover { text-decoration: underline; }
+
+/* 상세 목록 "관리" 컬럼: 버튼별 form이 가로로 나란히 붙도록 */
+#full-list .action-cell { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+#full-list .action-cell form { margin: 0; display: inline; }

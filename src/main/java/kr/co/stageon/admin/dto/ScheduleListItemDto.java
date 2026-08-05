@@ -14,4 +14,7 @@ public class ScheduleListItemDto {
     private final String statusText;
     private final String badgeClass;
     private final long remainingSeats;
+    /** 같은 공연장 홀에서 시간대가 겹치는 회차인지 여부입니다. */
+    private final boolean conflict;
+    private final String statusCode;
 }
