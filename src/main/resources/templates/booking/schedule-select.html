@@ -1,56 +1,762 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn | 회차 선택</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
-  </head>
-  <body id="top">
-    <div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
-    <main class="booking-page">
-      <div class="shell booking-grid">
-        <!-- STEP 01: 공연 날짜와 회차 선택 -->
-        <section>
-          <header class="page-heading">
-            <span class="eyebrow">STEP 01</span>
-            <h1>날짜와 회차를 선택하세요</h1>
-            <p>예매 가능한 회차만 선택할 수 있습니다.</p>
-          </header>
-          <div class="card">
-            <div class="cluster" style="justify-content:space-between">
-              <button class="btn" type="button" aria-label="이전 달">‹</button>
-              <h2>2026년 8월</h2>
-              <button class="btn" type="button" aria-label="다음 달">›</button>
-            </div>
-            <div class="tabs" style="margin:24px 0">
-              <span class="tab">14 금</span>
-              <span class="tab is-active">15 토</span>
-              <span class="tab">16 일</span>
-              <span class="tab">22 토</span>
-              <span class="tab">23 일</span>
-            </div>
-            <div class="schedule-list">
-              <div class="schedule-item">
-                <div>
-                  <b>1회 14:00</b>
-                  <p class="section-copy">잔여 219석</p>
-                </div>
-                <a class="btn" th:href="@{/queue}" href="/queue">선택</a>
-              </div>
-              <div class="schedule-item">
-                <div>
-                  <b>2회 19:00</b>
-                  <p class="section-copy">잔여 219석</p>
-                </div>
-                <a class="btn btn--primary" th:href="@{/queue}" href="/queue">선택하고 대기열 입장</a>
-              </div>
-            </div>
-          </div>
-        </section>
-        <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>StageOn | 날짜·회차 선택</title>
+
+  <link rel="stylesheet"
+        th:href="@{/css/app.css}"
+        href="/css/app.css">
+
+  <link rel="stylesheet"
+        th:href="@{/css/pages/booking-pages.css}"
+        href="/css/pages/booking-pages.css">
+</head>
+
+<body id="top">
+
+<div th:replace="~{fragments/booking/booking-header :: bookingHeader(step=1)}"></div>
+
+<main class="booking-page schedule-page">
+  <div class="shell schedule-shell">
+
+    <header class="schedule-heading">
+      <h1 th:text="${performance.title}">공연명</h1>
+      <p>예매할 날짜와 회차를 순서대로 선택해 주세요.</p>
+    </header>
+
+    <section class="booking-progress" aria-label="예매 단계">
+      <div class="booking-progress__item is-active">
+        <strong>1 날짜 선택</strong>
+        <span id="selected-date-text">선택 전</span>
       </div>
-    </main>
-  </body>
+
+      <div class="booking-progress__item">
+        <strong>2 회차 선택</strong>
+        <span id="selected-schedule-text">선택 전</span>
+      </div>
+
+      <div class="booking-progress__item">
+        <strong>예매 제한</strong>
+
+        <span th:text="${#lists.isEmpty(scheduleSelections)
+        ? '회차 없음'
+        : '1인 최대 ' + scheduleSelections[0].maxTicketsPerMember + '매'}">
+          1인 최대 4매
+        </span>
+      </div>
+    </section>
+
+    <div class="schedule-workspace">
+
+      <!-- [남수아 담당] starts_at 기준 날짜 달력 -->
+      <section class="schedule-calendar card">
+        <div class="schedule-calendar__header">
+          <button id="previous-month-button"
+                  class="calendar-move-button"
+                  type="button"
+                  aria-label="이전 달">‹</button>
+
+          <h2 id="calendar-month-title">공연 날짜</h2>
+
+          <button id="next-month-button"
+                  class="calendar-move-button"
+                  type="button"
+                  aria-label="다음 달">›</button>
+        </div>
+
+        <div class="schedule-week-header" aria-hidden="true">
+          <span class="is-sunday">일</span>
+          <span>월</span>
+          <span>화</span>
+          <span>수</span>
+          <span>목</span>
+          <span>금</span>
+          <span class="is-saturday">토</span>
+        </div>
+
+        <div id="calendar-grid"
+             class="schedule-calendar-grid"></div>
+
+        <div class="calendar-legend">
+          <span class="calendar-legend-item">
+            <i class="legend-dot legend-dot--open"></i>
+            예매 가능
+          </span>
+
+                  <span class="calendar-legend-item">
+            <i class="legend-dot legend-dot--scheduled"></i>
+            예매 예정
+          </span>
+
+                  <span class="calendar-legend-item">
+            <i class="legend-dot legend-dot--closed"></i>
+            판매 종료
+          </span>
+
+                  <span class="calendar-legend-item">
+            <i class="legend-dot legend-dot--cancelled"></i>
+            공연 취소
+          </span>
+        </div>
+      </section>
+
+      <!-- [남수아 담당] 회차 시간 및 등급별 잔여석 -->
+      <section class="schedule-session-area">
+        <div class="card schedule-session-card">
+          <div class="schedule-session-card__header">
+            <h2 id="session-date-title">
+              날짜를 선택해 주세요
+            </h2>
+
+            <span>
+              잔여석은 실시간으로 변경될 수 있습니다.
+            </span>
+          </div>
+
+          <div id="schedule-list"
+               class="schedule-list">
+
+            <p class="schedule-empty-message">
+              왼쪽 달력에서 공연 날짜를 선택해 주세요.
+            </p>
+          </div>
+        </div>
+
+        <div class="card schedule-notice">
+          <h2>예매 전 확인</h2>
+
+          <ul>
+            <li>
+              예매 가능한 상태이며 잔여석이 있는 회차만 선택할 수 있습니다.
+            </li>
+
+            <li>
+              좌석 등급명은 해당 회차에 연결된 좌석도를 기준으로 표시됩니다.
+            </li>
+
+            <li>
+              회차를 선택하면 다음 예매 흐름으로 공연 번호와 회차 번호를 전달합니다.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="schedule-action">
+      <button id="move-next-button"
+              class="schedule-submit-button"
+              type="button"
+              disabled>
+        회차를 선택해 주세요
+      </button>
+    </div>
+
+    <!--
+      [남수아 담당]
+      ScheduleSelectionController가 전달한 scheduleSelections를
+      JavaScript가 읽을 수 있는 data 속성으로 변환합니다.
+    -->
+    <div id="schedule-data"
+         hidden
+         th:attr="data-performance-id=${performanceId}">
+
+      <div th:each="selection : ${scheduleSelections}"
+           class="schedule-data-item"
+           th:attr="
+             data-schedule-id=${selection.scheduleId},
+             data-date=${#temporals.format(selection.startsAt, 'yyyy-MM-dd')},
+             data-time=${#temporals.format(selection.startsAt, 'HH:mm')},
+             data-round=${selection.roundNumber},
+             data-status=${selection.status},
+             data-venue=${selection.venueName},
+             data-hall=${selection.venueHallName},
+             data-max-tickets=${selection.maxTicketsPerMember}">
+
+        <span th:each="grade : ${selection.seatGrades}"
+              class="schedule-grade-data"
+              th:attr="
+                data-grade-id=${grade.gradeId},
+                data-grade-name=${grade.gradeName},
+                data-display-color=${grade.displayColor},
+                data-sort-order=${grade.sortOrder},
+                data-total-count=${grade.totalSeatCount},
+                data-available-count=${grade.availableSeatCount}">
+        </span>
+      </div>
+    </div>
+
+    <div class="schedule-no-data card"
+         th:if="${#lists.isEmpty(scheduleSelections)}">
+      등록된 공연 회차가 없습니다.
+    </div>
+  </div>
+</main>
+
+<script>
+  const scheduleDataRoot =
+          document.getElementById("schedule-data");
+
+  const performanceId =
+          scheduleDataRoot.dataset.performanceId;
+
+  const schedules = [
+    ...document.querySelectorAll(".schedule-data-item")
+  ].map((item) => {
+    const seatGrades = [
+      ...item.querySelectorAll(".schedule-grade-data")
+    ].map((grade) => ({
+      gradeId: Number(grade.dataset.gradeId),
+      gradeName: grade.dataset.gradeName,
+      displayColor: grade.dataset.displayColor,
+      sortOrder: Number(grade.dataset.sortOrder),
+      totalSeatCount: Number(grade.dataset.totalCount),
+      availableSeatCount:
+              Number(grade.dataset.availableCount)
+    }));
+
+    const totalAvailableSeatCount =
+            seatGrades.reduce(
+                    (total, grade) =>
+                            total + grade.availableSeatCount,
+                    0
+            );
+
+    return {
+      scheduleId: Number(item.dataset.scheduleId),
+      date: item.dataset.date,
+      time: item.dataset.time,
+      roundNumber: Number(item.dataset.round),
+      status: item.dataset.status,
+      venue: item.dataset.venue,
+      hall: item.dataset.hall,
+      maxTickets: Number(item.dataset.maxTickets),
+      seatGrades,
+      totalAvailableSeatCount
+    };
+  });
+
+  const selectableSchedules = schedules.filter(
+          (schedule) =>
+                  schedule.status === "OPEN"
+                  && schedule.totalAvailableSeatCount > 0
+  );
+
+  const availableDates = [
+    ...new Set(
+            selectableSchedules.map(
+                    (schedule) => schedule.date
+            )
+    )
+  ].sort();
+
+  const monthKeys = [
+    ...new Set(
+            schedules.map(
+                    (schedule) => schedule.date.slice(0, 7)
+            )
+    )
+  ].sort();
+
+  const calendarTitle =
+          document.getElementById("calendar-month-title");
+
+  const calendarGrid =
+          document.getElementById("calendar-grid");
+
+  const previousMonthButton =
+          document.getElementById("previous-month-button");
+
+  const nextMonthButton =
+          document.getElementById("next-month-button");
+
+  const sessionDateTitle =
+          document.getElementById("session-date-title");
+
+  const scheduleList =
+          document.getElementById("schedule-list");
+
+  const selectedDateText =
+          document.getElementById("selected-date-text");
+
+  const selectedScheduleText =
+          document.getElementById("selected-schedule-text");
+
+  const moveNextButton =
+          document.getElementById("move-next-button");
+
+  let currentMonthIndex = 0;
+  let selectedDate = null;
+  let selectedScheduleId = null;
+
+  function getStatusLabel(schedule) {
+    if (schedule.totalAvailableSeatCount === 0) {
+      return "매진";
+    }
+
+    const labels = {
+      OPEN: "예매 가능",
+      SCHEDULED: "예매 예정",
+      CLOSED: "판매 종료",
+      CANCELLED: "공연 취소"
+    };
+
+    return labels[schedule.status] || schedule.status;
+  }
+
+  function formatSelectedDate(dateText) {
+    const date = new Date(`${dateText}T00:00:00`);
+    const weekdays =
+            ["일", "월", "화", "수", "목", "금", "토"];
+
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`
+            + ` (${weekdays[date.getDay()]})`;
+  }
+
+  function resetScheduleSelection() {
+    selectedScheduleId = null;
+    selectedScheduleText.textContent = "선택 전";
+    moveNextButton.disabled = true;
+    moveNextButton.textContent = "회차를 선택해 주세요";
+  }
+
+  function renderCalendar() {
+    if (monthKeys.length === 0) {
+      calendarTitle.textContent = "등록된 일정 없음";
+      calendarGrid.innerHTML = "";
+      previousMonthButton.disabled = true;
+      nextMonthButton.disabled = true;
+      return;
+    }
+
+    const monthKey = monthKeys[currentMonthIndex];
+
+    const [year, month] =
+            monthKey.split("-").map(Number);
+
+    const firstDay =
+            new Date(year, month - 1, 1);
+
+    const lastDate =
+            new Date(year, month, 0).getDate();
+
+    const previousMonthLastDate =
+            new Date(year, month - 1, 0).getDate();
+
+    const firstWeekday =
+            firstDay.getDay();
+
+    calendarTitle.textContent =
+            `${year}년 ${month}월`;
+
+    calendarGrid.innerHTML = "";
+
+    previousMonthButton.disabled =
+            currentMonthIndex === 0;
+
+    nextMonthButton.disabled =
+            currentMonthIndex === monthKeys.length - 1;
+
+    for (let index = firstWeekday - 1;
+         index >= 0;
+         index--) {
+
+      const outsideDay =
+              document.createElement("span");
+
+      outsideDay.className =
+              "calendar-day is-outside";
+
+      outsideDay.textContent =
+              previousMonthLastDate - index;
+
+      calendarGrid.appendChild(outsideDay);
+    }
+
+    for (let day = 1; day <= lastDate; day++) {
+      const dateText =
+              `${year}-${String(month).padStart(2, "0")}`
+              + `-${String(day).padStart(2, "0")}`;
+
+      const dateSchedules = schedules.filter(
+              (schedule) =>
+                      schedule.date === dateText
+      );
+
+      const hasSchedule =
+              dateSchedules.length > 0;
+
+      const hasSelectableSchedule =
+              availableDates.includes(dateText);
+
+      /*
+ * 날짜에 포함된 회차 상태를 한글로 표시합니다.
+ */
+      let dateStatusLabel = "공연 없음";
+
+      if (dateSchedules.some(
+              (schedule) => schedule.status === "OPEN"
+      )) {
+        dateStatusLabel = "예매 가능";
+      } else if (dateSchedules.some(
+              (schedule) => schedule.status === "SCHEDULED"
+      )) {
+        dateStatusLabel = "예매 예정";
+      } else if (dateSchedules.some(
+              (schedule) => schedule.status === "CLOSED"
+      )) {
+        dateStatusLabel = "판매 종료";
+      } else if (dateSchedules.some(
+              (schedule) => schedule.status === "CANCELLED"
+      )) {
+        dateStatusLabel = "공연 취소";
+      }
+
+      const dayButton =
+              document.createElement("button");
+
+      dayButton.type = "button";
+      dayButton.className = "calendar-day";
+      dayButton.textContent = day;
+      dayButton.dataset.date = dateText;
+
+      dayButton.dataset.statusLabel = dateStatusLabel;
+      dayButton.title = `${formatSelectedDate(dateText)} · ${dateStatusLabel}`;
+      dayButton.setAttribute(
+              "aria-label",
+              `${formatSelectedDate(dateText)} ${dateStatusLabel}`
+      );
+
+      const weekday =
+              new Date(`${dateText}T00:00:00`).getDay();
+
+      if (weekday === 0) {
+        dayButton.classList.add("is-sunday");
+      }
+
+      if (weekday === 6) {
+        dayButton.classList.add("is-saturday");
+      }
+
+      if (hasSchedule) {
+        dayButton.classList.add("has-schedule");
+      }
+
+      if (dateStatusLabel === "예매 가능") {
+        dayButton.classList.add("is-open-date");
+      }
+
+      if (dateStatusLabel === "예매 예정") {
+        dayButton.classList.add("is-scheduled-date");
+      }
+
+      if (dateStatusLabel === "판매 종료") {
+        dayButton.classList.add("is-closed-date");
+      }
+
+      if (dateStatusLabel === "공연 취소") {
+        dayButton.classList.add("is-cancelled-date");
+      }
+
+      if (!hasSelectableSchedule) {
+        dayButton.disabled = true;
+      }
+
+      if (selectedDate === dateText) {
+        dayButton.classList.add("is-selected");
+      }
+
+      dayButton.addEventListener("click", () => {
+        selectDate(dateText);
+      });
+
+      calendarGrid.appendChild(dayButton);
+    }
+
+    const totalCells =
+            firstWeekday + lastDate;
+
+    const trailingCells =
+            totalCells % 7 === 0
+                    ? 0
+                    : 7 - (totalCells % 7);
+
+    for (let day = 1;
+         day <= trailingCells;
+         day++) {
+
+      const outsideDay =
+              document.createElement("span");
+
+      outsideDay.className =
+              "calendar-day is-outside";
+
+      outsideDay.textContent = day;
+
+      calendarGrid.appendChild(outsideDay);
+    }
+  }
+
+  function selectDate(dateText) {
+    selectedDate = dateText;
+
+    selectedDateText.textContent =
+            formatSelectedDate(dateText);
+
+    resetScheduleSelection();
+    renderCalendar();
+    renderSchedules();
+  }
+
+  function renderSeatGrades(schedule) {
+    if (schedule.seatGrades.length === 0) {
+      return `
+        <p class="schedule-grade-empty">
+          좌석 재고 정보가 없습니다.
+        </p>
+      `;
+    }
+
+    return [...schedule.seatGrades]
+            .sort(
+                    (first, second) =>
+                            first.sortOrder - second.sortOrder
+            )
+            .map((grade) => {
+              const soldOut =
+                      grade.availableSeatCount === 0;
+
+              const color =
+                      grade.displayColor || "#9ca3af";
+
+              return `
+          <div class="schedule-grade-row
+                      ${soldOut ? "is-sold-out" : ""}">
+
+            <span class="schedule-grade-name">
+              <i class="schedule-grade-color"
+                 style="background:${color}">
+              </i>
+
+              ${grade.gradeName}
+            </span>
+
+            <span class="schedule-grade-count">
+              ${
+                      soldOut
+                              ? "매진"
+                              : `잔여 ${grade.availableSeatCount}석`
+              }
+            </span>
+          </div>
+        `;
+            })
+            .join("");
+  }
+
+  function renderSchedules() {
+    const dateSchedules = schedules
+            .filter(
+                    (schedule) =>
+                            schedule.date === selectedDate
+            )
+            .sort(
+                    (first, second) =>
+                            first.time.localeCompare(second.time)
+            );
+
+    sessionDateTitle.textContent =
+            `${formatSelectedDate(selectedDate)} 공연`;
+
+    scheduleList.innerHTML = "";
+
+    if (dateSchedules.length === 0) {
+      scheduleList.innerHTML =
+              '<p class="schedule-empty-message">'
+              + '등록된 회차가 없습니다.</p>';
+
+      return;
+    }
+
+    dateSchedules.forEach((schedule) => {
+      const selectable =
+              schedule.status === "OPEN"
+              && schedule.totalAvailableSeatCount > 0;
+
+      const scheduleButton =
+              document.createElement("button");
+
+      scheduleButton.type = "button";
+      scheduleButton.className =
+              "schedule-item schedule-item--grade";
+
+      scheduleButton.dataset.scheduleId =
+              schedule.scheduleId;
+
+      scheduleButton.disabled = !selectable;
+
+      if (selectedScheduleId
+              === schedule.scheduleId) {
+
+        scheduleButton.classList.add(
+                "is-selected"
+        );
+      }
+
+      if (!selectable) {
+        scheduleButton.classList.add(
+                "is-disabled"
+        );
+      }
+
+      scheduleButton.innerHTML = `
+        <div class="schedule-item-header">
+          <div class="schedule-main-info">
+            <span class="schedule-round">
+              ${schedule.roundNumber || "-"}회
+            </span>
+
+            <strong class="schedule-time">
+              ${schedule.time}
+            </strong>
+
+            <span class="schedule-place">
+              ${schedule.venue || ""}
+              ${schedule.hall || ""}
+            </span>
+          </div>
+
+          <div class="schedule-summary">
+            <span class="schedule-total-seat">
+              총 잔여 ${schedule.totalAvailableSeatCount}석
+            </span>
+
+            <span class="schedule-status
+                         status-${schedule.status.toLowerCase()}">
+              ${getStatusLabel(schedule)}
+            </span>
+
+            <span class="schedule-radio"
+                  aria-hidden="true">
+            </span>
+          </div>
+        </div>
+
+        <div class="schedule-grade-list">
+          ${renderSeatGrades(schedule)}
+        </div>
+      `;
+
+      if (selectable) {
+        scheduleButton.addEventListener(
+                "click",
+                () => selectSchedule(schedule)
+        );
+      }
+
+      scheduleList.appendChild(scheduleButton);
+    });
+  }
+
+  function selectSchedule(schedule) {
+    selectedScheduleId =
+            schedule.scheduleId;
+
+    selectedScheduleText.textContent =
+            `${schedule.roundNumber || "-"}회 ${schedule.time}`;
+
+    moveNextButton.disabled = false;
+    moveNextButton.textContent =
+            "선택한 회차로 이동";
+
+    renderSchedules();
+  }
+
+  function clearDateAndSchedule() {
+    selectedDate = null;
+    selectedDateText.textContent = "선택 전";
+
+    resetScheduleSelection();
+
+    sessionDateTitle.textContent =
+            "날짜를 선택해 주세요";
+
+    scheduleList.innerHTML =
+            '<p class="schedule-empty-message">'
+            + '왼쪽 달력에서 공연 날짜를 선택해 주세요.</p>';
+  }
+
+  previousMonthButton.addEventListener(
+          "click",
+          () => {
+
+            if (currentMonthIndex === 0) {
+              return;
+            }
+
+            currentMonthIndex--;
+            clearDateAndSchedule();
+            renderCalendar();
+          });
+
+  nextMonthButton.addEventListener(
+          "click",
+          () => {
+
+            if (currentMonthIndex
+                    >= monthKeys.length - 1) {
+              return;
+            }
+
+            currentMonthIndex++;
+            clearDateAndSchedule();
+            renderCalendar();
+          });
+
+  moveNextButton.addEventListener(
+          "click",
+          () => {
+
+            if (!selectedScheduleId) {
+              alert("회차를 선택해 주세요.");
+              return;
+            }
+
+            /*
+             * [남수아 담당 범위]
+             * 다음 담당 영역에 performanceId와 scheduleId를 전달합니다.
+             *
+             * 현재 대기열 Controller는 token도 필수로 받기 때문에
+             * 대기열 담당자가 연결 주소를 확정하기 전까지는
+             * 좌석 선택 화면으로 흐름만 확인합니다.
+             */
+            const nextUrl =
+                    `/booking/seats`
+                    + `?performanceId=${encodeURIComponent(performanceId)}`
+                    + `&scheduleId=${encodeURIComponent(selectedScheduleId)}`;
+
+            window.location.href = nextUrl;
+          });
+
+  renderCalendar();
+
+  const firstSelectableSchedule =
+          selectableSchedules[0];
+
+  if (firstSelectableSchedule) {
+    const firstMonthKey =
+            firstSelectableSchedule.date.slice(0, 7);
+
+    currentMonthIndex =
+            Math.max(
+                    monthKeys.indexOf(firstMonthKey),
+                    0
+            );
+
+    selectDate(firstSelectableSchedule.date);
+  }
+</script>
+</body>
 </html>

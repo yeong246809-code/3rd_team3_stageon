@@ -4,6 +4,7 @@ import kr.co.stageon.performance.domain.PerformanceSchedule;
 
 import java.time.LocalDateTime;
 
+
 /** 회차 선택 화면과 회차 API에서 사용하는 DTO입니다. */
 public record ScheduleResponse(
         Long id,
@@ -21,6 +22,7 @@ public record ScheduleResponse(
         Integer maxTicketsPerMember,
         String seatsioEventKey,
         String status
+
 ) {
     public static ScheduleResponse from(PerformanceSchedule schedule) {
         var venueHall = schedule.getVenueHall();

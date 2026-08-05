@@ -41,9 +41,23 @@ public class PerformanceViewController {
     }
 
     @GetMapping("/performances/{performanceId}/schedules")
-    public String schedules(@PathVariable Long performanceId, Model model) {
+    public String schedules(
+            @PathVariable Long performanceId,
+            Model model
+    ) {
+        var performance = performanceQueryService
+                .findPerformance(performanceId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("공연을 찾을 수 없습니다.")
+                );
+
+        model.addAttribute("performance", performance);
         model.addAttribute("performanceId", performanceId);
-        model.addAttribute("schedules", performanceQueryService.findSchedules(performanceId));
+        model.addAttribute(
+                "schedules",
+                performanceQueryService.findSchedules(performanceId)
+        );
+
         return "booking/schedule-select";
     }
 
