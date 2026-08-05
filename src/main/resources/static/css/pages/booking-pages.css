@@ -1,20 +1,678 @@
-.schedule-list { display: grid; gap: 12px; }
-.schedule-item { padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
-.queue-box { width: min(calc(100% - 32px), 760px); margin: 0 auto; text-align: center; }
-.queue-count { margin: 18px 0; color: var(--brand); font-family: "Hanken Grotesk"; font-size: 58px; font-weight: 800; }
-.progress { height: 10px; overflow: hidden; border-radius: 999px; background: var(--surface-2); }
-.progress i { width: 44%; height: 100%; display: block; background: var(--brand); }
-.seat-stage { margin-bottom: 28px; padding: 12px; border-radius: 50% 50% 8px 8px; color: #fff; background: var(--ink); text-align: center; }
-.seat-map { display: grid; gap: 10px; justify-content: center; }
-.seat-row { display: flex; gap: 8px; }
-.seat { width: 28px; height: 28px; border: 0; border-radius: 6px 6px 3px 3px; background: #d1d5db; }
-.seat.is-selected { background: var(--brand); }
-.seat.is-held { background: #f59e0b; }
-.seat.is-disabled { background: #4b5563; }
-.payment-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.payment-method { padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fff; text-align: center; font-weight: 700; }
-.payment-method.is-active { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
-.complete-card { width: min(calc(100% - 32px), 680px); margin: 0 auto; text-align: center; }
-.complete-check { width: 76px; height: 76px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--success); font-size: 36px; }
-@media (max-width: 620px) { .payment-methods { grid-template-columns: 1fr; } .seat { width: 22px; height: 22px; } }
+.schedule-list {
+    display: grid;
+    gap: 12px;
+}
 
+.schedule-item {
+    width: 100%;
+    min-height: 64px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 46px 76px minmax(140px, 1fr) auto 22px;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.schedule-item:hover:not(:disabled) {
+    border-color: var(--brand);
+    transform: translateY(-1px);
+}
+
+.schedule-item.is-selected {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    box-shadow: 0 0 0 1px var(--brand);
+}
+
+.schedule-item.is-disabled {
+    background: #f8f9fb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.schedule-round {
+    min-width: 42px;
+    padding: 6px 8px;
+    border-radius: 999px;
+    background: #17191d;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.schedule-item.is-disabled .schedule-round {
+    background: #e5e7eb;
+    color: #6b7280;
+}
+
+.schedule-time {
+    font-size: 18px;
+}
+
+.schedule-place {
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.schedule-status {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.status-open {
+    color: #159447;
+}
+
+.status-scheduled {
+    color: #2563eb;
+}
+
+.status-closed,
+.status-cancelled {
+    color: #9ca3af;
+}
+
+.schedule-radio {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #cfd5dd;
+    border-radius: 50%;
+}
+
+.schedule-item.is-selected .schedule-radio {
+    border: 4px solid var(--brand);
+}
+
+.schedule-page {
+    background: #f4f6f9;
+}
+
+.schedule-shell {
+    padding-top: 28px;
+    padding-bottom: 56px;
+}
+
+.schedule-heading {
+    margin-bottom: 20px;
+}
+
+.schedule-heading h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+.schedule-heading p {
+    margin: 8px 0 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.booking-progress {
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.8fr;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.booking-progress__item {
+    min-height: 54px;
+    padding: 13px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-right: 1px solid var(--line);
+}
+
+.booking-progress__item:last-child {
+    border-right: 0;
+}
+
+.booking-progress__item strong {
+    color: #747b86;
+    font-size: 12px;
+}
+
+.booking-progress__item.is-active strong {
+    color: var(--brand);
+}
+
+.booking-progress__item span {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.schedule-workspace {
+    display: grid;
+    grid-template-columns: minmax(360px, 0.92fr) minmax(420px, 1.08fr);
+    gap: 18px;
+}
+
+.schedule-calendar,
+.schedule-session-card,
+.schedule-notice {
+    padding: 22px;
+}
+
+.schedule-calendar__header,
+.schedule-session-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.schedule-calendar__header h2,
+.schedule-session-card__header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.schedule-session-card__header > span {
+    color: #9ca3af;
+    font-size: 10px;
+}
+
+.calendar-move-button {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.calendar-move-button:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+}
+
+.schedule-week-header,
+.schedule-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.schedule-week-header {
+    margin-top: 20px;
+    color: #7b818c;
+    font-size: 11px;
+    text-align: center;
+}
+
+.schedule-week-header span {
+    padding: 8px 0;
+}
+
+.schedule-week-header .is-sunday,
+.calendar-day.is-sunday {
+    color: #ef4444;
+}
+
+.schedule-week-header .is-saturday,
+.calendar-day.is-saturday {
+    color: #2563eb;
+}
+
+.schedule-calendar-grid {
+    row-gap: 6px;
+}
+
+.calendar-day {
+    position: relative;
+    min-height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #24272d;
+    font-size: 12px;
+}
+
+button.calendar-day {
+    cursor: pointer;
+}
+
+/* 예매 가능한 날짜에 마우스를 올렸을 때 */
+button.calendar-day:hover:not(:disabled) {
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-weight: 800;
+    box-shadow: inset 0 0 0 1px var(--brand);
+}
+
+.calendar-day.has-schedule::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 5px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--brand);
+    transform: translateX(-50%);
+}
+
+.calendar-day.is-selected {
+    background: var(--brand);
+    color: #fff;
+    font-weight: 800;
+}
+
+.calendar-day.is-selected::after {
+    background: #fff;
+}
+
+.calendar-day:disabled {
+    color: #c4c8cf;
+    cursor: not-allowed;
+}
+
+.calendar-day.is-outside {
+    display: grid;
+    place-items: center;
+    color: #d2d5da;
+}
+
+.calendar-legend {
+    margin-top: 18px;
+    padding: 12px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px 18px;
+    border-radius: 8px;
+    background: #f5f6f8;
+    color: #6b7280;
+    font-size: 10px;
+}
+
+.legend-dot {
+    width: 7px;
+    height: 7px;
+    margin-right: 4px;
+    display: inline-block;
+    border-radius: 50%;
+    background: var(--brand);
+}
+
+.schedule-session-area {
+    display: grid;
+    gap: 14px;
+}
+
+.schedule-session-card {
+    min-height: 300px;
+}
+
+.schedule-session-card .schedule-list {
+    margin-top: 22px;
+}
+
+.schedule-empty-message {
+    margin: 50px 0;
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center;
+}
+
+.schedule-notice h2 {
+    margin: 0 0 10px;
+    font-size: 14px;
+}
+
+.schedule-notice ul {
+    margin: 0;
+    padding-left: 17px;
+    color: #68707c;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.schedule-action {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.schedule-submit-button {
+    min-width: 230px;
+    min-height: 48px;
+    padding: 0 28px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.schedule-submit-button:disabled {
+    background: #cfd3d9;
+    cursor: not-allowed;
+}
+
+.schedule-no-data {
+    margin-top: 16px;
+    padding: 30px;
+    text-align: center;
+}
+
+.queue-box {
+    width: min(calc(100% - 32px), 760px);
+    margin: 0 auto;
+    text-align: center;
+}
+
+.queue-count {
+    margin: 18px 0;
+    color: var(--brand);
+    font-family: "Hanken Grotesk";
+    font-size: 58px;
+    font-weight: 800;
+}
+
+.progress {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--surface-2);
+}
+
+.progress i {
+    width: 44%;
+    height: 100%;
+    display: block;
+    background: var(--brand);
+}
+
+.seat-stage {
+    margin-bottom: 28px;
+    padding: 12px;
+    border-radius: 50% 50% 8px 8px;
+    color: #fff;
+    background: var(--ink);
+    text-align: center;
+}
+
+.seat-map {
+    display: grid;
+    gap: 10px;
+    justify-content: center;
+}
+
+.seat-row {
+    display: flex;
+    gap: 8px;
+}
+
+.seat {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px 6px 3px 3px;
+    background: #d1d5db;
+}
+
+.seat.is-selected {
+    background: var(--brand);
+}
+
+.seat.is-held {
+    background: #f59e0b;
+}
+
+.seat.is-disabled {
+    background: #4b5563;
+}
+
+.payment-methods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.payment-method {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    text-align: center;
+    font-weight: 700;
+}
+
+.payment-method.is-active {
+    color: var(--brand);
+    border-color: var(--brand);
+    background: var(--brand-soft);
+}
+
+.complete-card {
+    width: min(calc(100% - 32px), 680px);
+    margin: 0 auto;
+    text-align: center;
+}
+
+.complete-check {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 20px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #fff;
+    background: var(--success);
+    font-size: 36px;
+}
+
+@media (max-width: 900px) {
+    .schedule-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-progress {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-progress__item {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .booking-progress__item:last-child {
+        border-bottom: 0;
+    }
+}
+
+@media (max-width: 620px) {
+    .schedule-item {
+        grid-template-columns: 42px 64px 1fr 18px;
+    }
+
+    .schedule-place {
+        display: none;
+    }
+
+    .schedule-status {
+        grid-column: 2 / 4;
+    }
+
+    .schedule-submit-button {
+        width: 100%;
+    }
+
+    .payment-methods {
+        grid-template-columns: 1fr;
+    }
+
+    .seat {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* ===== [남수아 담당: 회차별 좌석 등급 잔여석 표시 시작] ===== */
+
+.schedule-item--grade {
+    display: block;
+    padding: 16px;
+}
+
+.schedule-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.schedule-main-info,
+.schedule-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.schedule-summary {
+    justify-content: flex-end;
+}
+
+.schedule-total-seat {
+    color: #111827;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.schedule-grade-list {
+    margin-top: 14px;
+    padding-top: 13px;
+    display: grid;
+    grid-template-columns:
+      repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px 24px;
+    border-top: 1px solid #eceff3;
+}
+
+.schedule-grade-row {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #4b5563;
+    font-size: 12px;
+}
+
+.schedule-grade-row.is-sold-out {
+    color: #a4a9b2;
+}
+
+.schedule-grade-name {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 700;
+}
+
+.schedule-grade-color {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    display: inline-block;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+}
+
+.schedule-grade-count {
+    flex: 0 0 auto;
+    font-weight: 800;
+}
+
+.schedule-grade-empty {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.schedule-item.is-selected .schedule-grade-list {
+    border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.schedule-item.is-disabled .schedule-total-seat,
+.schedule-item.is-disabled .schedule-grade-row {
+    color: #a4a9b2;
+}
+
+@media (max-width: 720px) {
+    .schedule-item-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .schedule-main-info,
+    .schedule-summary {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .schedule-summary {
+        justify-content: flex-start;
+    }
+
+    .schedule-grade-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 달력 회차 상태 점 */
+.calendar-day.is-open-date::after {
+    background: var(--brand);
+}
+
+.calendar-day.is-scheduled-date::after {
+    background: #2563eb;
+}
+
+.calendar-day.is-closed-date::after {
+    background: #9ca3af;
+}
+
+.calendar-day.is-cancelled-date::after {
+    background: #111827;
+}
+
+.calendar-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-dot--open {
+    background: var(--brand);
+}
+
+.legend-dot--scheduled {
+    background: #2563eb;
+}
+
+.legend-dot--closed {
+    background: #9ca3af;
+}
+
+.legend-dot--cancelled {
+    background: #111827;
+}
+
+/* ===== [남수아 담당: 회차별 좌석 등급 잔여석 표시 끝] ===== */

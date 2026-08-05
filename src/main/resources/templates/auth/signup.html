@@ -61,6 +61,8 @@
                      name="email"
                      autocomplete="email"
                      placeholder="stageon@example.com"
+                     pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+                     title="example@email.com 형식으로 입력해 주세요."
                      required>
 
               <button class="signup-check-button"
@@ -359,9 +361,15 @@
             <!-- 마케팅 수신 -->
             <li>
               <label class="signup-agreement-label">
+                <!-- 체크하지 않으면 false로 처리 -->
+                <input type="hidden"
+                       name="_marketingTerms"
+                       value="on">
+
                 <input type="checkbox"
                        class="term-checkbox"
-                       name="marketingTerms">
+                       name="marketingTerms"
+                       value="true">
 
                 <span class="signup-term-badge signup-term-badge--optional">
                 선택
@@ -599,6 +607,14 @@
   let verificationTimerId = null;
   let remainingSeconds = 180;
 
+  // @ 뒤 도메인에 마침표와 2자 이상의 확장자가 있어야 함
+  const emailPattern =
+          /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+  function isValidEmail(email) {
+    return emailPattern.test(email);
+  }
+
   function showCheckMessage(element, message, success) {
     element.textContent = message;
     element.className = success
@@ -732,8 +748,12 @@
 
   async function sendVerificationCode() {
     const email = signupEmail.value.trim();
-    if (!email || !signupEmail.checkValidity()) {
-      showCheckMessage(verificationMessage, "올바른 이메일을 입력해 주세요.", false);
+    if (!email || !isValidEmail(email)) {
+      showCheckMessage(
+              verificationMessage,
+              "example@email.com 형식으로 입력해 주세요.",
+              false
+      );
       signupEmail.focus();
       return;
     }
@@ -769,8 +789,13 @@
 
   emailCheckButton.addEventListener("click", async () => {
     const email = signupEmail.value.trim();
-    if (!email || !signupEmail.checkValidity()) {
-      showCheckMessage(emailCheckMessage, "올바른 이메일 형식으로 입력해 주세요.", false);
+    if (!email || !isValidEmail(email)) {
+      emailDuplicateChecked = false;
+      showCheckMessage(
+              emailCheckMessage,
+              "example@email.com 형식으로 입력해 주세요.",
+              false
+      );
       signupEmail.focus();
       return;
     }
@@ -917,12 +942,24 @@
     updateSignupButtonState();
   });
   agreeAll.addEventListener("change", () => {
-    termCheckboxes.forEach((checkbox) => checkbox.checked = agreeAll.checked);
+    termCheckboxes.forEach((checkbox) => {
+      checkbox.checked = agreeAll.checked;
+    });
+
+    agreeAll.indeterminate = false;
     updateSignupButtonState();
   });
+
   termCheckboxes.forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
-      agreeAll.checked = termCheckboxes.every((term) => term.checked);
+      const checkedCount = termCheckboxes.filter(
+              (term) => term.checked
+      ).length;
+
+      agreeAll.checked = checkedCount === termCheckboxes.length;
+      agreeAll.indeterminate =
+              checkedCount > 0 && checkedCount < termCheckboxes.length;
+
       updateSignupButtonState();
     });
   });
@@ -955,7 +992,11 @@
   });
 
   signupForm.addEventListener("submit", (event) => {
-    if (submitButton.disabled) {
+    const requiredChecked = requiredTerms.every(
+            (checkbox) => checkbox.checked
+    );
+
+    if (submitButton.disabled || !requiredChecked) {
       event.preventDefault();
       alert("회원가입 필수 항목을 모두 완료해 주세요.");
     }

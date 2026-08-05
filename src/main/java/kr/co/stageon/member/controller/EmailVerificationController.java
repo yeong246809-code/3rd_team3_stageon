@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * 회원가입 이메일 인증 요청을 처리합니다.
@@ -17,6 +18,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/api/members/email-verification")
 public class EmailVerificationController {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    );
 
     private final EmailVerificationService emailVerificationService;
     private final MemberService memberService;
@@ -33,6 +38,15 @@ public class EmailVerificationController {
                     Map.of(
                             "success", false,
                             "message", "이메일을 입력해 주세요."
+                    )
+            );
+        }
+
+        if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "success", false,
+                            "message", "example@email.com 형식으로 입력해 주세요."
                     )
             );
         }
