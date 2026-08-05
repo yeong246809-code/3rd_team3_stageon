@@ -1,14 +1,21 @@
 package kr.co.stageon.booking.service;
 
+import io.lettuce.core.AbstractRedisAsyncCommands;
 import kr.co.stageon.booking.domain.SeatHold;
+import kr.co.stageon.booking.domain.SeatHoldItem;
 import kr.co.stageon.booking.dto.SeatHoldRequest;
+import kr.co.stageon.booking.repository.SeatHoldItemRepository;
 import kr.co.stageon.booking.repository.SeatHoldRepository;
 import kr.co.stageon.booking.domain.ScheduleSeat;
 import kr.co.stageon.booking.repository.ScheduleSeatRepository;
+import kr.co.stageon.member.domain.Member;
+import kr.co.stageon.member.repository.MemberRepository;
+import kr.co.stageon.performance.domain.PerformanceSchedule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -17,6 +24,8 @@ public class SeatHoldService {
 
     private final ScheduleSeatRepository scheduleSeatRepository;
     private final SeatHoldRepository seatHoldRepository;
+    private final MemberRepository memberRepository;
+    private final SeatHoldItemRepository seatHoldItemRepository;
 
     @Transactional
     public void processSeatHolds(SeatHoldRequest request) {
@@ -42,12 +51,23 @@ public class SeatHoldService {
 
         // 3. 상태 검증 및 HELD로 상태 변경
         for (ScheduleSeat seat : seats) {
-            // 이전에 엔티티에 만들어둔 비즈니스 메서드 호출 (이미 팔린 자리면 예외 발생)
             seat.hold();
         }
 
-        // 4. (팀원분이 만들어둔 로직에 맞춰 SeatHold를 INSERT 하는 부분 추가)
-        // SeatHold seatHold = SeatHold.create(...);
-        // seatHoldRepository.save(seatHold);
+        // 4. 선점 장바구니(SeatHold) 및 개별 좌석(SeatHoldItem) DB 저장
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        PerformanceSchedule schedule = seats.get(0).getSchedule();
+
+        String holdToken = java.util.UUID.randomUUID().toString(); // 고유 해시/토큰 생성
+        SeatHold seatHold = SeatHold.create(member, schedule, LocalDateTime.now().plusMinutes(5), holdToken);
+        seatHoldRepository.save(seatHold);
+
+        for (ScheduleSeat seat : seats) {
+            SeatHoldItem item = SeatHoldItem.create(seatHold, seat);
+            seatHoldItemRepository.save(item);
+        }
     }
 }

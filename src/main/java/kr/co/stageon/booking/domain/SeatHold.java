@@ -19,7 +19,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SeatHold {
 
-    public enum Status { ACTIVE, BOOKED, RELEASED, EXPIRED }
+    public enum Status { ACTIVE, BOOKED, RELEASED, EXPIRED, CANCELLED }
+    //활성, 예매완료, 결제오류, 만료, 결제취소
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,6 +56,22 @@ public class SeatHold {
     public void expire() {
         this.status = Status.EXPIRED;
         this.releasedAt = LocalDateTime.now();
+    }
+
+    public static SeatHold create(Member member, PerformanceSchedule schedule, LocalDateTime expiresAt, String holdTokenHash) {
+        SeatHold seatHold = new SeatHold();
+        seatHold.member = member;
+        seatHold.schedule = schedule;
+        seatHold.status = Status.ACTIVE;
+        seatHold.expiresAt = expiresAt;
+        seatHold.holdTokenHash = holdTokenHash;
+        seatHold.startedAt = LocalDateTime.now();
+        return seatHold;
+    }
+
+    public void cancel() {
+        this.status = Status.CANCELLED;
+        this.expiresAt = LocalDateTime.now(); // 즉시 만료 처리
     }
 
 }

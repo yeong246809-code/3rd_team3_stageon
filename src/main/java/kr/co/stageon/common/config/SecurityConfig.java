@@ -37,7 +37,8 @@ public class SecurityConfig {
                         .ignoringRequestMatchers(
                                 "/api/members/email-verification/**",
                                 "/api/members/find-id",
-                                "/api/members/password-reset/**"
+                                "/api/members/password-reset/**",
+                                "/api/seats/**"
                         )
                 )
 

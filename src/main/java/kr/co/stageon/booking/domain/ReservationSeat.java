@@ -50,4 +50,20 @@ public class ReservationSeat {
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public static ReservationSeat create(Reservation reservation, ScheduleSeat scheduleSeat) {
+        ReservationSeat rs = new ReservationSeat();
+        rs.reservation = reservation;
+        rs.scheduleSeat = scheduleSeat;
+
+        rs.capturedSectionName = scheduleSeat.getSeat().getSectionName();
+        rs.capturedRowLabel = scheduleSeat.getSeat().getRowLabel();
+        rs.capturedSeatNumber = scheduleSeat.getSeat().getSeatNumber();
+        rs.capturedGradeName = scheduleSeat.getSeat().getSeatGrade().getName();
+
+        // 결제 당시의 단가 스냅샷
+        rs.capturedUnitPrice = scheduleSeat.getPrice();
+
+        return rs;
+    }
 }

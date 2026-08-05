@@ -1,10 +1,14 @@
 package kr.co.stageon.booking.api;
 
+import kr.co.stageon.booking.domain.ScheduleSeat;
 import kr.co.stageon.booking.dto.ReservationResponse;
 import kr.co.stageon.booking.dto.SeatResponse;
+import kr.co.stageon.booking.repository.ScheduleSeatRepository;
 import kr.co.stageon.booking.service.BookingQueryService;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RedissonClient;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
