@@ -1,5 +1,6 @@
 package kr.co.stageon.admin.web;
 
+import kr.co.stageon.admin.dto.ScheduleEditFormDto;
 import kr.co.stageon.admin.dto.ScheduleFormDto;
 import kr.co.stageon.admin.dto.ScheduleListItemDto;
 import kr.co.stageon.admin.service.AdminScheduleService;
@@ -31,7 +32,6 @@ public class AdminScheduleController {
     public String schedules(@RequestParam(required = false) Long performanceId,
                             @RequestParam(required = false) String month,
                             @RequestParam(defaultValue = "false") boolean all,
-                            @RequestParam(defaultValue = "false") boolean conflictOnly,
                             Model model) {
         List<Performance> performances = performanceRepository.findAll();
         Long selectedPerformanceId = (performanceId != null) ? performanceId
@@ -49,9 +49,9 @@ public class AdminScheduleController {
                 : List.of();
 
         model.addAttribute("stats", adminScheduleService.getStats());
-        model.addAttribute("overview", adminScheduleService.getOverview(all, conflictOnly));
+        model.addAttribute("overview", adminScheduleService.getOverview(all, false));
         model.addAttribute("overviewAll", all);
-        model.addAttribute("overviewConflictOnly", conflictOnly);
+        model.addAttribute("conflictItems", adminScheduleService.getOverview(true, true));
         model.addAttribute("performances", performances);
         model.addAttribute("hallOptions", adminScheduleService.getHallOptions());
         model.addAttribute("selectedPerformanceId", selectedPerformanceId);
@@ -74,6 +74,22 @@ public class AdminScheduleController {
         return "redirect:/admin/schedules";
     }
 
+    /** 회차 번호·일정·매수를 수정합니다. 필터를 유지한 채로 목록으로 되돌아갑니다. */
+    @PostMapping("/admin/schedules/{id}/edit")
+    public String edit(@PathVariable Long id,
+                       @ModelAttribute ScheduleEditFormDto form,
+                       @RequestParam(required = false) Long performanceId,
+                       @RequestParam(required = false) String month,
+                       RedirectAttributes ra) {
+        try {
+            adminScheduleService.updateSchedule(id, form);
+            ra.addFlashAttribute("message", "회차 정보가 수정되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return buildRedirect(performanceId, month);
+    }
+
     /** 회차 판매 상태를 변경합니다(판매 시작/판매 종료/취소). 필터를 유지한 채로 목록으로 되돌아갑니다. */
     @PostMapping("/admin/schedules/{id}/status")
     public String changeStatus(@PathVariable Long id,
@@ -87,6 +103,10 @@ public class AdminScheduleController {
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
+        return buildRedirect(performanceId, month);
+    }
+
+    private String buildRedirect(Long performanceId, String month) {
         StringBuilder redirect = new StringBuilder("redirect:/admin/schedules?");
         if (performanceId != null) redirect.append("performanceId=").append(performanceId).append("&");
         if (month != null && !month.isBlank()) redirect.append("month=").append(month);

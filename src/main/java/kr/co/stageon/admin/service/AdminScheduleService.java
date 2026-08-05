@@ -1,6 +1,7 @@
 package kr.co.stageon.admin.service;
 
 import kr.co.stageon.admin.dto.HallOptionDto;
+import kr.co.stageon.admin.dto.ScheduleEditFormDto;
 import kr.co.stageon.admin.dto.ScheduleFormDto;
 import kr.co.stageon.admin.dto.ScheduleListItemDto;
 import kr.co.stageon.admin.dto.ScheduleOverviewItemDto;
@@ -30,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** AD07 "일정·회차 관리" 화면의 통계/요약/상세 목록/회차 생성·상태 변경을 담당합니다. */
+/** AD07 "일정·회차 관리" 화면의 통계/요약/상세 목록/회차 생성·수정·상태 변경을 담당합니다. */
 @Service
 @RequiredArgsConstructor
 public class AdminScheduleService {
@@ -42,6 +43,7 @@ public class AdminScheduleService {
     private static final DateTimeFormatter DATE_TIME_FMT = DateTimeFormatter.ofPattern("MM.dd HH:mm");
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     private final PerformanceScheduleRepository scheduleRepository;
     private final ScheduleSeatRepository scheduleSeatRepository;
@@ -82,7 +84,15 @@ public class AdminScheduleService {
                         s.getStartsAt().format(DATE_TIME_FMT),
                         statusText(s.getStatus()),
                         badgeClass(s.getStatus()),
-                        conflictIds.contains(s.getId())
+                        conflictIds.contains(s.getId()),
+                        s.getPerformance().getId(),
+                        s.getVenueHall().getId(),
+                        s.getRoundNumber(),
+                        s.getMaxTicketsPerMember(),
+                        s.getStartsAt().format(ISO_FMT),
+                        s.getSalesOpenAt() != null ? s.getSalesOpenAt().format(ISO_FMT) : null,
+                        s.getSalesCloseAt() != null ? s.getSalesCloseAt().format(ISO_FMT) : null,
+                        s.getCancelCloseAt() != null ? s.getCancelCloseAt().format(ISO_FMT) : null
                 ))
                 .collect(Collectors.toList());
     }
@@ -109,7 +119,15 @@ public class AdminScheduleService {
                     badgeClass(s.getStatus()),
                     remaining,
                     conflictIds.contains(s.getId()),
-                    s.getStatus().name()
+                    s.getStatus().name(),
+                    s.getPerformance().getId(),
+                    s.getVenueHall().getId(),
+                    s.getRoundNumber(),
+                    s.getMaxTicketsPerMember(),
+                    s.getStartsAt().format(ISO_FMT),
+                    s.getSalesOpenAt() != null ? s.getSalesOpenAt().format(ISO_FMT) : null,
+                    s.getSalesCloseAt() != null ? s.getSalesCloseAt().format(ISO_FMT) : null,
+                    s.getCancelCloseAt() != null ? s.getCancelCloseAt().format(ISO_FMT) : null
             ));
         }
         return result;
@@ -155,6 +173,26 @@ public class AdminScheduleService {
                 PerformanceSchedule.Status.SCHEDULED
         );
         return scheduleRepository.save(schedule).getId();
+    }
+
+    /**
+     * 기존 회차의 회차 번호·일정·매수를 수정합니다. 공연·공연장 홀·좌석도는 변경하지 않습니다.
+     * 판매 시작·종료를 비워두면 각각 공연 시작 14일 전 / 공연 시작 시각으로 자동 설정됩니다.
+     */
+    @Transactional
+    public void updateSchedule(Long scheduleId, ScheduleEditFormDto dto) {
+        if (dto.getStartsAt() == null) {
+            throw new IllegalArgumentException("공연 시작 시간은 필수입니다.");
+        }
+        PerformanceSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException("회차를 찾을 수 없습니다. id=" + scheduleId));
+
+        LocalDateTime startsAt = dto.getStartsAt();
+        LocalDateTime salesOpenAt = dto.getSalesOpenAt() != null ? dto.getSalesOpenAt() : startsAt.minusDays(14);
+        LocalDateTime salesCloseAt = dto.getSalesCloseAt() != null ? dto.getSalesCloseAt() : startsAt;
+        Integer maxTickets = dto.getMaxTicketsPerMember() != null ? dto.getMaxTicketsPerMember() : 4;
+
+        schedule.updateTiming(dto.getRoundNumber(), startsAt, salesOpenAt, salesCloseAt, dto.getCancelCloseAt(), maxTickets);
     }
 
     /** 회차 판매 상태를 변경합니다(판매 시작/판매 종료/취소). */

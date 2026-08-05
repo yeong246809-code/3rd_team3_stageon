@@ -26,6 +26,7 @@ public interface PerformanceScheduleRepository extends JpaRepository<Performance
     /** 특정 공연의 특정 월 회차 목록을 시작시간 순으로 조회합니다. */
     @Query("SELECT ps FROM PerformanceSchedule ps " +
             "JOIN FETCH ps.performance " +
+            "JOIN FETCH ps.venueHall " +
             "WHERE ps.performance.id = :performanceId " +
             "AND ps.startsAt >= :from AND ps.startsAt < :to " +
             "ORDER BY ps.startsAt ASC")

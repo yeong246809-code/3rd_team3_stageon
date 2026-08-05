@@ -92,4 +92,15 @@ public class PerformanceSchedule {
         }
         this.status = newStatus;
     }
+
+    /** 관리자 "회차 수정" 화면에서 회차 번호·일정·매수를 수정할 때 사용합니다. 공연·홀·좌석도는 변경하지 않습니다. */
+    public void updateTiming(Integer roundNumber, LocalDateTime startsAt, LocalDateTime salesOpenAt,
+                             LocalDateTime salesCloseAt, LocalDateTime cancelCloseAt, Integer maxTicketsPerMember) {
+        this.roundNumber = roundNumber;
+        this.startsAt = startsAt;
+        this.salesOpenAt = salesOpenAt;
+        this.salesCloseAt = salesCloseAt;
+        this.cancelCloseAt = cancelCloseAt;
+        this.maxTicketsPerMember = maxTicketsPerMember;
+    }
 }
