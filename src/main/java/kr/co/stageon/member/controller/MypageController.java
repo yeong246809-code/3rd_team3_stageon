@@ -1,7 +1,9 @@
 package kr.co.stageon.member.controller;
 
+import kr.co.stageon.booking.dto.ReservationDetailResponse;
 import kr.co.stageon.booking.dto.ReservationResponse;
 import kr.co.stageon.booking.service.BookingQueryService;
+import kr.co.stageon.booking.service.ReservationDetailQueryService;
 import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class MypageController {
 
     private final MemberRepository memberRepository;
     private final BookingQueryService bookingQueryService;
+    private final ReservationDetailQueryService reservationDetailQueryService;
 
     @GetMapping
     public String home(
@@ -79,25 +82,17 @@ public class MypageController {
     ) {
         Member member = findLoginMember(authentication);
 
-        ReservationResponse reservation =
-                bookingQueryService.findReservation(reservationId)
-                        .filter(found ->
-                                found.memberId().equals(member.getId())
-                        )
-                        .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "예매 내역을 찾을 수 없습니다."
-                                )
-                        );
+        // 예매·좌석·최신 결제 정보를 상세 화면 전용 DTO로 조회합니다.
+        ReservationDetailResponse reservation =
+                reservationDetailQueryService.findDetail(
+                        reservationId,
+                        member.getId()
+                );
 
         model.addAttribute("reservation", reservation);
+        model.addAttribute("activeMenu", "reservations");
 
-        return placeholder(
-                model,
-                "reservations",
-                "예매 상세",
-                "좌석과 결제 정보를 연결할 예정입니다."
-        );
+        return "user/mypage-reservation-detail";
     }
 
     @GetMapping("/tickets")
