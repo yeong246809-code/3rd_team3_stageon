@@ -41,7 +41,7 @@ public class SeatHoldRedissonFacade {
 
         try {
             // 4. 락 획득 시도: 최대 5초 대기, 락 획득 후 3초 뒤 자동 해제 (장애 방지)
-            isLocked = multiLock.tryLock(5, 3, TimeUnit.SECONDS);
+            isLocked = multiLock.tryLock(5, 10, TimeUnit.SECONDS);
 
             if (!isLocked) {
                 throw new IllegalStateException("선택한 좌석을 다른 사용자가 처리 중입니다. 잠시 후 다시 시도해 주세요.");

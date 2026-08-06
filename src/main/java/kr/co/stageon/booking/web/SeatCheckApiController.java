@@ -86,6 +86,7 @@ public class SeatCheckApiController {
                 redissonClient.getBucket("seat:selecting:" + seatIds).delete();
 
                 for (Long seatId : seatIds) {
+                    redissonClient.getBucket("seat:selecting:" + seatId).delete();
                     seatRealtimeService.notifySeatStatus(seatId, "AVAILABLE");
                 }
             }

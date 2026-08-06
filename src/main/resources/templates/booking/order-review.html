@@ -1,113 +1,119 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn | 주문 확인</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
-  </head>
-  <body id="top">
-  <div th:replace="~{fragments/booking/booking-header :: bookingHeader(3)}"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StageOn | 주문 확인</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+  <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
+</head>
+<body id="top">
+<div th:replace="~{fragments/booking/booking-header :: bookingHeader(3)}"></div>
 
-    <main class="booking-page">
-      <div class="shell booking-grid">
-        <section class="stack">
-          <header class="page-heading">
-            <span class="eyebrow">STEP 03</span>
-            <h1>주문 내용을 확인하세요</h1>
-          </header>
+<main class="booking-page">
+  <div class="shell booking-grid">
+    <section class="stack">
+      <header class="page-heading">
+        <span class="eyebrow">STEP 03</span>
+        <h1>주문 내용을 확인하세요</h1>
+      </header>
 
-          <div class="card">
-            <h2>예매자 정보</h2>
-            <div class="info-list" style="margin-top:18px">
-              <div>
-                <b>이름</b>
-                <span th:text="${member.name}">김스테이지</span>
-              </div>
-              <div>
-                <b>이메일</b>
-                <span th:text="${member.email}">stageon@example.com</span>
-              </div>
-              <div>
-                <b>연락처</b>
-                <span th:text="${member.phone}">010-1234-5678</span>
-              </div>
-            </div>
+      <div class="card">
+        <h2>예매자 정보</h2>
+        <div class="info-list" style="margin-top:18px">
+          <div>
+            <b>이름</b>
+            <span th:text="${member.name}">김스테이지</span>
           </div>
-
-          <div class="card">
-            <h2>취소 및 유의사항</h2>
-            <p class="section-copy">결제 실패 또는 선점 만료 시 예약과 좌석은 자동 복구됩니다.</p>
-            <label style="display:block;margin-top:18px">
-              <input type="checkbox" id="agreeCheck">
-              주문 내용과 유의사항을 확인했습니다.
-            </label>
+          <div>
+            <b>이메일</b>
+            <span th:text="${member.email}">stageon@example.com</span>
           </div>
-        </section>
-
-        <aside class="stack">
-          <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
-
-          <form id="paymentForm" th:action="@{/payment/process}" method="post">
-            <input type="hidden" name="holdTokenHash" th:value="${seatHold != null ? seatHold.holdTokenHash : ''}">
-            <input type="hidden" name="seatHoldId" th:value="${seatHold != null ? seatHold.id : ''}">
-
-            <button type="submit" class="btn btn--primary btn--wide" id="payBtn">
-              모의 결제로 이동
-            </button>
-          </form>
-        </aside>
+          <div>
+            <b>연락처</b>
+            <span th:text="${member.phone}">010-1234-5678</span>
+          </div>
+        </div>
       </div>
-    </main>
 
-  <script>
-    // 결제 진행 여부를 판단하는 플래그 변수
-    let isSubmitting = false;
+      <div class="card">
+        <h2>취소 및 유의사항</h2>
+        <p class="section-copy">결제 실패 또는 선점 만료 시 예약과 좌석은 자동 복구됩니다.</p>
+        <label style="display:block;margin-top:18px">
+          <input type="checkbox" id="agreeCheck">
+          주문 내용과 유의사항을 확인했습니다.
+        </label>
+      </div>
+    </section>
 
-    // 1. 결제 버튼 클릭 시 플래그 변경 (기존과 동일)
-    const paymentForm = document.getElementById('paymentForm');
-    if (paymentForm) {
-      paymentForm.addEventListener('submit', function(e) {
-        const agreeCheck = document.getElementById('agreeCheck');
-        if (agreeCheck && !agreeCheck.checked) {
-          e.preventDefault();
-          alert('주문 내용과 유의사항 동의에 체크해 주세요.');
-        } else {
-          isSubmitting = true;
-        }
-      });
-    }
+    <aside class="stack">
+      <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
 
-    // 2. 서버에 취소 요청을 확실하게 꽂아넣는 함수
-    function releaseHoldOnExit() {
-      if (!isSubmitting) {
-        // 화면 어딘가에 있는 seatHoldId 값을 가져옵니다.
-        // (Thymeleaf로 렌더링된 hidden input이 있다고 가정)
-        const seatHoldInput = document.querySelector('input[name="seatHoldId"]');
+      <form id="paymentForm" th:action="@{/payment/process}" method="post">
+        <input type="hidden" name="holdTokenHash" th:value="${seatHold != null ? seatHold.holdTokenHash : ''}">
+        <input type="hidden" name="seatHoldId" th:value="${seatHold != null ? seatHold.id : ''}">
 
-        if (seatHoldInput && seatHoldInput.value) {
-          const seatHoldId = seatHoldInput.value;
-          const url = `/api/seats/holds/${seatHoldId}/cancel`;
+        <button type="submit" class="btn btn--primary btn--wide" id="payBtn">
+          모의 결제로 이동
+        </button>
+      </form>
+    </aside>
+  </div>
+</main>
 
-          // fetch 대신 브라우저 종료/이동 시 가장 강력한 생존력을 가진 sendBeacon 사용!
-          // POST 요청으로 서버에 날아가며, 우리 API 구조와 완벽히 호환됩니다.
-          navigator.sendBeacon(url);
-        }
-      }
-    }
+<script>
+  let isSubmitting = false;
 
-    // 3. 최신 브라우저 표준 이탈 감지 (탭 전환, 모바일 백그라운드 이동 등 모두 커버)
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'hidden') {
-        releaseHoldOnExit();
+  const paymentForm = document.getElementById('paymentForm');
+  if (paymentForm) {
+    paymentForm.addEventListener('submit', function(e) {
+      const agreeCheck = document.getElementById('agreeCheck');
+      if (agreeCheck && !agreeCheck.checked) {
+        e.preventDefault();
+        alert('주문 내용과 유의사항 동의에 체크해 주세요.');
+      } else {
+        isSubmitting = true;
       }
     });
+  }
 
-    // 4. 링크 클릭, 새로고침, 뒤로가기 방어 (구형 브라우저 호환)
-    window.addEventListener('pagehide', function() {
+  function releaseHoldOnExit() {
+    if (!isSubmitting) {
+      const seatHoldInput = document.querySelector('input[name="seatHoldId"]');
+
+      if (seatHoldInput && seatHoldInput.value) {
+        const seatHoldId = seatHoldInput.value;
+        const url = `/api/seats/holds/${seatHoldId}/cancel`;
+        navigator.sendBeacon(url);
+      }
+    }
+  }
+
+  // 뒤로가기 등으로 캐시된 페이지가 복원될 때 즉시 좌석 해제 및 새로고침
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
       releaseHoldOnExit();
-    });
-  </script>
-  </body>
+      location.reload();
+    }
+  });
+
+  // 새로고침 감지
+  window.addEventListener('beforeunload', function(e) {
+    const navigationEntries = performance.getEntriesByType('navigation');
+    if (navigationEntries.length > 0 && navigationEntries[0].type === 'reload') {
+      releaseHoldOnExit();
+    }
+  });
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+      releaseHoldOnExit();
+    }
+  });
+
+  window.addEventListener('pagehide', function() {
+    releaseHoldOnExit();
+  });
+</script>
+</body>
 </html>

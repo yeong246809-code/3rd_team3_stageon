@@ -1,278 +1,278 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn | 좌석 선택</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
-  </head>
-  <body id="top">
-    <div th:replace="~{fragments/booking/booking-header :: bookingHeader(2)}"></div>
-    <div th:if="${errorMessage}" class="notice notice--danger" style="margin-bottom:18px">
-      <b th:text="${errorMessage}">에러 메시지</b>
-    </div>
-    <main class="booking-page">
-      <div class="shell booking-grid">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StageOn | 좌석 선택</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+  <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
+</head>
+<body id="top">
+<div th:replace="~{fragments/booking/booking-header :: bookingHeader(2)}"></div>
+<div th:if="${errorMessage}" class="notice notice--danger" style="margin-bottom:18px">
+  <b th:text="${errorMessage}">에러 메시지</b>
+</div>
+<main class="booking-page">
+  <div class="shell booking-grid">
 
-        <section>
-          <header class="page-heading">
-            <div class="cluster" style="justify-content:space-between">
-              <div>
-                <span class="eyebrow">STEP 02</span>
-                <h1>좌석을 선택하세요</h1>
-              </div>
-              <div>
-                <small>선점 만료까지</small>
-                <div class="timer">04:32</div>
-              </div>
-            </div>
-          </header>
-
-          <div class="notice notice--danger" style="margin-bottom:18px">
-            <b>좌석 선택 충돌</b>
-            · 다른 사용자가 먼저 선점한 좌석은 최신 상태 조회 후 선택할 수 있습니다.
+    <section>
+      <header class="page-heading">
+        <div class="cluster" style="justify-content:space-between">
+          <div>
+            <span class="eyebrow">STEP 02</span>
+            <h1>좌석을 선택하세요</h1>
           </div>
+          <div>
+            <small>선점 만료까지</small>
+            <div class="timer">04:32</div>
+          </div>
+        </div>
+      </header>
 
-          <div class="card">
-            <div class="seat-stage">STAGE</div>
+      <div class="notice notice--danger" style="margin-bottom:18px">
+        <b>좌석 선택 충돌</b>
+        · 다른 사용자가 먼저 선점한 좌석은 최신 상태 조회 후 선택할 수 있습니다.
+      </div>
 
-            <th:block th:each="section : ${groupedSeats}">
+      <div class="card">
+        <div class="seat-stage">STAGE</div>
 
-              <h3 style="text-align: center; margin: 20px 0 10px; font-size: 1.1rem;" th:text="${section.key}">A구역</h3>
+        <th:block th:each="section : ${groupedSeats}">
 
-              <div class="seat-map" aria-label="좌석 배치도">
+          <h3 style="text-align: center; margin: 20px 0 10px; font-size: 1.1rem;" th:text="${section.key}">A구역</h3>
 
-                <th:block th:with="uniqueRows=${#sets.toSet(section.value.![row])}">
-                  <div class="seat-row" th:each="rowLabel : ${#lists.sort(uniqueRows)}">
+          <div class="seat-map" aria-label="좌석 배치도">
 
-                    <th:block th:each="seat : ${section.value}">
-                      <button th:if="${seat.row == rowLabel}"
-                              class="seat"
-                              th:classappend="${seat.status == 'HELD'} ? 'is-held' : (${seat.status != 'AVAILABLE'} ? 'is-disabled' : '')"
-                              th:style="${seat.status == 'AVAILABLE'} ? 'background-color: ' + ${seat.displayColor} : ''"
-                              th:data-seat-id="${seat.id}"
-                              th:data-seat-name="|${seat.section} ${seat.row}열 ${seat.number}번|"
-                              th:data-seat-price="${seat.price}"
-                              th:disabled="${seat.status != 'AVAILABLE'}"
-                              onclick="selectSeat(this)">
-                      </button>
-                    </th:block>
+            <th:block th:with="uniqueRows=${#sets.toSet(section.value.![row])}">
+              <div class="seat-row" th:each="rowLabel : ${#lists.sort(uniqueRows)}">
 
-                  </div>
+                <th:block th:each="seat : ${section.value}">
+                  <button th:if="${seat.row == rowLabel}"
+                          class="seat"
+                          th:classappend="${seat.status == 'HELD'} ? 'is-held' : (${seat.status != 'AVAILABLE'} ? 'is-disabled' : '')"
+                          th:style="${seat.status == 'AVAILABLE'} ? 'background-color: ' + ${seat.displayColor} : ''"
+                          th:data-seat-id="${seat.id}"
+                          th:data-seat-name="|${seat.section} ${seat.row}열 ${seat.number}번|"
+                          th:data-seat-price="${seat.price}"
+                          th:disabled="${seat.status != 'AVAILABLE'}"
+                          onclick="selectSeat(this)">
+                  </button>
                 </th:block>
 
               </div>
             </th:block>
 
-            <div class="seat-legend cluster" style="justify-content:center;margin-top:26px">
-              <span><i class="status-dot available"></i>선택 가능</span>
-              <span><i class="status-dot held"></i>임시 선점</span>
-              <span><i class="status-dot reserved"></i>선택 좌석</span>
-              <span><i class="status-dot blocked"></i>선택 불가</span>
-            </div>
           </div>
-        </section>
+        </th:block>
 
-        <aside class="stack">
-          <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
-
-          <form id="holdForm" th:action="@{/booking/seats/hold}" method="post" style="width: 100%;">
-            <input type="hidden" name="memberId" value="1">
-            <input type="hidden" name="scheduleId" th:value="${scheduleId}">
-            <button type="button" class="btn btn--primary btn--wide" onclick="submitHold()">결제하기</button>
-          </form>
-        </aside>
-
+        <div class="seat-legend cluster" style="justify-content:center;margin-top:26px">
+          <span><i class="status-dot available"></i>선택 가능</span>
+          <span><i class="status-dot held"></i>임시 선점</span>
+          <span><i class="status-dot reserved"></i>선택 좌석</span>
+          <span><i class="status-dot blocked"></i>선택 불가</span>
+        </div>
       </div>
+    </section>
 
-      <script th:inline="javascript">
-        // 1. 타임리프를 통해 백엔드(DB)에서 설정된 최대 예매 매수 가져오기
-        // (만약 모델에 값이 없으면 기본값 4를 사용하도록 안전하게 처리)
-        const MAX_TICKETS = /*[[${maxTickets ?: 4}]]*/ 4;
+    <aside class="stack">
+      <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
 
-        // 선택한 좌석들을 담아둘 Map (key: 좌석ID, value: {name, price})
-        let selectedSeats = new Map();
+      <form id="holdForm" th:action="@{/booking/seats/hold}" method="post" style="width: 100%;">
+        <input type="hidden" name="memberId" value="1">
+        <input type="hidden" name="scheduleId" th:value="${scheduleId}">
+        <button type="button" class="btn btn--primary btn--wide" onclick="submitHold()">결제하기</button>
+      </form>
+    </aside>
 
-        async function selectSeat(button) {
-          const seatId = button.getAttribute('data-seat-id');
-          const seatName = button.getAttribute('data-seat-name');
-          const seatPrice = parseFloat(button.getAttribute('data-seat-price'));
+  </div>
 
-          if (selectedSeats.has(seatId)) {
-            // [1] 이미 선택된 좌석을 다시 클릭한 경우 -> 선택 해제 (서버 통신 불필요)
-            selectedSeats.delete(seatId);
-            button.classList.remove('is-selected');
-            button.style.border = "";
-            updateSummaryPanel(); // 🚨 선택 해제 시에도 패널 업데이트 함수 즉시 호출
-          } else {
-            // [2] 새로운 좌석을 클릭한 경우 -> 추가 전 검증
-            if (selectedSeats.size >= MAX_TICKETS) {
-              alert(`해당 공연의 1인 최대 예매 가능 매수(${MAX_TICKETS}매)를 초과했습니다.`);
-              return;
-            }
+  <script th:inline="javascript">
+    // 1. 타임리프를 통해 백엔드(DB)에서 설정된 최대 예매 매수 가져오기
+    // (만약 모델에 값이 없으면 기본값 4를 사용하도록 안전하게 처리)
+    const MAX_TICKETS = /*[[${maxTickets ?: 4}]]*/ 4;
 
-            try {
-              const response = await fetch(`/api/seats/${seatId}/check`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                }
-              });
+    // 선택한 좌석들을 담아둘 Map (key: 좌석ID, value: {name, price})
+    let selectedSeats = new Map();
 
-              // 서버에서 409 등 에러 코드를 보냈을 때
-              if (!response.ok) {
-                const errorText = await response.text();
+    async function selectSeat(button) {
+      const seatId = button.getAttribute('data-seat-id');
+      const seatName = button.getAttribute('data-seat-name');
+      const seatPrice = parseFloat(button.getAttribute('data-seat-price'));
 
-                try {
-                  const errorJson = JSON.parse(errorText);
-                  // 만약 405나 500 등 시스템 에러라면
-                  alert("시스템 오류: " + (errorJson.message || errorJson.error));
-                } catch (e) {
-                  // "현재 다른 사용자가 결제를 진행 중인 좌석입니다." 메시지 출력
-                  alert(errorText);
-                }
-
-                return;
-              }
-
-              // 서버 검증 통과 시 정상적으로 UI 선택 처리
-              selectedSeats.set(seatId, { name: seatName, price: seatPrice });
-              button.classList.add('is-selected');
-              button.style.border = "3px solid #000";
-
-              // 우측 요약 패널 업데이트
-              updateSummaryPanel();
-
-            } catch (error) {
-              console.error("좌석 상태 확인 중 오류:", error);
-              alert("좌석 상태를 확인하는 중 서버 오류가 발생했습니다.");
-            }
-          }
+      if (selectedSeats.has(seatId)) {
+        // [1] 이미 선택된 좌석을 다시 클릭한 경우 -> 선택 해제 (서버 통신 불필요)
+        selectedSeats.delete(seatId);
+        button.classList.remove('is-selected');
+        button.style.border = "";
+        updateSummaryPanel(); // 🚨 선택 해제 시에도 패널 업데이트 함수 즉시 호출
+      } else {
+        // [2] 새로운 좌석을 클릭한 경우 -> 추가 전 검증
+        if (selectedSeats.size >= MAX_TICKETS) {
+          alert(`해당 공연의 1인 최대 예매 가능 매수(${MAX_TICKETS}매)를 초과했습니다.`);
+          return;
         }
 
-        function updateSummaryPanel() {
-          const container = document.getElementById('dynamic-seat-container');
-          const summaryCountEl = document.getElementById('summary-seat-count');
-          const summaryPriceEl = document.getElementById('summary-seat-price');
-          const formContainer = document.getElementById('holdForm');
+        try {
+          const response = await fetch(`/api/seats/${seatId}/check`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
 
-          // 선택된 좌석이 하나도 없을 때
-          if (selectedSeats.size === 0) {
-            if (container) {
-              container.innerHTML = `
+          // 서버에서 409 등 에러 코드를 보냈을 때
+          if (!response.ok) {
+            const errorText = await response.text();
+
+            try {
+              const errorJson = JSON.parse(errorText);
+              // 만약 405나 500 등 시스템 에러라면
+              alert("시스템 오류: " + (errorJson.message || errorJson.error));
+            } catch (e) {
+              // "현재 다른 사용자가 결제를 진행 중인 좌석입니다." 메시지 출력
+              alert(errorText);
+            }
+
+            return;
+          }
+
+          // 서버 검증 통과 시 정상적으로 UI 선택 처리
+          selectedSeats.set(seatId, { name: seatName, price: seatPrice });
+          button.classList.add('is-selected');
+          button.style.border = "3px solid #000";
+
+          // 우측 요약 패널 업데이트
+          updateSummaryPanel();
+
+        } catch (error) {
+          console.error("좌석 상태 확인 중 오류:", error);
+          alert("좌석 상태를 확인하는 중 서버 오류가 발생했습니다.");
+        }
+      }
+    }
+
+    function updateSummaryPanel() {
+      const container = document.getElementById('dynamic-seat-container');
+      const summaryCountEl = document.getElementById('summary-seat-count');
+      const summaryPriceEl = document.getElementById('summary-seat-price');
+      const formContainer = document.getElementById('holdForm');
+
+      // 선택된 좌석이 하나도 없을 때
+      if (selectedSeats.size === 0) {
+        if (container) {
+          container.innerHTML = `
                     <div>
                         <dt>좌석</dt>
                         <dd style="color: #ff5252;">좌석을 선택해주세요</dd>
                     </div>`;
-            }
-            if (summaryCountEl) summaryCountEl.innerText = '0매';
-            if (summaryPriceEl) summaryPriceEl.innerText = '0원';
+        }
+        if (summaryCountEl) summaryCountEl.innerText = '0매';
+        if (summaryPriceEl) summaryPriceEl.innerText = '0원';
 
-            // 생성해둔 hidden input들 싹 지우기
-            document.querySelectorAll('.dynamic-seat-input').forEach(el => el.remove());
-            return;
-          }
+        // 생성해둔 hidden input들 싹 지우기
+        document.querySelectorAll('.dynamic-seat-input').forEach(el => el.remove());
+        return;
+      }
 
-          let seatsHTML = '';
-          let totalPrice = 0;
+      let seatsHTML = '';
+      let totalPrice = 0;
 
-          // 기존 동적 hidden input 초기화
-          document.querySelectorAll('.dynamic-seat-input').forEach(el => el.remove());
+      // 기존 동적 hidden input 초기화
+      document.querySelectorAll('.dynamic-seat-input').forEach(el => el.remove());
 
-          selectedSeats.forEach((value, key) => {
-            // 🚨 선택한 좌석 개수만큼 '칸(div)'을 통째로 누적 생성
-            seatsHTML += `
+      selectedSeats.forEach((value, key) => {
+        // 🚨 선택한 좌석 개수만큼 '칸(div)'을 통째로 누적 생성
+        seatsHTML += `
                 <div>
                     <dt>좌석</dt>
                     <dd style="font-weight: bold; color: #ff5252;">${value.name}</dd>
                 </div>`;
-            totalPrice += value.price;
+        totalPrice += value.price;
 
-            // 폼으로 보낼 다중 좌석 ID 생성
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'scheduleSeatIds';
-            input.value = key;
-            input.className = 'dynamic-seat-input';
-            formContainer.appendChild(input);
-          });
+        // 폼으로 보낼 다중 좌석 ID 생성
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'scheduleSeatIds';
+        input.value = key;
+        input.className = 'dynamic-seat-input';
+        formContainer.appendChild(input);
+      });
 
-          if (container) container.innerHTML = seatsHTML;
-          if (summaryCountEl) summaryCountEl.innerText = selectedSeats.size + '매';
-          if (summaryPriceEl) summaryPriceEl.innerText = totalPrice.toLocaleString() + '원';
+      if (container) container.innerHTML = seatsHTML;
+      if (summaryCountEl) summaryCountEl.innerText = selectedSeats.size + '매';
+      if (summaryPriceEl) summaryPriceEl.innerText = totalPrice.toLocaleString() + '원';
+    }
+
+    function submitHold() {
+      if (selectedSeats.size === 0) {
+        alert('좌석을 먼저 선택해주세요.');
+        return;
+      }
+      // 폼 제출 (백엔드 락 처리 API로 이동)
+      document.getElementById('holdForm').submit();
+    }
+
+    // 10분 실시간 타이머 스크립트
+    window.onload = function () {
+      let time = 600; // 10분 = 600초
+      let timerElement = document.querySelector('.timer');
+
+      if (!timerElement) return; // 타이머 요소가 없으면 실행 안함
+
+      let interval = setInterval(function () {
+        let minutes = Math.floor(time / 60);
+        let seconds = time % 60;
+
+        // 00:00 포맷 맞추기
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        timerElement.textContent = minutes + ":" + seconds;
+
+        if (--time < 0) {
+          clearInterval(interval);
+          alert("시간이 초과되었습니다. 좌석을 다시 선택해 주세요.");
+          window.location.reload(); // 페이지 새로고침
         }
+      }, 1000);
+    };
 
-        function submitHold() {
-          if (selectedSeats.size === 0) {
-            alert('좌석을 먼저 선택해주세요.');
-            return;
-          }
-          // 폼 제출 (백엔드 락 처리 API로 이동)
-          document.getElementById('holdForm').submit();
+    // 서버의 실시간 방송국(SSE)에 주파수 연결
+    const eventSource = new EventSource('/api/seats/stream');
+
+    // 서버에서 "seatStatus"라는 이벤트가 날아올 때마다 실행됨
+    eventSource.addEventListener('seatStatus', function(event) {
+      const data = JSON.parse(event.data);
+
+      // 방송으로 날아온 좌석 ID를 가진 버튼 요소를 찾음
+      // (주의: HTML의 버튼에 data-seat-id="${seat.id}" 처럼 속성이 걸려있어야 합니다)
+      const seatBtn = document.querySelector(`button[data-seat-id='${data.seatId}']`);
+
+      if (seatBtn) {
+        if (data.status === 'AVAILABLE') {
+          // 1. 좌석이 해방되었을 때: 즉시 선택 가능 상태로 원복! (새로고침 없음)
+          seatBtn.classList.remove('is-disabled');
+          seatBtn.disabled = false;
+          seatBtn.style.backgroundColor = ''; // 회색을 풀고 원래 색상으로 복구
+          seatBtn.style.opacity = '1';
+          // (선택) 알림 효과를 주고 싶다면:
+          // seatBtn.style.border = '2px solid red'; setTimeout(() => seatBtn.style.border='', 1000);
         }
+        else if (data.status === 'HELD') {
+          // (응용) 누군가 클릭하는 순간 방송을 쏴서 다른 사람 화면에서 즉시 회색으로 바꿀 수도 있습니다!
+          seatBtn.classList.add('is-disabled');
+          seatBtn.disabled = true;
+          seatBtn.style.backgroundColor = '#ccc';
+        }
+      }
+    });
 
-        // 10분 실시간 타이머 스크립트
-        window.onload = function () {
-          let time = 600; // 10분 = 600초
-          let timerElement = document.querySelector('.timer');
+    // 브라우저 오류 시 자동 재연결 방지 (필요에 따라 유지)
+    eventSource.onerror = function(err) {
+      console.error("실시간 연결 오류, 재연결을 시도합니다.", err);
+    };
 
-          if (!timerElement) return; // 타이머 요소가 없으면 실행 안함
-
-          let interval = setInterval(function () {
-            let minutes = Math.floor(time / 60);
-            let seconds = time % 60;
-
-            // 00:00 포맷 맞추기
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
-
-            timerElement.textContent = minutes + ":" + seconds;
-
-            if (--time < 0) {
-              clearInterval(interval);
-              alert("시간이 초과되었습니다. 좌석을 다시 선택해 주세요.");
-              window.location.reload(); // 페이지 새로고침
-            }
-          }, 1000);
-        };
-
-        // 서버의 실시간 방송국(SSE)에 주파수 연결
-        const eventSource = new EventSource('/api/seats/stream');
-
-        // 서버에서 "seatStatus"라는 이벤트가 날아올 때마다 실행됨
-        eventSource.addEventListener('seatStatus', function(event) {
-          const data = JSON.parse(event.data);
-
-          // 방송으로 날아온 좌석 ID를 가진 버튼 요소를 찾음
-          // (주의: HTML의 버튼에 data-seat-id="${seat.id}" 처럼 속성이 걸려있어야 합니다)
-          const seatBtn = document.querySelector(`button[data-seat-id='${data.seatId}']`);
-
-          if (seatBtn) {
-            if (data.status === 'AVAILABLE') {
-              // 1. 좌석이 해방되었을 때: 즉시 선택 가능 상태로 원복! (새로고침 없음)
-              seatBtn.classList.remove('is-disabled');
-              seatBtn.disabled = false;
-              seatBtn.style.backgroundColor = ''; // 회색을 풀고 원래 색상으로 복구
-              seatBtn.style.opacity = '1';
-              // (선택) 알림 효과를 주고 싶다면:
-              // seatBtn.style.border = '2px solid red'; setTimeout(() => seatBtn.style.border='', 1000);
-            }
-            else if (data.status === 'HELD') {
-              // (응용) 누군가 클릭하는 순간 방송을 쏴서 다른 사람 화면에서 즉시 회색으로 바꿀 수도 있습니다!
-              seatBtn.classList.add('is-disabled');
-              seatBtn.disabled = true;
-              seatBtn.style.backgroundColor = '#ccc';
-            }
-          }
-        });
-
-        // 브라우저 오류 시 자동 재연결 방지 (필요에 따라 유지)
-        eventSource.onerror = function(err) {
-          console.error("실시간 연결 오류, 재연결을 시도합니다.", err);
-        };
-
-      </script>
-    </main>
-  </body>
+  </script>
+</main>
+</body>
 </html>
