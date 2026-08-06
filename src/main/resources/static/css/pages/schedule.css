@@ -157,6 +157,13 @@
     font-size: 13px; padding: 8px 16px; box-shadow: 0 2px 6px rgba(220, 38, 38, .12);
 }
 
+/* "전체 보기" 버튼 (중립 톤) */
+.btn-mini--info-outline {
+    color: var(--info); border-color: #c9dcff; background: #eef4ff;
+    font-size: 13px; padding: 8px 16px; box-shadow: 0 2px 6px rgba(37, 99, 235, .1);
+}
+.btn-mini--info-outline:hover { background: var(--info); color: #fff; border-color: var(--info); }
+
 /* 복사/수정으로 모달을 열었을 때 안내 문구 */
 .modal-copy-note {
     background: #eef4ff; color: var(--info); border: 1px solid #dbe7ff;
@@ -167,6 +174,39 @@
 /* 상세 목록 "관리" 컬럼: 버튼별 form이 가로로 나란히 붙도록 */
 #full-list .action-cell { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 #full-list .action-cell form { margin: 0; display: inline; }
+
+/* 통합 "관리" 드롭다운 메뉴 */
+.row-menu { position: relative; display: inline-block; }
+.btn-mini--menu-trigger {
+    color: var(--ink-2); border-color: var(--line); background: var(--surface);
+    padding: 7px 14px;
+}
+.btn-mini--menu-trigger:hover { background: var(--sidebar); color: #fff; border-color: var(--sidebar); }
+.row-menu.is-open .btn-mini--menu-trigger { background: var(--sidebar); color: #fff; border-color: var(--sidebar); }
+
+.row-menu__panel {
+    display: none; flex-direction: column; gap: 4px;
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 60;
+    min-width: 190px; padding: 8px; background: var(--canvas);
+    border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .16);
+}
+.row-menu.is-open .row-menu__panel { display: flex; }
+.row-menu__panel form { margin: 0; }
+
+.row-menu__item {
+    display: block; width: 100%; text-align: left; box-sizing: border-box;
+    padding: 9px 12px; border-radius: 9px; border: none; background: none;
+    font-size: 13px; font-weight: 700; color: var(--ink-2); cursor: pointer;
+    transition: background .12s ease;
+}
+.row-menu__item:hover { background: var(--surface); }
+.row-menu__item--manage:hover { background: #f4efff; color: var(--violet); }
+.row-menu__item--copy:hover { background: #eef4ff; color: var(--info); }
+.row-menu__item--start:hover { background: var(--success-soft); color: var(--success); }
+.row-menu__item--stop:hover { background: var(--warning-soft); color: var(--warning); }
+.row-menu__item--danger { color: var(--danger); }
+.row-menu__item--danger:hover { background: #fde8e8; color: var(--danger); }
 
 /* 충돌 모달 전용 카드형 리스트 */
 .modal-card--conflict { width: min(600px, 92vw); }
@@ -179,3 +219,59 @@
 .conflict-row__info .cell-title { font-weight: 700; color: var(--ink); }
 .conflict-row__time { font-size: 13px; color: var(--muted); }
 .conflict-row__right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+/* "전체 보기" 모달에서 충돌 아닌 행은 중립 톤 */
+.conflict-row--neutral { background: var(--surface); border-color: var(--line); }
+
+/* 회차 일괄 추가(달력) 모달 */
+.modal-card--calendar { width: min(520px, 92vw); }
+
+.calendar-block { margin-top: 20px; }
+.calendar-toolbar { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 10px; }
+.calendar-title { font-size: 15px; font-weight: 800; color: var(--ink); min-width: 110px; text-align: center; }
+.calendar-nav {
+    width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--canvas);
+    color: var(--ink-2); font-size: 16px; font-weight: 700; cursor: pointer; transition: all .15s ease;
+}
+.calendar-nav:hover { background: var(--sidebar); color: #fff; border-color: var(--sidebar); }
+
+.calendar-tip { font-size: 12px; color: var(--info); background: #eef4ff; border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; text-align: center; }
+
+.calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+.calendar-weekday {
+    border: none; background: var(--surface); color: var(--ink-2); font-size: 12px; font-weight: 800;
+    padding: 8px 0; border-radius: 8px; cursor: pointer; transition: all .15s ease;
+}
+.calendar-weekday:hover { background: var(--brand); color: #fff; }
+
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calendar-cell {
+    aspect-ratio: 1; border: 1px solid var(--line); background: var(--canvas); border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; transition: all .12s ease;
+}
+.calendar-cell:hover { border-color: var(--brand); background: var(--brand-soft); }
+.calendar-cell.is-today { border-color: var(--info); font-weight: 800; }
+.calendar-cell.is-selected { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 800; }
+.calendar-cell--blank { border: none; background: none; cursor: default; }
+.calendar-cell--blank:hover { border: none; background: none; }
+
+.calendar-selected {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line);
+}
+.calendar-selected__label { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.calendar-selected__label strong { color: var(--brand); font-size: 15px; }
+.calendar-clear { border: none; background: none; color: var(--subtle); font-size: 12px; font-weight: 700; cursor: pointer; }
+.calendar-clear:hover { color: var(--danger); text-decoration: underline; }
+
+.calendar-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; max-height: 90px; overflow-y: auto; }
+.calendar-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 6px 5px 12px; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark);
+    font-size: 12px; font-weight: 700;
+}
+.calendar-chip button {
+    width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,.06);
+    color: var(--brand-dark); font-size: 12px; line-height: 1; cursor: pointer;
+}
+.calendar-chip button:hover { background: var(--brand); color: #fff; }

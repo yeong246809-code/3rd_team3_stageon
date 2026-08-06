@@ -21,8 +21,8 @@
           <h1>일정·회차 관리</h1>
           <p>공연 날짜, 회차와 판매 상태를 설정합니다.</p>
         </div>
-        <button class="btn--venue-add" type="button" onclick="openScheduleModal()">
-          회차 추가
+        <button class="btn--venue-add" type="button" onclick="openBulkModal()">
+          📅 회차 추가
         </button>
       </header>
 
@@ -50,22 +50,20 @@
       <div class="structure-layout">
         <div class="structure-card">
           <div class="structure-card__head">
-            <h2 th:text="${overviewAll} ? '회차 운영 현황 (전체 ' + ${#lists.size(overview)} + '건)' : '회차 운영 현황'">회차 운영 현황</h2>
+            <h2>회차 운영 현황</h2>
             <span class="head-links">
+                  <button type="button" class="btn-mini btn-mini--info-outline"
+                          onclick="document.getElementById('allModal').classList.add('is-open')">
+                    📋 전체 보기 (<span th:text="${#lists.size(allItems)}">12</span>)
+                  </button>
                   <button type="button" class="btn-mini btn-mini--danger"
                           th:if="${stats.conflictCount > 0}"
                           onclick="document.getElementById('conflictModal').classList.add('is-open')">
                     ⚠ 충돌만 보기 (<span th:text="${stats.conflictCount}">2</span>)
                   </button>
-                  <a th:if="${!overviewAll}"
-                     th:href="@{/admin/schedules(all=true, performanceId=${selectedPerformanceId}, month=${selectedMonth})}"
-                     class="back-link">전체 보기 &gt;</a>
-                  <a th:if="${overviewAll}"
-                     th:href="@{/admin/schedules(all=false, performanceId=${selectedPerformanceId}, month=${selectedMonth})}"
-                     class="back-link">접기 &gt;</a>
                 </span>
           </div>
-          <div class="table-wrap" th:classappend="${overviewAll} ? 'scroll-tall' : ''">
+          <div class="table-wrap">
             <table class="structure-table">
               <thead>
               <tr>
@@ -146,47 +144,52 @@
               </td>
               <td th:text="${row.remainingSeats}">219</td>
               <td class="action-cell">
-                <button type="button" class="btn-mini btn-mini--manage"
-                        th:attr="data-id=${row.id},
-                                       data-performance-id=${row.performanceId},
-                                       data-venue-hall-id=${row.venueHallId},
-                                       data-round=${row.roundNumber},
-                                       data-max-tickets=${row.maxTicketsPerMember},
-                                       data-starts-at=${row.startsAtIso},
-                                       data-sales-open-at=${row.salesOpenAtIso},
-                                       data-sales-close-at=${row.salesCloseAtIso},
-                                       data-cancel-close-at=${row.cancelCloseAtIso}"
-                        onclick="editScheduleToModal(this)">수정</button>
-                <button type="button" class="btn-mini btn-mini--copy"
-                        th:attr="data-performance-id=${row.performanceId},
-                                       data-venue-hall-id=${row.venueHallId},
-                                       data-round=${row.roundNumber},
-                                       data-max-tickets=${row.maxTicketsPerMember}"
-                        onclick="copyScheduleToModal(this)">이 회차 정보로 추가</button>
-                <form method="post" th:if="${row.statusCode == 'SCHEDULED'}"
-                      th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
-                      onsubmit="return confirm('이 회차의 판매를 시작하시겠습니까?')">
-                  <input type="hidden" name="status" value="OPEN">
-                  <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
-                  <input type="hidden" name="month" th:value="${selectedMonth}">
-                  <button type="submit" class="btn-mini btn-mini--start">판매 시작</button>
-                </form>
-                <form method="post" th:if="${row.statusCode == 'OPEN'}"
-                      th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
-                      onsubmit="return confirm('이 회차의 판매를 종료하시겠습니까?')">
-                  <input type="hidden" name="status" value="CLOSED">
-                  <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
-                  <input type="hidden" name="month" th:value="${selectedMonth}">
-                  <button type="submit" class="btn-mini btn-mini--stop">판매 종료</button>
-                </form>
-                <form method="post" th:if="${row.statusCode != 'CANCELLED'}"
-                      th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
-                      onsubmit="return confirm('이 회차를 취소하시겠습니까? 취소 후에는 되돌릴 수 없습니다.')">
-                  <input type="hidden" name="status" value="CANCELLED">
-                  <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
-                  <input type="hidden" name="month" th:value="${selectedMonth}">
-                  <button type="submit" class="btn-mini btn-mini--danger">취소</button>
-                </form>
+                <div class="row-menu">
+                  <button type="button" class="btn-mini btn-mini--menu-trigger" onclick="toggleRowMenu(this)">관리 ▾</button>
+                  <div class="row-menu__panel">
+                    <button type="button" class="row-menu__item row-menu__item--manage"
+                            th:attr="data-id=${row.id},
+                                           data-performance-id=${row.performanceId},
+                                           data-venue-hall-id=${row.venueHallId},
+                                           data-round=${row.roundNumber},
+                                           data-max-tickets=${row.maxTicketsPerMember},
+                                           data-starts-at=${row.startsAtIso},
+                                           data-sales-open-at=${row.salesOpenAtIso},
+                                           data-sales-close-at=${row.salesCloseAtIso},
+                                           data-cancel-close-at=${row.cancelCloseAtIso}"
+                            onclick="editScheduleToModal(this); closeAllRowMenus()">✏ 수정</button>
+                    <button type="button" class="row-menu__item row-menu__item--copy"
+                            th:attr="data-performance-id=${row.performanceId},
+                                           data-venue-hall-id=${row.venueHallId},
+                                           data-round=${row.roundNumber},
+                                           data-max-tickets=${row.maxTicketsPerMember}"
+                            onclick="copyScheduleToModal(this); closeAllRowMenus()">＋ 이 회차 정보로 추가</button>
+                    <form method="post" th:if="${row.statusCode == 'SCHEDULED'}"
+                          th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
+                          onsubmit="return confirm('이 회차의 판매를 시작하시겠습니까?')">
+                      <input type="hidden" name="status" value="OPEN">
+                      <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+                      <input type="hidden" name="month" th:value="${selectedMonth}">
+                      <button type="submit" class="row-menu__item row-menu__item--start">▶ 판매 시작</button>
+                    </form>
+                    <form method="post" th:if="${row.statusCode == 'OPEN'}"
+                          th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
+                          onsubmit="return confirm('이 회차의 판매를 종료하시겠습니까?')">
+                      <input type="hidden" name="status" value="CLOSED">
+                      <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+                      <input type="hidden" name="month" th:value="${selectedMonth}">
+                      <button type="submit" class="row-menu__item row-menu__item--stop">■ 판매 종료</button>
+                    </form>
+                    <form method="post" th:if="${row.statusCode != 'CANCELLED'}"
+                          th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
+                          onsubmit="return confirm('이 회차를 취소하시겠습니까? 취소 후에는 되돌릴 수 없습니다.')">
+                      <input type="hidden" name="status" value="CANCELLED">
+                      <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+                      <input type="hidden" name="month" th:value="${selectedMonth}">
+                      <button type="submit" class="row-menu__item row-menu__item--danger">✕ 회차 취소</button>
+                    </form>
+                  </div>
+                </div>
               </td>
             </tr>
             </tbody>
@@ -307,6 +310,118 @@
   </div>
 </div>
 
+<!-- 회차 일괄 추가(달력) 모달 -->
+<div class="modal-overlay" id="bulkModal">
+  <div class="modal-card modal-card--calendar">
+    <div class="modal-header">
+      <span class="modal-header__icon">📅</span>
+      <div>
+        <h2>회차 추가</h2>
+        <p class="modal-header__sub">달력에서 날짜를 여러 개 선택하면 한 번에 회차가 만들어집니다.</p>
+      </div>
+    </div>
+
+    <form method="post" th:action="@{/admin/schedules/bulk}" id="bulkForm">
+      <div class="modal-grid">
+        <div class="full">
+          <label>공연 <span class="required-mark">*</span></label>
+          <select name="performanceId" id="bulkPerformanceId" required>
+            <option value="">선택하세요</option>
+            <option th:each="p : ${performances}" th:value="${p.id}" th:text="${p.title}">공연명</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>공연장 · 홀 <span class="required-mark">*</span></label>
+          <select name="venueHallId" id="bulkVenueHallId" required>
+            <option value="">선택하세요</option>
+            <option th:each="h : ${hallOptions}" th:value="${h.id}" th:text="${h.label}">공연장 - 홀</option>
+          </select>
+        </div>
+        <div>
+          <label>공연 시작 시간 <span class="required-mark">*</span></label>
+          <div class="dt-group">
+            <select class="dt-hour" id="bulkHour"></select>
+            <span class="dt-colon">:</span>
+            <select class="dt-minute" id="bulkMinute"></select>
+          </div>
+        </div>
+        <div>
+          <label>1인 최대 매수</label>
+          <input type="number" name="maxTicketsPerMember" min="1" placeholder="기본 4매">
+        </div>
+      </div>
+
+      <div class="calendar-block">
+        <div class="calendar-toolbar">
+          <button type="button" class="calendar-nav" onclick="shiftCalendarMonth(-1)">‹</button>
+          <span class="calendar-title" id="calendarTitle">2026년 8월</span>
+          <button type="button" class="calendar-nav" onclick="shiftCalendarMonth(1)">›</button>
+        </div>
+        <p class="calendar-tip">요일을 클릭하면 이번 달의 해당 요일이 한 번에 선택됩니다. (예: "토" 클릭 → 이번 달 토요일 전체 선택)</p>
+        <div class="calendar-weekdays" id="calendarWeekdays"></div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <div class="calendar-selected">
+        <span class="calendar-selected__label">선택된 날짜 <strong id="selectedCount">0</strong>개</span>
+        <button type="button" class="calendar-clear" onclick="clearSelectedDates()">전체 해제</button>
+      </div>
+      <div class="calendar-chips" id="selectedChips"></div>
+
+      <input type="hidden" name="datesCsv" id="bulkDatesCsv">
+      <input type="hidden" name="time" id="bulkTime">
+      <p class="modal-error" id="bulkErrorBox" style="display:none"></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn--cancel" style="width:auto;padding:11px 20px"
+                onclick="document.getElementById('bulkModal').classList.remove('is-open')">취소</button>
+        <button type="submit" class="btn--venue-add" id="bulkSubmitBtn">회차 생성</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 전체 회차 보기 모달 -->
+<div class="modal-overlay" id="allModal">
+  <div class="modal-card modal-card--conflict">
+    <div class="modal-header">
+      <span class="modal-header__icon">📋</span>
+      <div>
+        <h2>전체 회차 운영 현황</h2>
+        <p class="modal-header__sub">현재 운영 중이거나 예정된 회차 <strong th:text="${#lists.size(allItems)}">12</strong>건입니다.</p>
+      </div>
+    </div>
+    <div class="conflict-list">
+      <p class="venue-empty" th:if="${#lists.isEmpty(allItems)}">등록된 회차가 없습니다.</p>
+      <div class="conflict-row" th:each="item : ${allItems}" th:classappend="${item.conflict} ? '' : 'conflict-row--neutral'">
+        <div class="conflict-row__info">
+          <span class="cell-title" th:text="${item.performanceTitle}">공연명</span>
+          <span class="conflict-row__time" th:text="${item.dateTimeText}">08.16 20:30</span>
+        </div>
+        <div class="conflict-row__right">
+          <span class="badge" th:classappend="${item.badgeClass}" th:text="${item.statusText}">판매 중</span>
+          <span class="conflict-tag" th:if="${item.conflict}">⚠ 충돌</span>
+          <button type="button" class="btn-mini btn-mini--manage"
+                  th:attr="data-id=${item.id},
+                               data-performance-id=${item.performanceId},
+                               data-venue-hall-id=${item.venueHallId},
+                               data-round=${item.roundNumber},
+                               data-max-tickets=${item.maxTicketsPerMember},
+                               data-starts-at=${item.startsAtIso},
+                               data-sales-open-at=${item.salesOpenAtIso},
+                               data-sales-close-at=${item.salesCloseAtIso},
+                               data-cancel-close-at=${item.cancelCloseAtIso}"
+                  onclick="editScheduleToModal(this); document.getElementById('allModal').classList.remove('is-open')">관리</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn--cancel" style="width:auto;padding:11px 20px"
+              onclick="document.getElementById('allModal').classList.remove('is-open')">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 충돌 회차 확인 모달 -->
 <div class="modal-overlay" id="conflictModal">
   <div class="modal-card modal-card--conflict">
@@ -352,13 +467,28 @@
 </div>
 
 <script>
+  function closeAllRowMenus() {
+    document.querySelectorAll('.row-menu.is-open').forEach(function (el) { el.classList.remove('is-open'); });
+  }
+  function toggleRowMenu(btn) {
+    var menu = btn.closest('.row-menu');
+    var wasOpen = menu.classList.contains('is-open');
+    closeAllRowMenus();
+    if (!wasOpen) menu.classList.add('is-open');
+  }
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.row-menu')) closeAllRowMenus();
+  });
+</script>
+
+<script>
   (function () {
     var form = document.getElementById('scheduleForm');
     var errorBox = document.getElementById('modalError');
     var groups = {};
 
     // 시(00~23) 10분 단위 분 옵션을 모든 dt-group에 채워 넣는다.
-    document.querySelectorAll('.dt-group').forEach(function (group) {
+    document.querySelectorAll('#scheduleModal .dt-group').forEach(function (group) {
       var hourSel = group.querySelector('.dt-hour');
       var minuteSel = group.querySelector('.dt-minute');
       for (var h = 0; h < 24; h++) {
@@ -495,6 +625,7 @@
       });
     });
 
+
     // 공연 시작 시간을 입력하면, 아직 비어 있는 판매 시작/종료를 자동으로 채워준다.
     groups.startsAt.date.addEventListener('change', autoFillSales);
     groups.startsAt.hour.addEventListener('change', autoFillSales);
@@ -542,6 +673,152 @@
         errorBox.style.display = 'block';
         return;
       }
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    var WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+    var today = new Date();
+    var calYear = today.getFullYear();
+    var calMonth = today.getMonth(); // 0-indexed
+    var selectedDates = new Set();
+
+    var hourSel = document.getElementById('bulkHour');
+    var minuteSel = document.getElementById('bulkMinute');
+    for (var h = 0; h < 24; h++) {
+      var hOpt = document.createElement('option');
+      hOpt.value = String(h).padStart(2, '0');
+      hOpt.textContent = String(h).padStart(2, '0') + '시';
+      hourSel.appendChild(hOpt);
+    }
+    for (var m = 0; m < 60; m += 10) {
+      var mOpt = document.createElement('option');
+      mOpt.value = String(m).padStart(2, '0');
+      mOpt.textContent = String(m).padStart(2, '0') + '분';
+      minuteSel.appendChild(mOpt);
+    }
+    hourSel.value = '19';
+    minuteSel.value = '00';
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function dateKey(y, mo, d) { return y + '-' + pad(mo + 1) + '-' + pad(d); }
+
+    window.openBulkModal = function () {
+      document.getElementById('bulkPerformanceId').value = '';
+      document.getElementById('bulkVenueHallId').value = '';
+      selectedDates.clear();
+      calYear = today.getFullYear();
+      calMonth = today.getMonth();
+      document.getElementById('bulkErrorBox').style.display = 'none';
+      renderCalendar();
+      document.getElementById('bulkModal').classList.add('is-open');
+    };
+
+    window.shiftCalendarMonth = function (delta) {
+      calMonth += delta;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    };
+
+    window.clearSelectedDates = function () {
+      selectedDates.clear();
+      renderCalendar();
+    };
+
+    window.toggleWeekday = function (dow) {
+      var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      var keysThisMonth = [];
+      for (var d = 1; d <= daysInMonth; d++) {
+        if (new Date(calYear, calMonth, d).getDay() === dow) {
+          keysThisMonth.push(dateKey(calYear, calMonth, d));
+        }
+      }
+      var allSelected = keysThisMonth.every(function (k) { return selectedDates.has(k); });
+      keysThisMonth.forEach(function (k) {
+        if (allSelected) selectedDates.delete(k); else selectedDates.add(k);
+      });
+      renderCalendar();
+    };
+
+    window.toggleDate = function (key) {
+      if (selectedDates.has(key)) selectedDates.delete(key); else selectedDates.add(key);
+      renderCalendar();
+    };
+
+    window.removeSelectedDate = function (key) {
+      selectedDates.delete(key);
+      renderCalendar();
+    };
+
+    window.renderCalendar = function () {
+      document.getElementById('calendarTitle').textContent = calYear + '년 ' + (calMonth + 1) + '월';
+
+      var weekdaysEl = document.getElementById('calendarWeekdays');
+      weekdaysEl.innerHTML = '';
+      WEEKDAY_LABELS.forEach(function (label, idx) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'calendar-weekday';
+        btn.textContent = label;
+        btn.onclick = function () { toggleWeekday(idx); };
+        weekdaysEl.appendChild(btn);
+      });
+
+      var gridEl = document.getElementById('calendarGrid');
+      gridEl.innerHTML = '';
+      var firstDow = new Date(calYear, calMonth, 1).getDay();
+      var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      var todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+      for (var i = 0; i < firstDow; i++) {
+        var blank = document.createElement('div');
+        blank.className = 'calendar-cell calendar-cell--blank';
+        gridEl.appendChild(blank);
+      }
+      for (var d = 1; d <= daysInMonth; d++) {
+        var key = dateKey(calYear, calMonth, d);
+        var cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'calendar-cell';
+        if (selectedDates.has(key)) cell.classList.add('is-selected');
+        if (key === todayKey) cell.classList.add('is-today');
+        cell.textContent = d;
+        cell.onclick = function (k) { return function () { toggleDate(k); }; }(key);
+        gridEl.appendChild(cell);
+      }
+
+      var sorted = Array.from(selectedDates).sort();
+      document.getElementById('selectedCount').textContent = sorted.length;
+      var chipsEl = document.getElementById('selectedChips');
+      chipsEl.innerHTML = '';
+      sorted.forEach(function (key) {
+        var chip = document.createElement('span');
+        chip.className = 'calendar-chip';
+        chip.textContent = key.slice(5).replace('-', '.');
+        var x = document.createElement('button');
+        x.type = 'button';
+        x.textContent = '×';
+        x.onclick = function (k) { return function () { removeSelectedDate(k); }; }(key);
+        chip.appendChild(x);
+        chipsEl.appendChild(chip);
+      });
+    };
+
+    document.getElementById('bulkForm').addEventListener('submit', function (e) {
+      var errorBox = document.getElementById('bulkErrorBox');
+      errorBox.style.display = 'none';
+
+      if (selectedDates.size === 0) {
+        e.preventDefault();
+        errorBox.textContent = '달력에서 날짜를 하나 이상 선택해주세요.';
+        errorBox.style.display = 'block';
+        return;
+      }
+      document.getElementById('bulkDatesCsv').value = Array.from(selectedDates).sort().join(',');
+      document.getElementById('bulkTime').value = hourSel.value + ':' + minuteSel.value;
     });
   })();
 </script>
