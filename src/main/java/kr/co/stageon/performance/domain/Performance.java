@@ -1,6 +1,7 @@
 package kr.co.stageon.performance.domain;
 
 import jakarta.persistence.*;
+import kr.co.stageon.venue.domain.VenueHall;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -62,6 +63,15 @@ public class Performance {
     @Column(name = "is_draft", nullable = false)
     private boolean draft;
 
+    /** 공연장 중복 예약 방지에 사용되는 홀 연관관계입니다. 동일 hall+동일 기간에는 이 performanceId 외 등록을 막습니다. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "venue_hall_id")
+    private VenueHall venueHall;
+
+    /** 공연 기본 가격입니다(등급별 가격은 PerformanceSeatPrice에서 별도 관리). */
+    @Column(name = "base_price")
+    private Integer basePrice;
+
     @Column(name = "kopis_updated_at")
     private LocalDateTime kopisUpdatedAt;
 
@@ -74,10 +84,16 @@ public class Performance {
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
+    /** 등급별 가격(JSON)을 raw_price_text 컬럼에 저장합니다. 새 테이블 없이 기존 컬럼을 재사용합니다. */
+    public void updateSeatPriceJson(String json) {
+        this.rawPriceText = json;
+    }
+
     /** 관리자 등록 폼에서 신규 생성 시 사용합니다. */
     public static Performance create(String kopisId, String title, String genre, String posterUrl,
                                      LocalDate startDate, LocalDate endDate, Integer runtimeMinutes,
-                                     String ageText, String story, Status status, boolean draft) {
+                                     String ageText, String story, Status status, boolean draft,
+                                     VenueHall venueHall, Integer basePrice) {
         Performance p = new Performance();
         p.kopisId = kopisId;
         p.title = title;
@@ -90,13 +106,16 @@ public class Performance {
         p.story = story;
         p.status = status;
         p.draft = draft;
+        p.venueHall = venueHall;
+        p.basePrice = basePrice;
         return p;
     }
 
     /** 관리자 수정 폼에서 필드를 갱신할 때 사용합니다. */
     public void update(String kopisId, String title, String genre, String posterUrl,
                        LocalDate startDate, LocalDate endDate, Integer runtimeMinutes,
-                       String ageText, String story, Status status, boolean draft) {
+                       String ageText, String story, Status status, boolean draft,
+                       VenueHall venueHall, Integer basePrice) {
         this.kopisId = kopisId;
         this.title = title;
         this.genre = genre;
@@ -108,5 +127,7 @@ public class Performance {
         this.story = story;
         this.status = status;
         this.draft = draft;
+        this.venueHall = venueHall;
+        this.basePrice = basePrice;
     }
 }
