@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn | 예매 상세</title>
+
+    <!-- 사이트·마이페이지 공통 스타일 -->
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/mypage.css}" href="/css/pages/mypage.css">
+
+    <!-- 예매 상세 화면 전용 스타일 -->
+    <link rel="stylesheet"
+          th:href="@{/css/pages/mypage-reservation-detail.css}"
+          href="/css/pages/mypage-reservation-detail.css">
+</head>
+<body id="top">
+
+<!-- 공통 헤더 -->
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+<main class="mypage-page">
+    <div class="mypage-shell">
+
+        <!-- 페이지 제목과 목록 복귀 버튼 -->
+        <header class="mypage-heading detail-heading">
+            <div>
+                <h1>예매 상세</h1>
+                <p>공연 일정과 좌석, 결제 정보를 확인할 수 있습니다.</p>
+            </div>
+            <a class="detail-back" th:href="@{/mypage/reservations}" href="/mypage/reservations">
+                예매 내역으로
+            </a>
+        </header>
+
+        <div class="mypage-layout">
+
+            <!-- 마이페이지 사이드바 -->
+            <div th:replace="~{fragments/mypage/mypage-sidebar :: sidebar('reservations')}"></div>
+
+            <section class="mypage-content detail-content">
+
+                <!-- 공연과 예매 상태를 가장 먼저 보여주는 요약 카드 -->
+                <section class="detail-card detail-summary">
+                    <div class="detail-poster">
+                        <img th:if="${reservation.posterUrl != null and !#strings.isEmpty(reservation.posterUrl)}"
+                             th:src="${reservation.posterUrl}"
+                             th:alt="|${reservation.performanceTitle} 포스터|">
+                        <div th:unless="${reservation.posterUrl != null and !#strings.isEmpty(reservation.posterUrl)}"
+                             class="detail-poster__empty" aria-hidden="true">
+                            STAGE<br>ON
+                        </div>
+                    </div>
+
+                    <div class="detail-summary__body">
+                        <div class="detail-summary__meta">
+                            <span class="detail-status"
+                                  th:classappend="${reservation.reservationStatus == 'CANCELLED'} ? ' detail-status--muted' :
+                                                  (${reservation.reservationStatus == 'PENDING'} ? ' detail-status--pending' :
+                                                  (${reservation.reservationStatus == 'EXPIRED'} ? ' detail-status--muted' : ''))"
+                                  th:text="${reservation.reservationStatus == 'CANCELLED'} ? '예매 취소' :
+                                           (${reservation.reservationStatus == 'PENDING'} ? '결제 대기' :
+                                           (${reservation.reservationStatus == 'EXPIRED'} ? '결제 만료' : '예매 완료'))">
+                                예매 완료
+                            </span>
+                            <span th:text="${reservation.bookingNumber}">예매번호</span>
+                        </div>
+
+                        <h2 th:text="${reservation.performanceTitle}">공연명</h2>
+
+                        <dl class="detail-key-info">
+                            <div>
+                                <dt>관람 일시</dt>
+                                <dd th:text="${#temporals.format(reservation.startsAt, 'yyyy.MM.dd (E) HH:mm')}">
+                                    2026.08.15 (토) 19:00
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>회차</dt>
+                                <dd th:text="${reservation.roundNumber != null} ? |${reservation.roundNumber}회| : '-'">1회</dd>
+                            </div>
+                            <div>
+                                <dt>공연장</dt>
+                                <dd th:text="|${reservation.venueName} ${reservation.hallName}|">공연장</dd>
+                            </div>
+                            <div>
+                                <dt>주소</dt>
+                                <dd th:text="${reservation.venueAddress}">공연장 주소</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </section>
+
+                <!-- 예약 좌석 정보 -->
+                <section class="detail-card">
+                    <div class="detail-card__heading">
+                        <div>
+                            <h2>좌석 정보</h2>
+                            <p>예매가 확정될 당시 저장된 좌석 정보입니다.</p>
+                        </div>
+                        <span th:text="|총 ${#lists.size(reservation.seats)}석|">총 0석</span>
+                    </div>
+
+                    <div class="seat-detail-list" th:if="${!#lists.isEmpty(reservation.seats)}">
+                        <article class="seat-detail-item" th:each="seat, stat : ${reservation.seats}">
+                            <strong th:text="|좌석 ${stat.count}|">좌석 1</strong>
+                            <dl>
+                                <div><dt>등급</dt><dd th:text="${seat.gradeName}">R석</dd></div>
+                                <div><dt>위치</dt><dd th:text="|${seat.sectionName} ${seat.rowLabel}열 ${seat.seatNumber}번|">A구역 1열 1번</dd></div>
+                                <div><dt>가격</dt><dd th:text="|${#numbers.formatInteger(seat.unitPrice, 0, 'COMMA')}원|">0원</dd></div>
+                            </dl>
+                        </article>
+                    </div>
+
+                    <!-- 좌석 담당 기능과 아직 연결되지 않은 데이터도 화면 오류 없이 처리합니다. -->
+                    <div class="detail-empty" th:if="${#lists.isEmpty(reservation.seats)}">
+                        연결된 좌석 정보가 없습니다.
+                    </div>
+                </section>
+
+                <!-- 결제 정보 -->
+                <section class="detail-card">
+                    <div class="detail-card__heading">
+                        <div>
+                            <h2>결제 정보</h2>
+                            <p>가장 최근에 요청된 결제 기록을 기준으로 표시합니다.</p>
+                        </div>
+                    </div>
+
+                    <div class="payment-layout">
+                        <dl class="payment-info">
+                            <div>
+                                <dt>결제 방법</dt>
+                                <dd th:text="${reservation.paymentProvider == 'MOCK'} ? '모의 결제' :
+                                             (${reservation.paymentProvider != null} ? ${reservation.paymentProvider} : '결제 정보 없음')">
+                                    모의 결제
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>결제 상태</dt>
+                                <dd th:text="${reservation.paymentStatus == 'SUCCESS'} ? '결제 완료' :
+                                             (${reservation.paymentStatus == 'READY'} ? '결제 준비' :
+                                             (${reservation.paymentStatus == 'FAILED'} ? '결제 실패' :
+                                             (${reservation.paymentStatus == 'CANCELLED'} ? '결제 취소' : '결제 정보 없음'))) ">
+                                    결제 완료
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>결제 요청</dt>
+                                <dd th:text="${reservation.paymentRequestedAt != null} ?
+                                             ${#temporals.format(reservation.paymentRequestedAt, 'yyyy.MM.dd HH:mm')} : '-'">-</dd>
+                            </div>
+                            <div>
+                                <dt>결제 완료</dt>
+                                <dd th:text="${reservation.paymentProcessedAt != null} ?
+                                             ${#temporals.format(reservation.paymentProcessedAt, 'yyyy.MM.dd HH:mm')} : '-'">-</dd>
+                            </div>
+                        </dl>
+
+                        <dl class="payment-summary">
+                            <div><dt>좌석 금액</dt><dd th:text="|${#numbers.formatInteger(reservation.seatAmount, 0, 'COMMA')}원|">0원</dd></div>
+                            <div><dt>예매 수수료</dt><dd th:text="|${#numbers.formatInteger(reservation.feeAmount, 0, 'COMMA')}원|">0원</dd></div>
+                            <div><dt>할인 금액</dt><dd th:text="|- ${#numbers.formatInteger(reservation.discountAmount, 0, 'COMMA')}원|">- 0원</dd></div>
+                            <div class="payment-summary__total"><dt>총 결제 금액</dt><dd th:text="|${#numbers.formatInteger(reservation.totalAmount, 0, 'COMMA')}원|">0원</dd></div>
+                        </dl>
+                    </div>
+                </section>
+
+                <!-- 취소된 예매에만 취소 정보를 노출합니다. -->
+                <section class="detail-card detail-cancel"
+                         th:if="${reservation.reservationStatus == 'CANCELLED'}">
+                    <div class="detail-card__heading"><h2>취소 정보</h2></div>
+                    <dl>
+                        <div>
+                            <dt>취소 일시</dt>
+                            <dd th:text="${reservation.cancelledAt != null} ?
+                                         ${#temporals.format(reservation.cancelledAt, 'yyyy.MM.dd HH:mm')} : '-'">-</dd>
+                        </div>
+                        <div>
+                            <dt>취소 사유</dt>
+                            <dd th:text="${reservation.cancelReason != null} ? ${reservation.cancelReason} : '-'">-</dd>
+                        </div>
+                    </dl>
+                </section>
+
+            </section>
+        </div>
+    </div>
+</main>
+
+<!-- 공통 푸터와 플로팅 버튼 -->
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+</body>
+</html>

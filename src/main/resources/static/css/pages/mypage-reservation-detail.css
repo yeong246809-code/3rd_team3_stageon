@@ -1,0 +1,67 @@
+/* 예매 상세 페이지는 티켓 형태가 아닌 정보 카드 구조로 구성합니다. */
+.detail-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.detail-back { flex-shrink: 0; padding: 10px 14px; border: 1px solid #dfe3ea; border-radius: 9px; background: #fff; color: #344054; font-size: 13px; font-weight: 700; text-decoration: none; }
+.detail-back:hover { border-color: #e60012; color: #e60012; }
+
+.detail-content { display: grid; gap: 16px; }
+.detail-card { padding: 26px; border: 1px solid #e7eaf0; border-radius: 14px; background: #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, .045); }
+.detail-card__heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.detail-card__heading h2 { margin: 0 0 5px; font-size: 19px; color: #111827; }
+.detail-card__heading p { margin: 0; font-size: 12px; color: #98a2b3; }
+.detail-card__heading > span { flex-shrink: 0; font-size: 13px; color: #667085; }
+
+/* 공연 요약 카드 */
+.detail-summary { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 24px; }
+.detail-poster { overflow: hidden; width: 150px; aspect-ratio: 3 / 4; border-radius: 11px; background: #f2f4f7; }
+.detail-poster img { width: 100%; height: 100%; object-fit: cover; }
+.detail-poster__empty { display: flex; width: 100%; height: 100%; align-items: flex-end; padding: 18px; box-sizing: border-box; background: #e60012; color: #fff; font-size: 18px; font-weight: 800; line-height: 1; }
+.detail-summary__body { min-width: 0; }
+.detail-summary__meta { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; font-size: 12px; color: #98a2b3; }
+.detail-summary h2 { margin: 0 0 22px; font-size: 25px; line-height: 1.35; color: #101828; }
+.detail-status { padding: 4px 8px; border-radius: 999px; background: #fff0f1; color: #e60012; font-size: 11px; font-weight: 800; }
+.detail-status--pending { background: #fff7dc; color: #a96b00; }
+.detail-status--muted { background: #f2f4f7; color: #667085; }
+
+.detail-key-info { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; margin: 0; }
+.detail-key-info div, .payment-info div, .detail-cancel dl div { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 12px; }
+.detail-key-info dt, .payment-info dt, .detail-cancel dt { color: #98a2b3; font-size: 12px; }
+.detail-key-info dd, .payment-info dd, .detail-cancel dd { margin: 0; color: #344054; font-size: 13px; font-weight: 600; }
+
+/* 좌석 카드 */
+.seat-detail-list { display: grid; gap: 10px; }
+.seat-detail-item { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 18px; padding: 17px 18px; border: 1px solid #e7eaf0; border-radius: 11px; background: #fafbfc; }
+.seat-detail-item > strong { color: #e60012; font-size: 13px; }
+.seat-detail-item dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; }
+.seat-detail-item dl div { min-width: 0; }
+.seat-detail-item dt { margin-bottom: 5px; color: #98a2b3; font-size: 11px; }
+.seat-detail-item dd { margin: 0; color: #344054; font-size: 13px; font-weight: 700; }
+.detail-empty { padding: 26px; border: 1px dashed #d8dee8; border-radius: 11px; background: #fafbfc; color: #98a2b3; text-align: center; font-size: 13px; }
+
+/* 결제 카드 */
+.payment-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; }
+.payment-info { display: grid; align-content: start; gap: 15px; margin: 0; }
+.payment-summary { margin: 0; padding: 18px; border-radius: 11px; background: #f8fafc; }
+.payment-summary div { display: flex; justify-content: space-between; gap: 20px; padding: 8px 0; }
+.payment-summary dt { color: #667085; font-size: 12px; }
+.payment-summary dd { margin: 0; color: #344054; font-size: 13px; font-weight: 700; }
+.payment-summary__total { margin-top: 8px; padding-top: 15px !important; border-top: 1px solid #dfe3ea; }
+.payment-summary__total dt, .payment-summary__total dd { color: #101828; font-size: 15px; font-weight: 800; }
+
+.detail-cancel { border-color: #eceff3; background: #fafbfc; }
+.detail-cancel dl { display: grid; gap: 12px; margin: 0; }
+
+@media (max-width: 900px) {
+    .detail-summary { grid-template-columns: 110px minmax(0, 1fr); }
+    .detail-poster { width: 110px; }
+    .detail-key-info { grid-template-columns: 1fr; }
+    .payment-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+    .detail-heading { align-items: flex-start; }
+    .detail-card { padding: 18px; }
+    .detail-summary { grid-template-columns: 1fr; }
+    .detail-poster { width: 100%; max-width: 180px; }
+    .seat-detail-item { grid-template-columns: 1fr; }
+    .seat-detail-item dl { grid-template-columns: 1fr; }
+}
