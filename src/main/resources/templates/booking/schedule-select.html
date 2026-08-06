@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- POST 요청 시 Spring Security CSRF 검증에 사용할 값입니다. -->
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
   <title>StageOn | 날짜·회차 선택</title>
 
   <link rel="stylesheet"
@@ -86,17 +90,17 @@
             예매 가능
           </span>
 
-                  <span class="calendar-legend-item">
+          <span class="calendar-legend-item">
             <i class="legend-dot legend-dot--scheduled"></i>
             예매 예정
           </span>
 
-                  <span class="calendar-legend-item">
+          <span class="calendar-legend-item">
             <i class="legend-dot legend-dot--closed"></i>
             판매 종료
           </span>
 
-                  <span class="calendar-legend-item">
+          <span class="calendar-legend-item">
             <i class="legend-dot legend-dot--cancelled"></i>
             공연 취소
           </span>
@@ -669,7 +673,7 @@
 
     moveNextButton.disabled = false;
     moveNextButton.textContent =
-            "선택한 회차로 이동";
+            "좌석선택하기";
 
     renderSchedules();
   }
@@ -717,7 +721,7 @@
 
   moveNextButton.addEventListener(
           "click",
-          () => {
+          async () => {
 
             if (!selectedScheduleId) {
               alert("회차를 선택해 주세요.");
@@ -726,18 +730,79 @@
 
             /*
              * [남수아 담당 범위]
-             * 다음 담당 영역에 performanceId와 scheduleId를 전달합니다.
+             * 선택한 scheduleId를 서버에 전달하고,
+             * 로그인 회원의 memberId는 서버에서 조회합니다.
              *
-             * 현재 대기열 Controller는 token도 필수로 받기 때문에
-             * 대기열 담당자가 연결 주소를 확정하기 전까지는
-             * 좌석 선택 화면으로 흐름만 확인합니다.
+             * 이 요청은 waiting_queue_history INSERT까지만 수행합니다.
+             * Redis 처리와 다음 화면 이동은 이 코드에 포함하지 않습니다.
              */
-            const nextUrl =
-                    `/booking/seats`
-                    + `?performanceId=${encodeURIComponent(performanceId)}`
-                    + `&scheduleId=${encodeURIComponent(selectedScheduleId)}`;
+            const csrfToken = document
+                    .querySelector('meta[name="_csrf"]')
+                    ?.getAttribute("content");
 
-            window.location.href = nextUrl;
+            const csrfHeader = document
+                    .querySelector('meta[name="_csrf_header"]')
+                    ?.getAttribute("content");
+
+            const headers = {
+              "Content-Type":
+                      "application/x-www-form-urlencoded;charset=UTF-8"
+            };
+
+            if (csrfToken && csrfHeader) {
+              headers[csrfHeader] = csrfToken;
+            }
+
+            const requestBody = new URLSearchParams({
+              scheduleId: String(selectedScheduleId)
+            });
+
+            moveNextButton.disabled = true;
+            moveNextButton.textContent = "대기열 등록 중...";
+
+            try {
+              const response = await fetch(
+                      "/api/waiting-queue-history",
+                      {
+                        method: "POST",
+                        headers,
+                        body: requestBody
+                      }
+              );
+
+              if (response.status === 401) {
+                alert("로그인 후 이용해 주세요.");
+                return;
+              }
+
+              const responseBody = await response.json();
+
+              if (!response.ok) {
+                throw new Error(
+                        responseBody.message
+                        || "대기열 이력 등록에 실패했습니다."
+                );
+              }
+
+              /*
+               * 현재 단계에서는 화면을 이동하지 않습니다.
+               * INSERT 성공 여부와 이후 Redis 연동용 queueToken만 확인합니다.
+               */
+              console.log(
+                      "waiting_queue_history INSERT 성공",
+                      responseBody
+              );
+
+              alert(
+                      "대기열 이력 데이터가 정상적으로 등록되었습니다."
+              );
+            } catch (error) {
+              console.error(error);
+              alert(error.message);
+            } finally {
+              moveNextButton.disabled = false;
+              moveNextButton.textContent = "좌석선택하기";
+            }
           });
 
   renderCalendar();
