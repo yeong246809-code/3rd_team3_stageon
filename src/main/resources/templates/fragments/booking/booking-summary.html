@@ -4,7 +4,22 @@
 <!-- 예매 정보 패널 (좌석 선택 & 주문 확인 공용) -->
 <aside class="card booking-summary" th:fragment="summary">
   <span class="eyebrow">BOOKING SUMMARY</span>
-  <h2 style="margin-top:8px">예매 정보</h2>
+  <h2 style="margin-top:8px; margin-bottom: 20px;">예매 정보</h2>
+
+  <!-- holdItems가 비어있을 때(즉, STEP 2 좌석 선택 페이지일 때)만 가격표 렌더링 -->
+  <div th:if="${seatGrades != null and (holdItems == null or #lists.isEmpty(holdItems))}" style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0;">
+    <h3 style="font-size: 0.95rem; color: #555; margin-bottom: 12px;">좌석 등급별 가격</h3>
+    <div style="font-size: 0.95rem;">
+      <div th:each="grade : ${seatGrades}" style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span>
+          <span th:style="'display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: middle; background: ' + ${grade.displayColor}"></span>
+          <span th:text="${grade.name}">VIP석</span>
+        </span>
+        <span style="font-weight: bold;" th:text="${#numbers.formatInteger(grade.price, 3, 'COMMA')} + '원'">110,000원</span>
+      </div>
+    </div>
+  </div>
+
   <dl>
     <div>
       <dt>공연</dt>
@@ -15,16 +30,14 @@
       <dd th:text="${scheduleTime != null ? #temporals.format(scheduleTime, 'yyyy.MM.dd HH:mm') : '불러오기 실패'}">2026.08.15 19:00</dd>
     </div>
 
-    <!-- 1. 주문 확인 페이지(STEP 3): 서버에서 holdItems를 넘겨준 경우 -->
-    <div th:if="${holdItems != null}" style="display: contents;">
+    <!-- STEP 3 고정 패널 렌더링 -->
+    <div th:if="${holdItems != null and not #lists.isEmpty(holdItems)}" style="display: contents;">
       <div>
         <dt>좌석</dt>
         <dd>
-          <span th:if="${#lists.isEmpty(holdItems)}" style="color: #ff5252;">좌석을 선택해주세요</span>
-          <span th:unless="${#lists.isEmpty(holdItems)}"
-                th:text="${#strings.listJoin(holdItems.![scheduleSeat.seat.sectionName + ' ' + scheduleSeat.seat.rowLabel + '열 ' + scheduleSeat.seat.seatNumber + '번'], ', ')}">
+          <span th:text="${#strings.listJoin(holdItems.![scheduleSeat.seat.sectionName + ' ' + scheduleSeat.seat.rowLabel + '열 ' + scheduleSeat.seat.seatNumber + '번'], ', ')}">
               R구역 1열 5번
-            </span>
+          </span>
         </dd>
       </div>
       <div>
@@ -37,8 +50,8 @@
       </div>
     </div>
 
-    <!-- 2. 좌석 선택 페이지(STEP 2): holdItems가 없고 JS가 동적으로 채워야 하는 경우 -->
-    <div th:unless="${holdItems != null}" style="display: contents;">
+    <!-- STEP 2 동적 패널 렌더링 -->
+    <div th:unless="${holdItems != null and not #lists.isEmpty(holdItems)}" style="display: contents;">
       <div id="dynamic-seat-container" style="display: contents;">
         <div>
           <dt>좌석</dt>
@@ -51,7 +64,7 @@
       </div>
       <div>
         <dt>결제 금액</dt>
-        <dd id="summary-seat-price" style="font-weight: bold;">0원</dd>
+        <dd id="summary-seat-price" style="font-weight: bold; color: #ff5252;">0원</dd>
       </div>
     </div>
 

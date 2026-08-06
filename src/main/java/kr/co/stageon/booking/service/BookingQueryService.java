@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,6 +59,19 @@ public class BookingQueryService {
                 })
                 .orElse(null);
     }
+
+    // 좌석 등급표를 프론트로 넘겨주기 위한 전용 DTO
+    public record SeatGradeSummary(String name, BigDecimal price, String displayColor) {}
+
+    // 기존 findSeats를 활용해 고유한 좌석 등급(가격, 색상) 목록만 추출하는 메서드
+    public List<SeatGradeSummary> findSeatGrades(Long scheduleId) {
+        return findSeats(scheduleId).stream()
+                .map(seat -> new SeatGradeSummary(
+                        seat.grade(),
+                        seat.price(),
+                        seat.displayColor()
+                ))
+                .distinct()
+                .toList();
+    }
 }
-
-
