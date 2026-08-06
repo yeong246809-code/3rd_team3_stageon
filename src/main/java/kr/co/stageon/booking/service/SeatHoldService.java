@@ -70,4 +70,22 @@ public class SeatHoldService {
             seatHoldItemRepository.save(item);
         }
     }
+
+    @Transactional
+    public void releaseExpiredSeatHolds() {
+        LocalDateTime now = LocalDateTime.now();
+        // 1. 만료 시간이 지난 활성 상태의 선점 내역들을 모두 찾음
+        List<SeatHold> expiredHolds = seatHoldRepository.findByStatusAndExpiresAtBefore(SeatHold.Status.ACTIVE, now);
+
+        for (SeatHold hold : expiredHolds) {
+            // 2. 선점 내역의 상태를 EXPIRED(또는 CANCELLED)로 변경
+            hold.expire(); // (엔티티에 상태 변경 메서드가 없다면 hold.setStatus(Status.EXPIRED) 처리)
+
+            // 3. 해당 선점 내역에 묶인 좌석들을 다시 AVAILABLE로 복구
+            List<SeatHoldItem> items = seatHoldItemRepository.findBySeatHoldId(hold.getId());
+            for (SeatHoldItem item : items) {
+                item.getScheduleSeat().release(); // 좌석 상태를 AVAILABLE로 변경
+            }
+        }
+    }
 }

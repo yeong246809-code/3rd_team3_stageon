@@ -1,5 +1,6 @@
 package kr.co.stageon.booking.web;
 
+import kr.co.stageon.booking.repository.ScheduleSeatRepository;
 import kr.co.stageon.booking.service.BookingQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -16,6 +17,7 @@ import java.util.List;
 public class BookingViewController {
 
     private final BookingQueryService bookingQueryService;
+    private final ScheduleSeatRepository scheduleSeatRepository;
 
     /*@GetMapping({"/booking/queue", "/queue"})
     public String queue(@RequestParam(required = false) Long scheduleId, Model model) {
@@ -31,6 +33,13 @@ public class BookingViewController {
             model.addAttribute("groupedSeats", Collections.emptyMap());
         } else {
             model.addAttribute("groupedSeats", bookingQueryService.findGroupedSeats(scheduleId));
+
+            BookingQueryService.ScheduleSummaryResponse summary = bookingQueryService.findScheduleSummary(scheduleId);
+
+            if (summary != null) {
+                model.addAttribute("performanceTitle", summary.performanceTitle());
+                model.addAttribute("scheduleTime", summary.scheduleTime());
+            }
         }
 
         return "booking/seat-select";

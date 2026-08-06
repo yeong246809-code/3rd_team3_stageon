@@ -41,6 +41,23 @@ public class BookingQueryService {
         return reservationRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
                 .stream().map(ReservationResponse::from).toList();
     }
+
+    public record ScheduleSummaryResponse(String performanceTitle, java.time.LocalDateTime scheduleTime) {}
+
+    public ScheduleSummaryResponse findScheduleSummary(Long scheduleId) {
+        return scheduleSeatRepository
+                .findByScheduleIdOrderBySeatSectionNameAscSeatRowLabelAscSeatSeatNumberAsc(scheduleId)
+                .stream()
+                .findFirst()
+                .map(scheduleSeat -> {
+                    var schedule = scheduleSeat.getSchedule();
+                    return new ScheduleSummaryResponse(
+                            schedule.getPerformance().getTitle(),
+                            schedule.getStartsAt()
+                    );
+                })
+                .orElse(null);
+    }
 }
 
 

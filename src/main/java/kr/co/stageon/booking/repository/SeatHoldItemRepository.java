@@ -12,4 +12,6 @@ public interface SeatHoldItemRepository extends JpaRepository<SeatHoldItem, Long
     List<SeatHoldItem> findBySeatHoldIdOrderByIdAsc(Long seatHoldId);
 
     List<SeatHoldItem> findBySeatHoldIn(List<SeatHold> seatHolds);
+
+    List<SeatHoldItem> findBySeatHoldId(Long seatHoldId);
 }
