@@ -3,6 +3,7 @@ package kr.co.stageon.admin.web;
 import kr.co.stageon.admin.dto.PerformanceFormDto;
 import kr.co.stageon.admin.service.AdminDashboardService;
 import kr.co.stageon.admin.service.AdminPerformanceService;
+import kr.co.stageon.admin.service.AdminVenueService;
 import kr.co.stageon.performance.domain.Performance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ public class AdminViewController {
 
     private final AdminDashboardService adminDashboardService;
     private final AdminPerformanceService adminPerformanceService;
+    private final AdminVenueService adminVenueService;
 
     @GetMapping("/admin/login")
     public String login() { return "admin/login"; }
@@ -48,6 +50,7 @@ public class AdminViewController {
     public String performanceNew(Model model) {
         model.addAttribute("form", new PerformanceFormDto());
         model.addAttribute("readOnly", false);
+        model.addAttribute("halls", getHallOptions());
         return "admin/performance-form";
     }
 
@@ -55,6 +58,7 @@ public class AdminViewController {
     public String performanceEdit(@PathVariable Long id, Model model) {
         model.addAttribute("form", adminPerformanceService.getForm(id));
         model.addAttribute("readOnly", false);
+        model.addAttribute("halls", getHallOptions());
         return "admin/performance-form";
     }
 
@@ -64,7 +68,15 @@ public class AdminViewController {
     public String performanceView(@PathVariable Long id, Model model) {
         model.addAttribute("form", adminPerformanceService.getForm(id));
         model.addAttribute("readOnly", true);
+        model.addAttribute("halls", getHallOptions());
         return "admin/performance-form";
+    }
+
+    /** 공연 등록·수정 폼의 "공연장 선택" 드롭다운용 홀 목록입니다. 홀이 없는 공연장(row.hallId == null)은 제외합니다. */
+    private java.util.List<kr.co.stageon.admin.dto.VenueStructureRowDto> getHallOptions() {
+        return adminVenueService.getDashboard().getRows().stream()
+                .filter(row -> row.getHallId() != null)
+                .toList();
     }
 
     // "/admin/venues" 관련 GET·POST 매핑은 AdminVenueController로 이동했습니다.

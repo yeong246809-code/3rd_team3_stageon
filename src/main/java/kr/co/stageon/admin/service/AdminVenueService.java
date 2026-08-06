@@ -3,6 +3,7 @@ package kr.co.stageon.admin.service;
 import kr.co.stageon.admin.dto.SeatBulkFormDto;
 import kr.co.stageon.admin.dto.SeatGradeFormDto;
 import kr.co.stageon.admin.dto.SeatGradeSummaryDto;
+import kr.co.stageon.admin.dto.SeatMapItemDto;
 import kr.co.stageon.admin.dto.VenueDashboardDto;
 import kr.co.stageon.admin.dto.VenueFormDto;
 import kr.co.stageon.admin.dto.VenueHallFormDto;
@@ -102,6 +103,28 @@ public class AdminVenueService {
                         g.getName(),
                         g.getDisplayColor(),
                         seatRepository.countBySeatGradeIdAndActiveTrue(g.getId())
+                ))
+                .collect(Collectors.toList());
+    }
+
+    /** 선택된 홀의 활성 좌석도 기준 개별 좌석 목록입니다. 공연 등록 화면의 좌석 배치도 미리보기용입니다. */
+    @Transactional(readOnly = true)
+    public List<SeatMapItemDto> getHallSeatMap(Long hallId) {
+        if (hallId == null) {
+            return Collections.emptyList();
+        }
+        SeatChart chart = seatChartRepository
+                .findFirstByVenueHallIdAndActiveTrueOrderByVersionDesc(hallId)
+                .orElse(null);
+        if (chart == null) {
+            return Collections.emptyList();
+        }
+        List<Seat> seats = seatRepository
+                .findBySeatChartIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(chart.getId());
+        return seats.stream()
+                .map(s -> new SeatMapItemDto(
+                        s.getId(), s.getSectionName(), s.getRowLabel(), s.getSeatNumber(),
+                        s.getSeatGrade().getId(), s.getSeatGrade().getName(), s.getSeatGrade().getDisplayColor()
                 ))
                 .collect(Collectors.toList());
     }

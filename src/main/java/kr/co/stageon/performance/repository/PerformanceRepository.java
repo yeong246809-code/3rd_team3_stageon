@@ -3,6 +3,7 @@ package kr.co.stageon.performance.repository;
 import kr.co.stageon.performance.domain.Performance;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,4 +13,8 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
     List<Performance> findTop12ByOrderByStartDateAsc();
     List<Performance> findByTitleContainingIgnoreCaseOrderByStartDateAsc(String keyword);
     List<Performance> findByGenreOrderByStartDateAsc(String genre);
+
+    /** 동일 홀 + 기간이 겹치는 공연을 조회합니다(공연장 중복 예약 방지 검증용). */
+    List<Performance> findByVenueHallIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            Long venueHallId, LocalDate endDate, LocalDate startDate);
 }
