@@ -1,6 +1,8 @@
 package kr.co.stageon.admin.service;
 
+import kr.co.stageon.admin.dto.BulkCreateResultDto;
 import kr.co.stageon.admin.dto.HallOptionDto;
+import kr.co.stageon.admin.dto.ScheduleBulkFormDto;
 import kr.co.stageon.admin.dto.ScheduleEditFormDto;
 import kr.co.stageon.admin.dto.ScheduleFormDto;
 import kr.co.stageon.admin.dto.ScheduleListItemDto;
@@ -20,7 +22,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -193,6 +197,53 @@ public class AdminScheduleService {
         Integer maxTickets = dto.getMaxTicketsPerMember() != null ? dto.getMaxTicketsPerMember() : 4;
 
         schedule.updateTiming(dto.getRoundNumber(), startsAt, salesOpenAt, salesCloseAt, dto.getCancelCloseAt(), maxTickets);
+    }
+
+    /**
+     * 달력에서 선택한 여러 날짜에 같은 시간으로 회차를 한 번에 생성합니다.
+     * 홀에 좌석도가 없으면 예외를 던지며, 개별 날짜 파싱에 실패한 항목은 건너뛰고 개수로 집계합니다.
+     */
+    @Transactional
+    public BulkCreateResultDto createBulkSchedules(ScheduleBulkFormDto dto) {
+        if (dto.getPerformanceId() == null || dto.getVenueHallId() == null
+                || dto.getDatesCsv() == null || dto.getDatesCsv().isBlank() || dto.getTime() == null || dto.getTime().isBlank()) {
+            throw new IllegalArgumentException("공연·공연장·날짜·시간은 모두 필수입니다.");
+        }
+
+        Performance performance = performanceRepository.findById(dto.getPerformanceId())
+                .orElseThrow(() -> new IllegalArgumentException("공연을 찾을 수 없습니다. id=" + dto.getPerformanceId()));
+        VenueHall hall = venueHallRepository.findById(dto.getVenueHallId())
+                .orElseThrow(() -> new IllegalArgumentException("공연장 홀을 찾을 수 없습니다. id=" + dto.getVenueHallId()));
+        SeatChart chart = seatChartRepository.findFirstByVenueHallIdAndActiveTrueOrderByVersionDesc(hall.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "'" + hall.getName() + "' 홀에 등록된 좌석도가 없습니다. 공연장·좌석 관리에서 좌석 등급을 먼저 등록해주세요."));
+
+        LocalTime time = LocalTime.parse(dto.getTime());
+        Integer maxTickets = dto.getMaxTicketsPerMember() != null ? dto.getMaxTicketsPerMember() : 4;
+
+        int created = 0;
+        int skipped = 0;
+        for (String raw : dto.getDatesCsv().split(",")) {
+            String value = raw.trim();
+            if (value.isEmpty()) continue;
+            try {
+                LocalDate date = LocalDate.parse(value);
+                LocalDateTime startsAt = LocalDateTime.of(date, time);
+                LocalDateTime salesOpenAt = startsAt.minusDays(14);
+                LocalDateTime salesCloseAt = startsAt;
+
+                PerformanceSchedule schedule = PerformanceSchedule.create(
+                        performance, hall, chart, null, startsAt,
+                        salesOpenAt, salesCloseAt, null, maxTickets,
+                        PerformanceSchedule.Status.SCHEDULED
+                );
+                scheduleRepository.save(schedule);
+                created++;
+            } catch (Exception e) {
+                skipped++;
+            }
+        }
+        return new BulkCreateResultDto(created, skipped);
     }
 
     /** 회차 판매 상태를 변경합니다(판매 시작/판매 종료/취소). */

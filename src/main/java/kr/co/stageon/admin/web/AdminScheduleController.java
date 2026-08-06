@@ -1,5 +1,6 @@
 package kr.co.stageon.admin.web;
 
+import kr.co.stageon.admin.dto.ScheduleBulkFormDto;
 import kr.co.stageon.admin.dto.ScheduleEditFormDto;
 import kr.co.stageon.admin.dto.ScheduleFormDto;
 import kr.co.stageon.admin.dto.ScheduleListItemDto;
@@ -31,7 +32,6 @@ public class AdminScheduleController {
     @GetMapping("/admin/schedules")
     public String schedules(@RequestParam(required = false) Long performanceId,
                             @RequestParam(required = false) String month,
-                            @RequestParam(defaultValue = "false") boolean all,
                             Model model) {
         List<Performance> performances = performanceRepository.findAll();
         Long selectedPerformanceId = (performanceId != null) ? performanceId
@@ -49,8 +49,8 @@ public class AdminScheduleController {
                 : List.of();
 
         model.addAttribute("stats", adminScheduleService.getStats());
-        model.addAttribute("overview", adminScheduleService.getOverview(all, false));
-        model.addAttribute("overviewAll", all);
+        model.addAttribute("overview", adminScheduleService.getOverview(false, false));
+        model.addAttribute("allItems", adminScheduleService.getOverview(true, false));
         model.addAttribute("conflictItems", adminScheduleService.getOverview(true, true));
         model.addAttribute("performances", performances);
         model.addAttribute("hallOptions", adminScheduleService.getHallOptions());
@@ -68,6 +68,22 @@ public class AdminScheduleController {
         try {
             adminScheduleService.createSchedule(form);
             ra.addFlashAttribute("message", "회차가 등록되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/schedules";
+    }
+
+    /** 달력에서 선택한 여러 날짜에 회차를 한 번에 생성합니다. */
+    @PostMapping("/admin/schedules/bulk")
+    public String createBulk(@ModelAttribute ScheduleBulkFormDto form, RedirectAttributes ra) {
+        try {
+            var result = adminScheduleService.createBulkSchedules(form);
+            String msg = result.getCreatedCount() + "건의 회차가 생성되었습니다.";
+            if (result.getSkippedCount() > 0) {
+                msg += " (" + result.getSkippedCount() + "건은 날짜 형식 오류로 건너뜀)";
+            }
+            ra.addFlashAttribute("message", msg);
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
