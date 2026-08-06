@@ -95,5 +95,16 @@ public class SeatCheckApiController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{scheduleSeatId}/uncheck")
+    public ResponseEntity<?> releaseTempHoldSeat(@PathVariable Long scheduleSeatId) {
+
+        // 1. 체크할 때 걸어뒀던 Redis 키를 똑같이 찾아옵니다.
+        RBucket<String> tempLockBucket = redissonClient.getBucket("seat:selecting:" + scheduleSeatId);
+
+        // 2. 키가 존재하면 즉시 삭제하여 락을 풉니다.
+        tempLockBucket.delete();
+
+        return ResponseEntity.ok("선택 해제 완료");
+    }
 
 }

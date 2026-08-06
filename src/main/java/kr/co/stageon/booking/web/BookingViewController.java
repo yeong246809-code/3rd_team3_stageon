@@ -33,6 +33,7 @@ public class BookingViewController {
             model.addAttribute("groupedSeats", Collections.emptyMap());
         } else {
             model.addAttribute("groupedSeats", bookingQueryService.findGroupedSeats(scheduleId));
+            model.addAttribute("seatGrades", bookingQueryService.findSeatGrades(scheduleId));
 
             BookingQueryService.ScheduleSummaryResponse summary = bookingQueryService.findScheduleSummary(scheduleId);
 
