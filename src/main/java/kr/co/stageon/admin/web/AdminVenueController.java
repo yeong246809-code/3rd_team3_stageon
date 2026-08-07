@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-/** "/admin/venues" 공연장·좌석 관리 화면 전용 컨트롤러입니다. */
+/**
+ * "/admin/venues" 공연장·좌석 관리 화면 전용 컨트롤러입니다.
+ * 공연장 신규 등록 기능은 제공하지 않습니다(공연장은 DB 더미 데이터만 사용). 수정·삭제만 가능합니다.
+ */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/venues")
@@ -28,23 +31,9 @@ public class AdminVenueController {
         return "admin/venue-seats";
     }
 
-    @GetMapping("/new")
-    public String newForm(Model model) {
-        model.addAttribute("form", new VenueFormDto());
-        model.addAttribute("isEdit", false);
-        return "admin/venue-form";
-    }
-
-    @PostMapping
-    public String create(@ModelAttribute("form") VenueFormDto form) {
-        adminVenueService.createVenue(form);
-        return "redirect:/admin/venues";
-    }
-
     @GetMapping("/{venueId}/edit")
     public String editForm(@PathVariable Long venueId, Model model) {
         model.addAttribute("form", adminVenueService.getVenueForm(venueId));
-        model.addAttribute("isEdit", true);
         return "admin/venue-form";
     }
 

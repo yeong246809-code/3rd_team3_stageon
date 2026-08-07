@@ -1,4 +1,6 @@
 
+
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -39,11 +41,6 @@
           <span class="stat-card__label">예정 회차</span>
           <span class="stat-card__value" th:text="${stats.upcomingCount}">12</span>
         </div>
-        <div class="stat-card"
-             th:classappend="${stats.conflictCount > 0} ? 'stat-card--highlight' : 'stat-card--warn'">
-          <span class="stat-card__label">일정 충돌</span>
-          <span class="stat-card__value" th:text="${stats.conflictCount}">2</span>
-        </div>
       </div>
 
       <!-- 회차 운영 현황 + 사이드 안내 -->
@@ -55,11 +52,6 @@
                   <button type="button" class="btn-mini btn-mini--info-outline"
                           onclick="document.getElementById('allModal').classList.add('is-open')">
                     📋 전체 보기 (<span th:text="${#lists.size(allItems)}">12</span>)
-                  </button>
-                  <button type="button" class="btn-mini btn-mini--danger"
-                          th:if="${stats.conflictCount > 0}"
-                          onclick="document.getElementById('conflictModal').classList.add('is-open')">
-                    ⚠ 충돌만 보기 (<span th:text="${stats.conflictCount}">2</span>)
                   </button>
                 </span>
           </div>
@@ -76,12 +68,11 @@
               <tr th:if="${#lists.isEmpty(overview)}">
                 <td colspan="3" class="venue-empty">등록된 회차가 없습니다.</td>
               </tr>
-              <tr th:each="item : ${overview}" th:classappend="${item.conflict} ? 'is-conflict' : ''">
+              <tr th:each="item : ${overview}">
                 <td class="cell-title" th:text="${item.performanceTitle}">공연명</td>
                 <td th:text="${item.dateTimeText}">08.16 20:30</td>
                 <td>
                   <span class="badge" th:classappend="${item.badgeClass}" th:text="${item.statusText}">판매 중</span>
-                  <span class="conflict-tag" th:if="${item.conflict}">⚠ 충돌</span>
                 </td>
               </tr>
               </tbody>
@@ -96,12 +87,11 @@
               <li><span class="step-num">1</span> 기간 선택</li>
               <li><span class="step-num">2</span> 공연장 확인</li>
               <li><span class="step-num">3</span> 회차 생성</li>
-              <li><span class="step-num">4</span> 충돌 검수</li>
             </ul>
           </div>
           <div class="side-card side-card--info">
             <h3>운영 안내</h3>
-            <p>같은 공연장·홀 시간대가 겹치면 회차 목록에 일정 충돌로 표시됩니다. 충돌 회차는 판매 시작 전 시간을 조정해 주세요.</p>
+            <p>같은 공연장·홀에서 날짜가 겹치는 다른 공연의 회차는 등록할 수 없습니다. 같은 공연의 회차는 여러 개 등록 가능합니다.</p>
           </div>
         </div>
       </div>
@@ -134,62 +124,27 @@
             <tr th:if="${#lists.isEmpty(scheduleList)}">
               <td colspan="6" class="venue-empty">해당 월에 등록된 회차가 없습니다.</td>
             </tr>
-            <tr th:each="row : ${scheduleList}" th:classappend="${row.conflict} ? 'is-conflict' : ''">
+            <tr th:each="row : ${scheduleList}">
               <td th:text="${row.dateText}">2026.08.15</td>
               <td th:text="${row.roundText}">1회</td>
               <td th:text="${row.timeText}">14:00</td>
               <td>
                 <span class="badge" th:classappend="${row.badgeClass}" th:text="${row.statusText}">판매 중</span>
-                <span class="conflict-tag" th:if="${row.conflict}">⚠ 충돌</span>
               </td>
               <td th:text="${row.remainingSeats}">219</td>
               <td class="action-cell">
-                <div class="row-menu">
-                  <button type="button" class="btn-mini btn-mini--menu-trigger" onclick="toggleRowMenu(this)">관리 ▾</button>
-                  <div class="row-menu__panel">
-                    <button type="button" class="row-menu__item row-menu__item--manage"
-                            th:attr="data-id=${row.id},
-                                           data-performance-id=${row.performanceId},
-                                           data-venue-hall-id=${row.venueHallId},
-                                           data-round=${row.roundNumber},
-                                           data-max-tickets=${row.maxTicketsPerMember},
-                                           data-starts-at=${row.startsAtIso},
-                                           data-sales-open-at=${row.salesOpenAtIso},
-                                           data-sales-close-at=${row.salesCloseAtIso},
-                                           data-cancel-close-at=${row.cancelCloseAtIso}"
-                            onclick="editScheduleToModal(this); closeAllRowMenus()">✏ 수정</button>
-                    <button type="button" class="row-menu__item row-menu__item--copy"
-                            th:attr="data-performance-id=${row.performanceId},
-                                           data-venue-hall-id=${row.venueHallId},
-                                           data-round=${row.roundNumber},
-                                           data-max-tickets=${row.maxTicketsPerMember}"
-                            onclick="copyScheduleToModal(this); closeAllRowMenus()">＋ 이 회차 정보로 추가</button>
-                    <form method="post" th:if="${row.statusCode == 'SCHEDULED'}"
-                          th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
-                          onsubmit="return confirm('이 회차의 판매를 시작하시겠습니까?')">
-                      <input type="hidden" name="status" value="OPEN">
-                      <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
-                      <input type="hidden" name="month" th:value="${selectedMonth}">
-                      <button type="submit" class="row-menu__item row-menu__item--start">▶ 판매 시작</button>
-                    </form>
-                    <form method="post" th:if="${row.statusCode == 'OPEN'}"
-                          th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
-                          onsubmit="return confirm('이 회차의 판매를 종료하시겠습니까?')">
-                      <input type="hidden" name="status" value="CLOSED">
-                      <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
-                      <input type="hidden" name="month" th:value="${selectedMonth}">
-                      <button type="submit" class="row-menu__item row-menu__item--stop">■ 판매 종료</button>
-                    </form>
-                    <form method="post" th:if="${row.statusCode != 'CANCELLED'}"
-                          th:action="@{/admin/schedules/{id}/status(id=${row.id})}"
-                          onsubmit="return confirm('이 회차를 취소하시겠습니까? 취소 후에는 되돌릴 수 없습니다.')">
-                      <input type="hidden" name="status" value="CANCELLED">
-                      <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
-                      <input type="hidden" name="month" th:value="${selectedMonth}">
-                      <button type="submit" class="row-menu__item row-menu__item--danger">✕ 회차 취소</button>
-                    </form>
-                  </div>
-                </div>
+                <button type="button" class="btn-mini btn-mini--menu-trigger"
+                        th:attr="data-id=${row.id},
+                                       data-performance-id=${row.performanceId},
+                                       data-venue-hall-id=${row.venueHallId},
+                                       data-round=${row.roundNumber},
+                                       data-max-tickets=${row.maxTicketsPerMember},
+                                       data-starts-at=${row.startsAtIso},
+                                       data-sales-open-at=${row.salesOpenAtIso},
+                                       data-sales-close-at=${row.salesCloseAtIso},
+                                       data-cancel-close-at=${row.cancelCloseAtIso},
+                                       data-status-code=${row.statusCode}"
+                        onclick="openRowActionModal(this)">관리 ▾</button>
               </td>
             </tr>
             </tbody>
@@ -198,6 +153,30 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- 회차 관리 액션 모달 -->
+<div class="modal-overlay" id="rowActionModal">
+  <div class="modal-card" style="max-width:340px">
+    <div class="modal-header">
+      <span class="modal-header__icon">⚙</span>
+      <div>
+        <h2>회차 관리</h2>
+        <p class="modal-header__sub" id="rowActionSubtitle"></p>
+      </div>
+    </div>
+    <div class="stack" style="gap:10px;margin:6px 0 16px">
+      <button type="button" class="row-menu__item row-menu__item--manage" id="rowActionEdit">✏ 수정</button>
+      <button type="button" class="row-menu__item row-menu__item--copy" id="rowActionCopy">＋ 이 회차 정보로 추가</button>
+      <button type="button" class="row-menu__item row-menu__item--start" id="rowActionStart" style="display:none">▶ 판매 시작</button>
+      <button type="button" class="row-menu__item row-menu__item--stop" id="rowActionStop" style="display:none">■ 판매 종료</button>
+      <button type="button" class="row-menu__item row-menu__item--danger" id="rowActionCancel" style="display:none">✕ 회차 취소</button>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn--cancel" style="width:auto;padding:11px 20px"
+              onclick="document.getElementById('rowActionModal').classList.remove('is-open')">닫기</button>
+    </div>
+  </div>
 </div>
 
 <!-- 회차 추가 / 수정 모달 -->
@@ -358,6 +337,7 @@
           <button type="button" class="calendar-nav" onclick="shiftCalendarMonth(1)">›</button>
         </div>
         <p class="calendar-tip">요일을 클릭하면 이번 달의 해당 요일이 한 번에 선택됩니다. (예: "토" 클릭 → 이번 달 토요일 전체 선택)</p>
+        <p class="calendar-tip calendar-tip--legend"><span class="calendar-legend-dot calendar-legend-dot--occupied"></span> 선택불가 : 해당 공연장에 이미 다른 공연이 등록된 날짜입니다.</p>
         <div class="calendar-weekdays" id="calendarWeekdays"></div>
         <div class="calendar-grid" id="calendarGrid"></div>
       </div>
@@ -393,14 +373,13 @@
     </div>
     <div class="conflict-list">
       <p class="venue-empty" th:if="${#lists.isEmpty(allItems)}">등록된 회차가 없습니다.</p>
-      <div class="conflict-row" th:each="item : ${allItems}" th:classappend="${item.conflict} ? '' : 'conflict-row--neutral'">
+      <div class="conflict-row" th:each="item : ${allItems}">
         <div class="conflict-row__info">
           <span class="cell-title" th:text="${item.performanceTitle}">공연명</span>
           <span class="conflict-row__time" th:text="${item.dateTimeText}">08.16 20:30</span>
         </div>
         <div class="conflict-row__right">
           <span class="badge" th:classappend="${item.badgeClass}" th:text="${item.statusText}">판매 중</span>
-          <span class="conflict-tag" th:if="${item.conflict}">⚠ 충돌</span>
           <button type="button" class="btn-mini btn-mini--manage"
                   th:attr="data-id=${item.id},
                                data-performance-id=${item.performanceId},
@@ -422,62 +401,84 @@
   </div>
 </div>
 
-<!-- 충돌 회차 확인 모달 -->
-<div class="modal-overlay" id="conflictModal">
-  <div class="modal-card modal-card--conflict">
-    <div class="modal-header">
-      <span class="modal-header__icon modal-header__icon--danger">⚠</span>
-      <div>
-        <h2>일정 충돌 회차</h2>
-        <p class="modal-header__sub">같은 공연장·홀 시간대가 겹치는 회차 <strong th:text="${stats.conflictCount}">2</strong>건입니다.</p>
-      </div>
-    </div>
-    <div class="conflict-list">
-      <p class="venue-empty" th:if="${#lists.isEmpty(conflictItems)}">충돌하는 회차가 없습니다.</p>
-      <div class="conflict-row" th:each="item : ${conflictItems}">
-        <div class="conflict-row__info">
-          <span class="cell-title" th:text="${item.performanceTitle}">공연명</span>
-          <span class="conflict-row__time" th:text="${item.dateTimeText}">08.15 19:00</span>
-        </div>
-        <div class="conflict-row__right">
-          <span class="badge" th:classappend="${item.badgeClass}" th:text="${item.statusText}">판매 중</span>
-          <button type="button" class="btn-mini btn-mini--manage"
-                  th:attr="data-id=${item.id},
-                               data-performance-id=${item.performanceId},
-                               data-venue-hall-id=${item.venueHallId},
-                               data-round=${item.roundNumber},
-                               data-max-tickets=${item.maxTicketsPerMember},
-                               data-starts-at=${item.startsAtIso},
-                               data-sales-open-at=${item.salesOpenAtIso},
-                               data-sales-close-at=${item.salesCloseAtIso},
-                               data-cancel-close-at=${item.cancelCloseAtIso}"
-                  onclick="editScheduleToModal(this); document.getElementById('conflictModal').classList.remove('is-open')">관리</button>
-        </div>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn--cancel" style="width:auto;padding:11px 20px"
-              onclick="document.getElementById('conflictModal').classList.remove('is-open')">닫기</button>
-    </div>
-  </div>
-</div>
 
 <div th:if="${error != null or message != null}">
   <script>document.getElementById('scheduleModal').classList.remove('is-open');</script>
 </div>
 
 <script>
-  function closeAllRowMenus() {
-    document.querySelectorAll('.row-menu.is-open').forEach(function (el) { el.classList.remove('is-open'); });
+  var rowActionTarget = null;
+
+  function openRowActionModal(btn) {
+    rowActionTarget = btn;
+    document.getElementById('rowActionSubtitle').textContent =
+            (btn.dataset.round ? btn.dataset.round + '회차' : '선택한 회차') + '를 관리합니다.';
+
+    var status = btn.dataset.statusCode;
+    document.getElementById('rowActionStart').style.display = (status === 'SCHEDULED') ? 'block' : 'none';
+    document.getElementById('rowActionStop').style.display = (status === 'OPEN') ? 'block' : 'none';
+    document.getElementById('rowActionCancel').style.display = (status !== 'CANCELLED') ? 'block' : 'none';
+
+    document.getElementById('rowActionModal').classList.add('is-open');
   }
-  function toggleRowMenu(btn) {
-    var menu = btn.closest('.row-menu');
-    var wasOpen = menu.classList.contains('is-open');
-    closeAllRowMenus();
-    if (!wasOpen) menu.classList.add('is-open');
+
+  function closeRowActionModal() {
+    document.getElementById('rowActionModal').classList.remove('is-open');
   }
-  document.addEventListener('click', function (e) {
-    if (!e.target.closest('.row-menu')) closeAllRowMenus();
+
+  function submitRowStatusChange(status, confirmMsg) {
+    if (!confirm(confirmMsg)) return;
+    var perfSelect = document.querySelector('select[name="performanceId"]');
+    var monthInput = document.querySelector('input[name="month"]');
+
+    var form = document.createElement('form');
+    form.method = 'post';
+    form.action = '/admin/schedules/' + rowActionTarget.dataset.id + '/status';
+
+    var fields = {
+      status: status,
+      performanceId: perfSelect ? perfSelect.value : '',
+      month: monthInput ? monthInput.value : ''
+    };
+    Object.keys(fields).forEach(function (key) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = fields[key];
+      form.appendChild(input);
+    });
+
+    // CSRF 토큰: 이미 렌더링된 다른 th:action 폼(bulkForm)에서 그대로 복사합니다.
+    var existingCsrf = document.querySelector('#bulkForm input[name="_csrf"]')
+            || document.querySelector('input[name="_csrf"]');
+    if (existingCsrf) {
+      var csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = existingCsrf.name;
+      csrfInput.value = existingCsrf.value;
+      form.appendChild(csrfInput);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  document.getElementById('rowActionEdit').addEventListener('click', function () {
+    editScheduleToModal(rowActionTarget);
+    closeRowActionModal();
+  });
+  document.getElementById('rowActionCopy').addEventListener('click', function () {
+    copyScheduleToModal(rowActionTarget);
+    closeRowActionModal();
+  });
+  document.getElementById('rowActionStart').addEventListener('click', function () {
+    submitRowStatusChange('OPEN', '이 회차의 판매를 시작하시겠습니까?');
+  });
+  document.getElementById('rowActionStop').addEventListener('click', function () {
+    submitRowStatusChange('CLOSED', '이 회차의 판매를 종료하시겠습니까?');
+  });
+  document.getElementById('rowActionCancel').addEventListener('click', function () {
+    submitRowStatusChange('CANCELLED', '이 회차를 취소하시겠습니까? 취소 후에는 되돌릴 수 없습니다.');
   });
 </script>
 
@@ -684,6 +685,28 @@
     var calYear = today.getFullYear();
     var calMonth = today.getMonth(); // 0-indexed
     var selectedDates = new Set();
+    var occupiedDates = new Set(); // 다른 공연이 이미 등록한 날짜(클릭 불가)
+
+    function refreshOccupiedDates() {
+      var perfId = document.getElementById('bulkPerformanceId').value;
+      var hallId = document.getElementById('bulkVenueHallId').value;
+      occupiedDates = new Set();
+      if (!perfId || !hallId) {
+        renderCalendar();
+        return;
+      }
+      fetch('/admin/schedules/halls/' + hallId + '/occupied-dates?performanceId=' + perfId)
+              .then(function (res) { return res.json(); })
+              .then(function (dates) {
+                occupiedDates = new Set(dates);
+                // 이미 선택된 날짜 중 점유된 게 있으면 선택 해제
+                occupiedDates.forEach(function (d) { selectedDates.delete(d); });
+                renderCalendar();
+              })
+              .catch(function () { renderCalendar(); });
+    }
+    document.getElementById('bulkPerformanceId').addEventListener('change', refreshOccupiedDates);
+    document.getElementById('bulkVenueHallId').addEventListener('change', refreshOccupiedDates);
 
     var hourSel = document.getElementById('bulkHour');
     var minuteSel = document.getElementById('bulkMinute');
@@ -709,6 +732,7 @@
       document.getElementById('bulkPerformanceId').value = '';
       document.getElementById('bulkVenueHallId').value = '';
       selectedDates.clear();
+      occupiedDates = new Set();
       calYear = today.getFullYear();
       calMonth = today.getMonth();
       document.getElementById('bulkErrorBox').style.display = 'none';
@@ -744,6 +768,7 @@
     };
 
     window.toggleDate = function (key) {
+      if (occupiedDates.has(key)) return; // 다른 공연이 점유한 날짜는 클릭 무시
       if (selectedDates.has(key)) selectedDates.delete(key); else selectedDates.add(key);
       renderCalendar();
     };
@@ -785,6 +810,11 @@
         cell.className = 'calendar-cell';
         if (selectedDates.has(key)) cell.classList.add('is-selected');
         if (key === todayKey) cell.classList.add('is-today');
+        if (occupiedDates.has(key)) {
+          cell.classList.add('is-occupied');
+          cell.disabled = true;
+          cell.title = '다른 공연이 이미 등록된 날짜입니다.';
+        }
         cell.textContent = d;
         cell.onclick = function (k) { return function () { toggleDate(k); }; }(key);
         gridEl.appendChild(cell);

@@ -275,3 +275,33 @@
     color: var(--brand-dark); font-size: 12px; line-height: 1; cursor: pointer;
 }
 .calendar-chip button:hover { background: var(--brand); color: #fff; }
+
+.calendar-cell.is-occupied {
+    background: #f1f1f1;
+    color: #bbb;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.calendar-tip--legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #999;
+}
+.calendar-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+.calendar-legend-dot--occupied {
+    background: #f1f1f1;
+    border: 1px solid #ccc;
+}
+.calendar-cell.is-occupied {
+    background: #f1f1f1;
+    color: #bbb;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}

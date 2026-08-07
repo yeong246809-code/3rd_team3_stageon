@@ -16,10 +16,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Set;
 
 /** AD07 "일정·회차 관리" 화면 라우팅을 담당합니다. */
 @Controller
@@ -51,7 +53,6 @@ public class AdminScheduleController {
         model.addAttribute("stats", adminScheduleService.getStats());
         model.addAttribute("overview", adminScheduleService.getOverview(false, false));
         model.addAttribute("allItems", adminScheduleService.getOverview(true, false));
-        model.addAttribute("conflictItems", adminScheduleService.getOverview(true, true));
         model.addAttribute("performances", performances);
         model.addAttribute("hallOptions", adminScheduleService.getHallOptions());
         model.addAttribute("selectedPerformanceId", selectedPerformanceId);
@@ -72,6 +73,14 @@ public class AdminScheduleController {
             ra.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/schedules";
+    }
+
+    /** 회차 추가 달력에서 선택한 홀의 점유 날짜(다른 공연이 이미 등록된 날짜)를 조회합니다. */
+    @GetMapping("/admin/schedules/halls/{hallId}/occupied-dates")
+    @ResponseBody
+    public Set<String> getHallOccupiedDates(@PathVariable Long hallId,
+                                            @RequestParam Long performanceId) {
+        return adminScheduleService.getHallOccupiedDates(hallId, performanceId);
     }
 
     /** 달력에서 선택한 여러 날짜에 회차를 한 번에 생성합니다. */
