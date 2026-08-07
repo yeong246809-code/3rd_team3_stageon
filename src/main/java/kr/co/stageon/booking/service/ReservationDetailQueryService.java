@@ -68,6 +68,7 @@ public class ReservationDetailQueryService {
                 hall.getName(),
                 venue.getAddress(),
                 reservation.getStatus().name(),
+                reservation.getReceiveMethod().name(),
                 reservation.getSeatAmount(),
                 reservation.getFeeAmount(),
                 reservation.getDiscountAmount(),

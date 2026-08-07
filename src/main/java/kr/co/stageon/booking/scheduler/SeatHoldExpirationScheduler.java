@@ -6,6 +6,7 @@ import kr.co.stageon.booking.repository.SeatHoldItemRepository;
 import kr.co.stageon.booking.repository.SeatHoldRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class SeatHoldExpirationScheduler {
 
     private final SeatHoldRepository seatHoldRepository;
     private final SeatHoldItemRepository seatHoldItemRepository;
+    private final StringRedisTemplate redisTemplate;
 
     // 1분마다 실행
     @Scheduled(fixedDelay = 60000)
@@ -49,6 +51,7 @@ public class SeatHoldExpirationScheduler {
         // 4. 개별 좌석들을 다시 예매 가능 상태로 롤백
         for (SeatHoldItem item : expiredItems) {
             item.getScheduleSeat().release();
+            redisTemplate.delete("seat:selecting:" + item.getScheduleSeat().getId());
             log.info("회수된 좌석 ID: {}", item.getScheduleSeat().getId());
         }
 
