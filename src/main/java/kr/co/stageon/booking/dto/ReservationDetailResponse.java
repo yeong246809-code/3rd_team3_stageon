@@ -20,6 +20,7 @@ public record ReservationDetailResponse(
         String hallName,
         String venueAddress,
         String reservationStatus,
+        String receiveMethod,
         BigDecimal seatAmount,
         BigDecimal feeAmount,
         BigDecimal discountAmount,
