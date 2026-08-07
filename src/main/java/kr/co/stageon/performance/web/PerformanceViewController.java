@@ -1,6 +1,7 @@
 package kr.co.stageon.performance.web;
 
 import kr.co.stageon.performance.service.PerformanceQueryService;
+import kr.co.stageon.performance.support.PerformanceGenres;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +23,8 @@ public class PerformanceViewController {
             Model model
     ) {
         model.addAttribute("keyword", keyword == null ? "" : keyword);
+        model.addAttribute("selectedGenre", genre == null ? "" : genre.trim());
+        model.addAttribute("genreOptions", PerformanceGenres.options());
         model.addAttribute("performances", performanceQueryService.findPerformances(keyword, genre));
         return "user/search-results";
     }

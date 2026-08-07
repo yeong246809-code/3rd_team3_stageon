@@ -1,6 +1,7 @@
 package kr.co.stageon.performance.dto;
 
 import kr.co.stageon.performance.domain.Performance;
+import kr.co.stageon.performance.support.PerformanceGenres;
 
 import java.time.LocalDate;
 
@@ -10,6 +11,7 @@ public record PerformanceSummaryResponse(
         String title,
         String genre,
         String posterUrl,
+        String fallbackPosterUrl,
         LocalDate startDate,
         LocalDate endDate,
         String status
@@ -20,6 +22,7 @@ public record PerformanceSummaryResponse(
                 performance.getTitle(),
                 performance.getGenre(),
                 performance.getPosterUrl(),
+                PerformanceGenres.defaultPosterFor(performance.getGenre()),
                 performance.getStartDate(),
                 performance.getEndDate(),
                 performance.getStatus().name()
