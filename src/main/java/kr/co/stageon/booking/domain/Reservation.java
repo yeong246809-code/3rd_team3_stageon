@@ -78,7 +78,7 @@ public class Reservation {
     private LocalDateTime updatedAt;
 
     public static Reservation create(String bookingNumber, Member member, PerformanceSchedule schedule,
-                                     SeatHold seatHold, BigDecimal seatAmount, BigDecimal totalAmount) {
+                                     SeatHold seatHold, ReceiveMethod receiveMethod, BigDecimal seatAmount, BigDecimal totalAmount) {
         Reservation reservation = new Reservation();
         reservation.bookingNumber = bookingNumber;
         reservation.member = member;
