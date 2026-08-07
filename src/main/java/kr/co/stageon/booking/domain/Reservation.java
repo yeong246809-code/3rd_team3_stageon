@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 public class Reservation {
 
     public enum Status { PENDING, RESERVED, CANCELLED, EXPIRED }
+    public enum ReceiveMethod { MOBILE, ONSITE } //티켓수령방법 추가
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +42,10 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "receive_method", nullable = false, length = 20)
+    private ReceiveMethod receiveMethod;
 
     @Column(name = "seat_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal seatAmount;
@@ -80,6 +85,7 @@ public class Reservation {
         reservation.schedule = schedule;
         reservation.seatHold = seatHold;
         reservation.status = Status.RESERVED;
+        reservation.receiveMethod = receiveMethod;
         reservation.seatAmount = seatAmount;
         reservation.feeAmount = BigDecimal.ZERO; // 수수료 면제 가정
         reservation.discountAmount = BigDecimal.ZERO; // 할인 없음 가정
