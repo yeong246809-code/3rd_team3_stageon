@@ -7,6 +7,7 @@
   <title>StageOn Admin | 공연 등록·수정</title>
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+  <link rel="stylesheet" th:href="@{/css/pages/performance-form.css}" href="/css/pages/performance-form.css">
 </head>
 <body>
 <div class="admin-page">
@@ -114,24 +115,26 @@
         <div class="section-heading">
           <h2>공연장 · 가격</h2>
         </div>
-        <div class="admin-form-grid">
-          <div class="field">
-            <label>공연장 선택</label>
-            <select class="select" id="hallSelect" th:field="*{hallId}" th:disabled="${readOnly}">
-              <option value="">선택하세요</option>
-              <option th:each="h : ${halls}" th:value="${h.hallId}"
-                      th:text="${h.venueName} + ' - ' + ${h.hallName}"
-                      th:if="${h.hallId != null}">공연장 - 홀</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>공연 가격(기본)</label>
-            <input class="input" type="number" th:field="*{basePrice}" th:readonly="${readOnly}" placeholder="예: 150000">
-          </div>
-          <div class="field" th:unless="${readOnly}">
-            <label>&nbsp;</label>
-            <button type="button" class="btn" id="openSeatPriceModalBtn" onclick="openSeatPriceModal()" disabled>좌석/가격 설정</button>
-            <p id="seatPriceSummary" style="font-size:12px;color:var(--subtle);margin-top:6px">공연장을 먼저 선택하세요.</p>
+        <div class="venue-price-section">
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>공연장 선택</label>
+              <select class="select" id="hallSelect" th:field="*{hallId}" th:disabled="${readOnly}">
+                <option value="">선택하세요</option>
+                <option th:each="h : ${halls}" th:value="${h.hallId}"
+                        th:text="${h.venueName} + ' - ' + ${h.hallName}"
+                        th:if="${h.hallId != null}">공연장 - 홀</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>공연 가격(기본)</label>
+              <input class="input" type="number" th:field="*{basePrice}" th:readonly="${readOnly}" placeholder="예: 150000">
+            </div>
+            <div class="field" th:unless="${readOnly}">
+              <label>&nbsp;</label>
+              <button type="button" id="openSeatPriceModalBtn" onclick="openSeatPriceModal()" disabled>🎟 좌석/가격 설정</button>
+              <p id="seatPriceSummary" style="font-size:12px;color:var(--subtle);margin-top:6px">공연장을 먼저 선택하세요.</p>
+            </div>
           </div>
         </div>
 
@@ -225,8 +228,8 @@
       var seats = results[1];
       currentGrades = grades;
 
-      renderSeatMap(seats);
       renderGradeInputs(grades);
+      renderSeatMap(seats);
 
       document.getElementById('seatPriceModal').style.display = 'flex';
     }).catch(function (err) {
@@ -246,7 +249,7 @@
     }
     emptyEl.style.display = 'none';
 
-    // 구역(section)별로 묶기
+    // 구역(section) → 등급(grade) 순으로 묶기 (한 구역에 등급이 섞여 있을 수 있음)
     var bySection = {};
     seats.forEach(function (s) {
       var key = s.sectionName || '구역 미지정';
@@ -257,31 +260,64 @@
     Object.keys(bySection).forEach(function (sectionName) {
       var sectionSeats = bySection[sectionName];
 
-      var title = document.createElement('div');
-      title.textContent = sectionName;
-      title.style.cssText = 'font-weight:600;font-size:13px;margin:14px 0 8px;';
-      container.appendChild(title);
-
-      // row별로 묶기
-      var byRow = {};
+      var byGrade = {};
       sectionSeats.forEach(function (s) {
-        var rowKey = s.rowLabel || '';
-        if (!byRow[rowKey]) byRow[rowKey] = [];
-        byRow[rowKey].push(s);
+        if (!byGrade[s.gradeId]) byGrade[s.gradeId] = { name: s.gradeName, color: s.displayColor, seats: [] };
+        byGrade[s.gradeId].seats.push(s);
       });
 
-      Object.keys(byRow).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); })
-              .forEach(function (rowKey) {
-                var rowDiv = document.createElement('div');
-                rowDiv.style.cssText = 'display:flex;justify-content:center;gap:4px;margin-bottom:4px;';
-                byRow[rowKey].forEach(function (s) {
-                  var dot = document.createElement('span');
-                  dot.title = sectionName + ' ' + s.rowLabel + '열 ' + s.seatNumber + '번 (' + s.gradeName + ')';
-                  dot.style.cssText = 'display:inline-block;width:14px;height:14px;border-radius:3px;background:' + s.displayColor + ';';
-                  rowDiv.appendChild(dot);
+      Object.keys(byGrade).forEach(function (gradeId) {
+        var group = byGrade[gradeId];
+
+        var titleRow = document.createElement('div');
+        titleRow.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 8px;';
+
+        var title = document.createElement('span');
+        title.className = 'seat-map-section-title';
+        title.style.cssText = 'font-weight:600;font-size:13px;';
+        title.textContent = sectionName + ' · ' + group.name;
+
+        var priceLabel = document.createElement('span');
+        priceLabel.className = 'seat-map-section-price';
+        priceLabel.id = 'mapPrice_' + gradeId;
+        priceLabel.textContent = '';
+
+        titleRow.appendChild(title);
+        titleRow.appendChild(priceLabel);
+        container.appendChild(titleRow);
+
+        var byRow = {};
+        group.seats.forEach(function (s) {
+          var rowKey = s.rowLabel || '';
+          if (!byRow[rowKey]) byRow[rowKey] = [];
+          byRow[rowKey].push(s);
+        });
+
+        Object.keys(byRow).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); })
+                .forEach(function (rowKey) {
+                  var rowDiv = document.createElement('div');
+                  rowDiv.style.cssText = 'display:flex;justify-content:center;gap:4px;margin-bottom:4px;';
+                  byRow[rowKey].forEach(function (s) {
+                    var dot = document.createElement('span');
+                    dot.title = sectionName + ' ' + s.rowLabel + '열 ' + s.seatNumber + '번 (' + s.gradeName + ')';
+                    dot.style.cssText = 'display:inline-block;width:14px;height:14px;border-radius:3px;background:' + s.displayColor + ';';
+                    rowDiv.appendChild(dot);
+                  });
+                  container.appendChild(rowDiv);
                 });
-                container.appendChild(rowDiv);
-              });
+      });
+    });
+
+    updateSeatMapPrices();
+  }
+
+  /** 등급별 가격 입력값을 좌석 배치도의 가격 라벨에 실시간으로 반영합니다. */
+  function updateSeatMapPrices() {
+    document.querySelectorAll('#seatGradeList input[data-grade-id]').forEach(function (input) {
+      var label = document.getElementById('mapPrice_' + input.dataset.gradeId);
+      if (!label) return;
+      var val = input.value;
+      label.textContent = val ? (Number(val).toLocaleString() + '원') : '';
     });
   }
 
@@ -298,26 +334,29 @@
 
     grades.forEach(function (g) {
       var row = document.createElement('div');
-      row.className = 'cluster';
+      row.className = 'cluster grade-price-row';
       row.style.justifyContent = 'space-between';
       row.style.alignItems = 'center';
 
       var label = document.createElement('span');
-      label.innerHTML = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + g.displayColor + ';margin-right:6px;"></span>' +
-              g.name + ' (' + g.seatCount + '석)';
+      label.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:' + g.displayColor + ';margin-right:8px;vertical-align:middle;"></span>' +
+              '<b>' + g.name + '</b> <span style="color:#999;font-size:12px;">(' + g.seatCount + '석)</span>';
 
+      var inputWrap = document.createElement('span');
       var input = document.createElement('input');
       input.type = 'number';
-      input.className = 'input';
-      input.style.width = '160px';
+      input.style.width = '150px';
       input.placeholder = '가격 입력';
       input.dataset.gradeId = g.id;
+      input.oninput = updateSeatMapPrices;
       if (savedPrices[g.id] != null) {
         input.value = savedPrices[g.id];
       }
+      inputWrap.appendChild(input);
+      inputWrap.appendChild(document.createTextNode(' 원'));
 
       row.appendChild(label);
-      row.appendChild(input);
+      row.appendChild(inputWrap);
       listEl.appendChild(row);
     });
   }

@@ -29,7 +29,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/** 관리자 공연장·좌석 관리(AD06) 서비스입니다. */
+/**
+ * 관리자 공연장·좌석 관리(AD06) 서비스입니다.
+ * 공연장 신규 생성 기능은 없습니다(공연장은 DB 더미 데이터만 사용). 수정·삭제만 지원합니다.
+ */
 @Service
 @RequiredArgsConstructor
 public class AdminVenueService {
@@ -127,15 +130,6 @@ public class AdminVenueService {
                         s.getSeatGrade().getId(), s.getSeatGrade().getName(), s.getSeatGrade().getDisplayColor()
                 ))
                 .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public Long createVenue(VenueFormDto dto) {
-        Venue v = Venue.create(
-                dto.getKopisFacilityId(), dto.getName(), dto.getAddress(), dto.getRegion(),
-                null, null, dto.getPhone(), dto.getHomepageUrl()
-        );
-        return venueRepository.save(v).getId();
     }
 
     @Transactional(readOnly = true)

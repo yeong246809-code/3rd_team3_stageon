@@ -33,4 +33,15 @@ public interface PerformanceScheduleRepository extends JpaRepository<Performance
     List<PerformanceSchedule> findByPerformanceAndMonth(@Param("performanceId") Long performanceId,
                                                         @Param("from") LocalDateTime from,
                                                         @Param("to") LocalDateTime to);
+
+    /**
+     * 특정 홀에서 다른 공연이 이미 점유한 회차 목록을 조회합니다(취소된 회차는 제외).
+     * 공연장 중복 예약 방지(같은 홀·같은 날짜에는 한 공연만) 검증에 사용됩니다.
+     */
+    @Query("SELECT ps FROM PerformanceSchedule ps " +
+            "WHERE ps.venueHall.id = :venueHallId " +
+            "AND ps.performance.id <> :excludePerformanceId " +
+            "AND ps.status <> kr.co.stageon.performance.domain.PerformanceSchedule.Status.CANCELLED")
+    List<PerformanceSchedule> findOtherPerformanceSchedulesInHall(@Param("venueHallId") Long venueHallId,
+                                                                  @Param("excludePerformanceId") Long excludePerformanceId);
 }

@@ -1,10 +1,11 @@
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn Admin | 공연장 추가</title>
+    <title>StageOn Admin | 공연장 수정</title>
     <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
     <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
     <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
@@ -17,14 +18,13 @@
         <div class="admin-content">
             <header class="admin-title">
                 <div>
-                    <h1 th:text="${isEdit} ? '공연장 수정' : '공연장 추가'">공연장 추가</h1>
-                    <p th:text="${isEdit} ? '공연장 기본 정보를 수정합니다.' : '새 공연장(시설) 기본 정보를 등록합니다.'">새 공연장(시설) 기본 정보를 등록합니다.</p>
+                    <h1>공연장 수정</h1>
+                    <p>공연장 기본 정보를 수정합니다.</p>
                 </div>
             </header>
 
             <section class="venue-form-card">
-                <form th:action="${isEdit} ? @{/admin/venues/{id}/edit(id=${form.id})} : @{/admin/venues}"
-                      th:object="${form}" method="post">
+                <form th:action="@{/admin/venues/{id}/edit(id=${form.id})}" th:object="${form}" method="post">
                     <div class="admin-form-grid">
                         <div>
                             <label>공연장명<span class="required-mark">*</span></label>
@@ -52,13 +52,13 @@
                         </div>
                     </div>
                     <div class="form-actions">
-                        <button class="btn--venue-add" type="submit" th:text="${isEdit} ? '수정 저장' : '저장'">저장</button>
+                        <button class="btn--venue-add" type="submit">수정 저장</button>
                         <a class="btn--cancel" th:href="@{/admin/venues}">취소</a>
                     </div>
                 </form>
             </section>
 
-            <section class="venue-form-card danger-zone" th:if="${isEdit}" style="margin-top:20px">
+            <section class="venue-form-card danger-zone" style="margin-top:20px">
                 <h3>위험 구역</h3>
                 <p>공연장을 삭제하면 등록된 홀·좌석도·등급·좌석이 모두 함께 삭제되며 되돌릴 수 없습니다.</p>
                 <form th:action="@{/admin/venues/{id}/delete(id=${form.id})}" method="post">

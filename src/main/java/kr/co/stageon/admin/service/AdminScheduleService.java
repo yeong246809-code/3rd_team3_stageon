@@ -148,6 +148,20 @@ public class AdminScheduleService {
     }
 
     /**
+     * 특정 홀에서 다른 공연이 이미 점유한 날짜 목록입니다(yyyy-MM-dd 문자열).
+     * 회차 추가 달력에서 해당 날짜를 클릭 못 하도록 막는 데 사용합니다.
+     */
+    @Transactional(readOnly = true)
+    public Set<String> getHallOccupiedDates(Long hallId, Long excludePerformanceId) {
+        if (hallId == null || excludePerformanceId == null) {
+            return Set.of();
+        }
+        return scheduleRepository.findOtherPerformanceSchedulesInHall(hallId, excludePerformanceId).stream()
+                .map(s -> s.getStartsAt().toLocalDate().toString())
+                .collect(Collectors.toSet());
+    }
+
+    /**
      * 신규 회차를 생성합니다. 선택한 홀의 활성 좌석도를 그대로 사용하며,
      * 홀에 좌석도가 없으면 예외를 던집니다(공연장·좌석 관리에서 먼저 등급 등록 필요).
      * 판매 시작·종료 시각을 입력하지 않으면 회차 시작 시각을 기준으로 자동 설정합니다.
@@ -165,6 +179,9 @@ public class AdminScheduleService {
         SeatChart chart = seatChartRepository.findFirstByVenueHallIdAndActiveTrueOrderByVersionDesc(hall.getId())
                 .orElseThrow(() -> new IllegalStateException(
                         "'" + hall.getName() + "' 홀에 등록된 좌석도가 없습니다. 공연장·좌석 관리에서 좌석 등급을 먼저 등록해주세요."));
+
+        LocalDate targetDate = dto.getStartsAt().toLocalDate();
+        checkHallDateConflict(hall.getId(), performance.getId(), targetDate);
 
         LocalDateTime startsAt = dto.getStartsAt();
         LocalDateTime salesOpenAt = dto.getSalesOpenAt() != null ? dto.getSalesOpenAt() : startsAt.minusDays(14);
@@ -228,6 +245,8 @@ public class AdminScheduleService {
             if (value.isEmpty()) continue;
             try {
                 LocalDate date = LocalDate.parse(value);
+                checkHallDateConflict(hall.getId(), performance.getId(), date);
+
                 LocalDateTime startsAt = LocalDateTime.of(date, time);
                 LocalDateTime salesOpenAt = startsAt.minusDays(14);
                 LocalDateTime salesCloseAt = startsAt;
@@ -244,6 +263,19 @@ public class AdminScheduleService {
             }
         }
         return new BulkCreateResultDto(created, skipped);
+    }
+
+    /**
+     * 같은 홀, 같은 날짜에 다른 공연의 회차가 이미 있으면 예외를 던집니다.
+     * 같은 Performance ID(같은 공연의 다른 회차)는 예외로 허용합니다.
+     */
+    private void checkHallDateConflict(Long hallId, Long performanceId, LocalDate date) {
+        boolean conflict = scheduleRepository.findOtherPerformanceSchedulesInHall(hallId, performanceId).stream()
+                .anyMatch(s -> s.getStartsAt().toLocalDate().equals(date));
+        if (conflict) {
+            throw new IllegalStateException(
+                    date + " 날짜에는 해당 공연장에 이미 다른 공연이 등록되어 있습니다.");
+        }
     }
 
     /** 회차 판매 상태를 변경합니다(판매 시작/판매 종료/취소). */
