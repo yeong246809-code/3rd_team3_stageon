@@ -1,6 +1,8 @@
 
 
 
+
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -171,6 +173,7 @@
       <button type="button" class="row-menu__item row-menu__item--start" id="rowActionStart" style="display:none">▶ 판매 시작</button>
       <button type="button" class="row-menu__item row-menu__item--stop" id="rowActionStop" style="display:none">■ 판매 종료</button>
       <button type="button" class="row-menu__item row-menu__item--danger" id="rowActionCancel" style="display:none">✕ 회차 취소</button>
+      <button type="button" class="row-menu__item row-menu__item--danger" id="rowActionDelete" style="display:none">🗑 회차 삭제</button>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn--cancel" style="width:auto;padding:11px 20px"
@@ -418,6 +421,8 @@
     document.getElementById('rowActionStart').style.display = (status === 'SCHEDULED') ? 'block' : 'none';
     document.getElementById('rowActionStop').style.display = (status === 'OPEN') ? 'block' : 'none';
     document.getElementById('rowActionCancel').style.display = (status !== 'CANCELLED') ? 'block' : 'none';
+    document.getElementById('rowActionDelete').style.display =
+            (status === 'SCHEDULED' || status === 'CANCELLED') ? 'block' : 'none';
 
     document.getElementById('rowActionModal').classList.add('is-open');
   }
@@ -463,6 +468,41 @@
     form.submit();
   }
 
+  function submitRowDelete(confirmMsg) {
+    if (!confirm(confirmMsg)) return;
+    var perfSelect = document.querySelector('select[name="performanceId"]');
+    var monthInput = document.querySelector('input[name="month"]');
+
+    var form = document.createElement('form');
+    form.method = 'post';
+    form.action = '/admin/schedules/' + rowActionTarget.dataset.id + '/delete';
+
+    var fields = {
+      performanceId: perfSelect ? perfSelect.value : '',
+      month: monthInput ? monthInput.value : ''
+    };
+    Object.keys(fields).forEach(function (key) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = fields[key];
+      form.appendChild(input);
+    });
+
+    var existingCsrf = document.querySelector('#bulkForm input[name="_csrf"]')
+            || document.querySelector('input[name="_csrf"]');
+    if (existingCsrf) {
+      var csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = existingCsrf.name;
+      csrfInput.value = existingCsrf.value;
+      form.appendChild(csrfInput);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+
   document.getElementById('rowActionEdit').addEventListener('click', function () {
     editScheduleToModal(rowActionTarget);
     closeRowActionModal();
@@ -479,6 +519,9 @@
   });
   document.getElementById('rowActionCancel').addEventListener('click', function () {
     submitRowStatusChange('CANCELLED', '이 회차를 취소하시겠습니까? 취소 후에는 되돌릴 수 없습니다.');
+  });
+  document.getElementById('rowActionDelete').addEventListener('click', function () {
+    submitRowDelete('이 회차를 완전히 삭제하시겠습니까? 삭제 후에는 되돌릴 수 없습니다.');
   });
 </script>
 

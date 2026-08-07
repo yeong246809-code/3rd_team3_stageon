@@ -46,7 +46,7 @@ public interface PerformanceScheduleRepository extends JpaRepository<Performance
             "AND ps.status <> kr.co.stageon.performance.domain.PerformanceSchedule.Status.CANCELLED")
     List<PerformanceSchedule> findOtherPerformanceSchedulesInHall(@Param("venueHallId") Long venueHallId,
                                                                   @Param("excludePerformanceId") Long excludePerformanceId);
-}
+
     /** 홈 티켓 오픈 영역용으로 공연·공연장 정보를 함께 조회합니다. */
     @Query("""
             SELECT ps

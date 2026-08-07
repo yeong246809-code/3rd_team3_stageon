@@ -56,6 +56,13 @@ public class AdminPerformanceController {
         return adminVenueService.getHallSeatMap(hallId);
     }
 
+    /** 좌석/가격 설정 모달에서 등급명을 즉시 변경(DB 반영)합니다. 색상·좌석수·정렬순서는 유지됩니다. */
+    @PostMapping("/admin/performances/grades/{gradeId}/rename")
+    @ResponseBody
+    public void renameGrade(@PathVariable Long gradeId, @RequestParam String name) {
+        adminVenueService.renameGrade(gradeId, name);
+    }
+
     /** 새 파일이 업로드된 경우에만 posterUrl을 교체하고, 없으면 기존 값(hidden field)을 그대로 둡니다. */
     private void applyUploadedPoster(PerformanceFormDto form) {
         String savedUrl = fileStorageService.save(form.getPosterFile());
