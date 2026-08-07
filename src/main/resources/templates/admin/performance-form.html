@@ -1,4 +1,6 @@
 
+
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -152,13 +154,14 @@
             <div id="seatMapSections"></div>
           </div>
 
-          <h4 style="margin-bottom:10px">등급별 가격</h4>
+          <h4 style="margin-bottom:6px">등급별 가격</h4>
+          <p style="font-size:12px;color:var(--subtle);margin-bottom:10px">등급명은 직접 입력해 바꿀 수 있습니다. 변경한 이름은 확인 버튼을 누르면 바로 저장됩니다.</p>
           <div id="seatGradeList" class="stack" style="gap:12px;"></div>
           <p id="seatGradeEmpty" style="display:none;color:var(--subtle);font-size:13px">등록된 좌석 등급이 없습니다. 공연장·좌석 관리에서 먼저 등급을 등록해주세요.</p>
 
           <div class="cluster" style="justify-content:flex-end;margin-top:22px;gap:8px">
             <button type="button" class="btn" onclick="closeSeatPriceModal()">취소</button>
-            <button type="button" class="btn btn--dark" onclick="confirmSeatPrices()">확인</button>
+            <button type="button" class="btn btn--dark" id="confirmSeatPricesBtn" onclick="confirmSeatPrices()">확인</button>
           </div>
         </div>
       </div>
@@ -275,6 +278,8 @@
         var title = document.createElement('span');
         title.className = 'seat-map-section-title';
         title.style.cssText = 'font-weight:600;font-size:13px;';
+        title.dataset.section = sectionName;
+        title.dataset.mapTitleGrade = gradeId;
         title.textContent = sectionName + ' · ' + group.name;
 
         var priceLabel = document.createElement('span');
@@ -321,6 +326,13 @@
     });
   }
 
+  /** 등급명 입력값이 바뀔 때 좌석 배치도 타이틀에도 실시간으로 반영합니다. */
+  function updateSeatMapTitles(gradeId, newName) {
+    document.querySelectorAll('[data-map-title-grade="' + gradeId + '"]').forEach(function (el) {
+      el.textContent = el.dataset.section + ' · ' + newName;
+    });
+  }
+
   function renderGradeInputs(grades) {
     var listEl = document.getElementById('seatGradeList');
     var emptyEl = document.getElementById('seatGradeEmpty');
@@ -339,20 +351,40 @@
       row.style.alignItems = 'center';
 
       var label = document.createElement('span');
-      label.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:' + g.displayColor + ';margin-right:8px;vertical-align:middle;"></span>' +
-              '<b>' + g.name + '</b> <span style="color:#999;font-size:12px;">(' + g.seatCount + '석)</span>';
+      label.style.cssText = 'display:inline-flex;align-items:center;';
+
+      var dot = document.createElement('span');
+      dot.style.cssText = 'display:inline-block;width:12px;height:12px;border-radius:4px;background:' + g.displayColor + ';margin-right:8px;flex-shrink:0;';
+      label.appendChild(dot);
+
+      var nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.value = g.name;
+      nameInput.maxLength = 30;
+      nameInput.dataset.gradeNameId = g.id;
+      nameInput.dataset.originalName = g.name;
+      nameInput.style.cssText = 'width:90px;font-weight:600;font-size:14px;border:1px solid #ddd;border-radius:4px;padding:4px 6px;margin-right:6px;';
+      nameInput.oninput = function () {
+        updateSeatMapTitles(g.id, nameInput.value || g.name);
+      };
+      label.appendChild(nameInput);
+
+      var seatCountSpan = document.createElement('span');
+      seatCountSpan.style.cssText = 'color:#999;font-size:12px;';
+      seatCountSpan.textContent = '(' + g.seatCount + '석)';
+      label.appendChild(seatCountSpan);
 
       var inputWrap = document.createElement('span');
-      var input = document.createElement('input');
-      input.type = 'number';
-      input.style.width = '150px';
-      input.placeholder = '가격 입력';
-      input.dataset.gradeId = g.id;
-      input.oninput = updateSeatMapPrices;
+      var priceInput = document.createElement('input');
+      priceInput.type = 'number';
+      priceInput.style.width = '150px';
+      priceInput.placeholder = '가격 입력';
+      priceInput.dataset.gradeId = g.id;
+      priceInput.oninput = updateSeatMapPrices;
       if (savedPrices[g.id] != null) {
-        input.value = savedPrices[g.id];
+        priceInput.value = savedPrices[g.id];
       }
-      inputWrap.appendChild(input);
+      inputWrap.appendChild(priceInput);
       inputWrap.appendChild(document.createTextNode(' 원'));
 
       row.appendChild(label);
@@ -366,17 +398,51 @@
   }
 
   function confirmSeatPrices() {
-    var inputs = document.querySelectorAll('#seatGradeList input[data-grade-id]');
+    var confirmBtn = document.getElementById('confirmSeatPricesBtn');
+    var priceInputs = document.querySelectorAll('#seatGradeList input[data-grade-id]');
+    var nameInputs = document.querySelectorAll('#seatGradeList input[data-grade-name-id]');
+
     savedPrices = {};
-    inputs.forEach(function (input) {
+    priceInputs.forEach(function (input) {
       var price = input.value;
       if (price !== '' && price !== null) {
         savedPrices[input.dataset.gradeId] = parseInt(price, 10);
       }
     });
-    renderHiddenInputs();
-    updateSummaryText();
-    closeSeatPriceModal();
+
+    var renamePromises = [];
+    nameInputs.forEach(function (input) {
+      var newName = input.value.trim();
+      if (!newName) {
+        input.value = input.dataset.originalName; // 빈 값은 무시하고 원래 이름으로 되돌림
+        return;
+      }
+      if (newName !== input.dataset.originalName) {
+        var gradeId = input.dataset.gradeNameId;
+        renamePromises.push(
+                fetch('/admin/performances/grades/' + gradeId + '/rename?name=' + encodeURIComponent(newName), {
+                  method: 'POST'
+                }).then(function (res) {
+                  if (!res.ok) throw new Error('rename failed: ' + gradeId);
+                  input.dataset.originalName = newName;
+                  var g = currentGrades.find(function (cg) { return String(cg.id) === String(gradeId); });
+                  if (g) g.name = newName;
+                })
+        );
+      }
+    });
+
+    confirmBtn.disabled = true;
+    Promise.all(renamePromises).then(function () {
+      renderHiddenInputs();
+      updateSummaryText();
+      closeSeatPriceModal();
+    }).catch(function (err) {
+      alert('등급명 저장 중 오류가 발생했습니다.');
+      console.error(err);
+    }).finally(function () {
+      confirmBtn.disabled = false;
+    });
   }
 
   function renderHiddenInputs() {

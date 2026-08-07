@@ -131,6 +131,21 @@ public class AdminScheduleController {
         return buildRedirect(performanceId, month);
     }
 
+    /** 회차를 삭제합니다. 판매중/판매종료 상태는 서비스단에서 차단됩니다. 필터를 유지한 채로 목록으로 되돌아갑니다. */
+    @PostMapping("/admin/schedules/{id}/delete")
+    public String delete(@PathVariable Long id,
+                         @RequestParam(required = false) Long performanceId,
+                         @RequestParam(required = false) String month,
+                         RedirectAttributes ra) {
+        try {
+            adminScheduleService.deleteSchedule(id);
+            ra.addFlashAttribute("message", "회차가 삭제되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return buildRedirect(performanceId, month);
+    }
+
     private String buildRedirect(Long performanceId, String month) {
         StringBuilder redirect = new StringBuilder("redirect:/admin/schedules?");
         if (performanceId != null) redirect.append("performanceId=").append(performanceId).append("&");

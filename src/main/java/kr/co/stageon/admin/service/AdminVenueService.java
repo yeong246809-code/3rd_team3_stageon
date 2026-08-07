@@ -29,10 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * 관리자 공연장·좌석 관리(AD06) 서비스입니다.
- * 공연장 신규 생성 기능은 없습니다(공연장은 DB 더미 데이터만 사용). 수정·삭제만 지원합니다.
- */
+/** 관리자 공연장·좌석 관리(AD06) 서비스입니다. */
 @Service
 @RequiredArgsConstructor
 public class AdminVenueService {
@@ -132,6 +129,15 @@ public class AdminVenueService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public Long createVenue(VenueFormDto dto) {
+        Venue v = Venue.create(
+                dto.getKopisFacilityId(), dto.getName(), dto.getAddress(), dto.getRegion(),
+                null, null, dto.getPhone(), dto.getHomepageUrl()
+        );
+        return venueRepository.save(v).getId();
+    }
+
     @Transactional(readOnly = true)
     public VenueFormDto getVenueForm(Long venueId) {
         return VenueFormDto.from(getVenueOrThrow(venueId));
@@ -224,6 +230,20 @@ public class AdminVenueService {
 
         SeatGrade grade = SeatGrade.create(chart, dto.resolvedName(), color, sortOrder);
         return seatGradeRepository.save(grade).getId();
+    }
+
+    /**
+     * 좌석 등급명을 변경합니다(예: VIP/R/S → 원하는 이름).
+     * 색상·석수·정렬순서는 그대로 유지되고 이름만 바뀝니다.
+     */
+    @Transactional
+    public void renameGrade(Long gradeId, String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("등급명은 비워둘 수 없습니다.");
+        }
+        SeatGrade grade = seatGradeRepository.findById(gradeId)
+                .orElseThrow(() -> new IllegalArgumentException("등급을 찾을 수 없습니다. id=" + gradeId));
+        grade.rename(name.trim());
     }
 
     /** 해당 등급에 연결된 좌석이 없을 때만 삭제합니다(연결된 좌석 보호). */

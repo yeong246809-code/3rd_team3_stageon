@@ -19,6 +19,7 @@ import kr.co.stageon.venue.domain.VenueHall;
 import kr.co.stageon.venue.repository.SeatChartRepository;
 import kr.co.stageon.venue.repository.VenueHallRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** AD07 "일정·회차 관리" 화면의 통계/요약/상세 목록/회차 생성·수정·상태 변경을 담당합니다. */
+/** AD07 "일정·회차 관리" 화면의 통계/요약/상세 목록/회차 생성·수정·삭제·상태 변경을 담당합니다. */
 @Service
 @RequiredArgsConstructor
 public class AdminScheduleService {
@@ -214,6 +215,28 @@ public class AdminScheduleService {
         Integer maxTickets = dto.getMaxTicketsPerMember() != null ? dto.getMaxTicketsPerMember() : 4;
 
         schedule.updateTiming(dto.getRoundNumber(), startsAt, salesOpenAt, salesCloseAt, dto.getCancelCloseAt(), maxTickets);
+    }
+
+    /**
+     * 회차를 삭제합니다. 판매중(OPEN)·판매종료(CLOSED) 상태의 회차는 삭제할 수 없으며,
+     * 먼저 "회차 취소"로 상태를 변경한 뒤 삭제해야 합니다(이미 예매/판매가 있었을 수 있으므로 보호).
+     * 예매·결제 등 연결된 데이터가 있어 DB 제약으로 삭제가 막히는 경우에도 안내 메시지를 던집니다.
+     */
+    @Transactional
+    public void deleteSchedule(Long scheduleId) {
+        PerformanceSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException("회차를 찾을 수 없습니다. id=" + scheduleId));
+
+        if (schedule.getStatus() == PerformanceSchedule.Status.OPEN
+                || schedule.getStatus() == PerformanceSchedule.Status.CLOSED) {
+            throw new IllegalStateException("판매 중이거나 판매 종료된 회차는 삭제할 수 없습니다. 먼저 '회차 취소'로 상태를 변경해주세요.");
+        }
+
+        try {
+            scheduleRepository.delete(schedule);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("이미 예매·결제 등 연결된 데이터가 있어 이 회차는 삭제할 수 없습니다.");
+        }
     }
 
     /**

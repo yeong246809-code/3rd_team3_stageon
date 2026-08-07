@@ -1,6 +1,8 @@
 package kr.co.stageon.performance.repository;
 
+import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.domain.PerformanceSchedule;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -44,4 +46,24 @@ public interface PerformanceScheduleRepository extends JpaRepository<Performance
             "AND ps.status <> kr.co.stageon.performance.domain.PerformanceSchedule.Status.CANCELLED")
     List<PerformanceSchedule> findOtherPerformanceSchedulesInHall(@Param("venueHallId") Long venueHallId,
                                                                   @Param("excludePerformanceId") Long excludePerformanceId);
+
+    /** 홈 티켓 오픈 영역용으로 공연·공연장 정보를 함께 조회합니다. */
+    @Query("""
+            SELECT ps
+            FROM PerformanceSchedule ps
+            JOIN FETCH ps.performance p
+            JOIN FETCH ps.venueHall vh
+            JOIN FETCH vh.venue v
+            WHERE ps.salesOpenAt >= :now
+              AND ps.status IN :statuses
+              AND p.draft = false
+              AND p.status IN :performanceStatuses
+            ORDER BY ps.salesOpenAt ASC, ps.id ASC
+            """)
+    List<PerformanceSchedule> findUpcomingTicketOpenings(
+            @Param("now") LocalDateTime now,
+            @Param("statuses") List<PerformanceSchedule.Status> statuses,
+            @Param("performanceStatuses") List<Performance.Status> performanceStatuses,
+            Pageable pageable
+    );
 }

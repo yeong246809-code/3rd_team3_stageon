@@ -45,4 +45,9 @@ public class SeatGrade {
         g.sortOrder = sortOrder;
         return g;
     }
+
+    /** 등급명을 변경합니다(예: VIP/R/S 커스텀 이름 지정). */
+    public void rename(String name) {
+        this.name = name;
+    }
 }
