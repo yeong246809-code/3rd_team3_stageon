@@ -737,3 +737,39 @@ button.calendar-day:hover:not(:disabled) {
     color: #2d3748;
     font-size: 0.95rem;
 }
+
+.receive-methods { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.receive-option {
+    display: flex; align-items: center; padding: 18px 20px;
+    border: 1px solid #e5e8eb; border-radius: 8px; cursor: pointer;
+    background-color: #fff; transition: all 0.2s ease-in-out;
+}
+
+.receive-option:has(input:checked) {
+    border-color: #f03e3e; background-color: #fff5f5;
+}
+.receive-option input[type="radio"] {
+    margin: 0 16px 0 0; width: 20px; height: 20px;
+    accent-color: #f03e3e; cursor: pointer;
+}
+.receive-text { display: flex; align-items: center; gap: 24px; width: 100%; }
+.receive-text .title { font-size: 16px; font-weight: 700; color: #191f28; }
+.receive-text .desc { font-size: 14px; color: #8b95a1; }
+
+.form-group { margin-top: 12px; }
+.form-group label { display: block; font-weight: 700; margin-bottom: 6px; color: #191f28; }
+.input-text {
+    width: 100%; padding: 12px 14px;
+    border: 1px solid #e5e8eb; border-radius: 6px;
+    font-size: 15px; color: #191f28;
+    transition: border-color 0.2s;
+}
+.input-text:focus { border-color: #3182f6; outline: none; }
+
+.booking-grid {
+    align-items: flex-start; /* sticky가 작동하기 위한 필수 속성 */
+}
+aside.stack {
+    position: sticky;
+    top: 100px; /* 헤더 높이에 맞게 여백 조절 (필요시 숫자 조정) */
+}

@@ -35,9 +35,10 @@
       <div>
         <dt>좌석</dt>
         <dd>
-          <span th:text="${#strings.listJoin(holdItems.![scheduleSeat.seat.sectionName + ' ' + scheduleSeat.seat.rowLabel + '열 ' + scheduleSeat.seat.seatNumber + '번'], ', ')}">
-              R구역 1열 5번
-          </span>
+          <div th:each="item : ${holdItems}"
+               th:text="|${item.scheduleSeat.seat.sectionName} ${item.scheduleSeat.seat.rowLabel}열 ${item.scheduleSeat.seat.seatNumber}번|"
+               style="margin-bottom: 4px;">
+          </div>
         </dd>
       </div>
       <div>
