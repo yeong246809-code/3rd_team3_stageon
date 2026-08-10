@@ -35,6 +35,7 @@
     align-items: start;
 }
 
+
 /* 공통 사이드 메뉴 */
 .mypage-sidebar {
     overflow: hidden;
@@ -103,10 +104,14 @@
     background: #e61e2a;
 }
 
+
+/* 마이페이지 본문 */
 .mypage-content {
     min-width: 0;
 }
 
+
+/* 상단 요약 카드 */
 .mypage-summary {
     display: grid;
     grid-template-columns: 1.25fr repeat(3, 1fr);
@@ -172,6 +177,8 @@
     font-size: 12px;
 }
 
+
+/* 마이페이지 공통 섹션 */
 .mypage-section,
 .mypage-activity,
 .mypage-recommendations {
@@ -217,6 +224,8 @@
     color: #e61e2a;
 }
 
+
+/* 예매 카드 */
 .mypage-reservation-list {
     display: grid;
     gap: 11px;
@@ -262,6 +271,34 @@
     font-size: 17px;
     line-height: 1;
 }
+
+
+/* =========================================================
+   다가오는 공연 카드 - 실제 포스터 표시용
+
+   기존 .mypage-ticket-mark는 STAGE ON 마크용으로
+   padding과 flex 정렬이 들어가 있기 때문에,
+   실제 포스터가 있을 때만 별도 modifier를 적용합니다.
+========================================================= */
+.mypage-ticket-mark--poster {
+    position: relative;
+    overflow: hidden;
+}
+
+/* 실제 포스터가 존재하는 경우 padding 제거 */
+.mypage-ticket-mark--poster:has(.mypage-ticket-mark__image) {
+    padding: 0;
+}
+
+/* 포스터 이미지가 카드 영역을 꽉 채우도록 표시 */
+.mypage-ticket-mark__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+}
+
 
 .mypage-reservation-card__top {
     display: flex;
@@ -321,6 +358,8 @@
     font-size: 26px;
 }
 
+
+/* 빈 상태 */
 .mypage-empty {
     display: grid;
     justify-items: center;
@@ -358,6 +397,8 @@
     text-decoration: none;
 }
 
+
+/* 최근 활동 */
 .mypage-activity {
     display: flex;
     align-items: center;
@@ -385,6 +426,8 @@
     text-decoration: none;
 }
 
+
+/* 추천 공연 */
 .mypage-recommendations {
     padding: 28px 22px 24px;
     background: #f7f8fa;
@@ -482,6 +525,7 @@
     font-size: 10px;
 }
 
+
 /* 준비 중 화면 */
 .mypage-coming-soon {
     display: grid;
@@ -527,6 +571,8 @@
     text-decoration: none;
 }
 
+
+/* 반응형 */
 @media (max-width: 920px) {
     .mypage-layout {
         grid-template-columns: 1fr;
