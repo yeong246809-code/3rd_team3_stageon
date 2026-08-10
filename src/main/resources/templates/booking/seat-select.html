@@ -55,13 +55,12 @@
                           th:style="${seat.status == 'AVAILABLE'} ? 'background-color: ' + ${seat.displayColor} : 'background-color: #ccc; border-color: #ccc;'"
                           th:data-original-color="${seat.displayColor}"
                           th:data-seat-id="${seat.id}"
-                          th:data-seat-name="|${seat.section} ${seat.row}열 ${seat.number}번|"
+                          th:data-seat-name="${seat.section} + '구역 ' + ${seat.row} + '행 ' + ${seat.number} + '번'"
                           th:data-seat-price="${seat.price}"
                           th:disabled="${seat.status != 'AVAILABLE'}"
                           onclick="selectSeat(this)">
                   </button>
                 </th:block>
-
               </div>
             </th:block>
           </div>
@@ -71,12 +70,12 @@
     </section>
 
     <aside class="stack">
-      <!-- ⭐ 가격표가 포함된 summary 프래그먼트를 불러옵니다 ⭐ -->
       <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
 
       <form id="holdForm" th:action="@{/booking/seats/hold}" method="post" style="width: 100%;">
-        <input type="hidden" name="memberId" value="1">
         <input type="hidden" name="scheduleId" th:value="${scheduleId}">
+        <input type="hidden" name="seatHoldId" id="seatHoldInput" value="">
+
         <!-- 좌석 선택 시 동적으로 생성되는 input들이 여기에 추가됨 -->
         <button type="button" class="btn btn--primary btn--wide" onclick="submitHold()">결제하기</button>
       </form>
@@ -99,8 +98,8 @@
   // 2. 좌석 클릭 이벤트
   async function selectSeat(button) {
     const seatId = button.getAttribute('data-seat-id');
-    const seatName = button.getAttribute('data-seat-name');
-    const seatPrice = parseFloat(button.getAttribute('data-seat-price'));
+    const seatName = button.getAttribute('data-seat-name') || '선택 좌석';
+    const seatPrice = parseFloat(button.getAttribute('data-seat-price')) || 0;
 
     if (selectedSeats.has(seatId)) {
       // [1] 이미 선택된 좌석을 다시 클릭한 경우 -> 선택 해제
@@ -109,7 +108,6 @@
       button.style.border = "";
       updateSummaryPanel();
 
-      // 🚨 락 해제 API 호출 추가 (선택 취소 시 즉시 자물쇠 풀기)
       navigator.sendBeacon(`/api/seats/${seatId}/uncheck`);
     } else {
       // 새로운 좌석 클릭 -> 최대 매수 검증
@@ -119,25 +117,27 @@
       }
 
       try {
-        // 서버에 좌석 상태(다른 사람이 선점했는지) 확인 요청
         const response = await fetch(`/api/seats/${seatId}/check`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
 
         if (!response.ok) {
+          // 에러 처리 로직... (그대로 유지)
           const errorText = await response.text();
-          try {
-            const errorJson = JSON.parse(errorText);
-            alert("시스템 오류: " + (errorJson.message || errorJson.error));
-          } catch (e) {
-            alert(errorText);
-          }
+          alert(errorText);
           return;
         }
 
-        // 검증 통과 시 UI 반영
+        // 🚨 핵심 수정: 검증 통과 시 UI 반영
         selectedSeats.set(seatId, { name: seatName, price: seatPrice });
+
+        // 1. SSE 이벤트가 0.1초 먼저 도착해서 회색으로 만들고 비활성화했을 수 있으므로 강제 복구!
+        button.classList.remove('is-disabled');
+        button.disabled = false;
+        button.style.backgroundColor = button.getAttribute('data-original-color'); // HTML에 저장해둔 원래 색깔로 복구
+
+        // 2. 내 선택 표시 (검정 테두리 적용)
         button.classList.add('is-selected');
         button.style.border = "3px solid #000";
 
@@ -210,8 +210,37 @@
     document.getElementById('holdForm').submit();
   }
 
-  // 5. 10분 타이머
+  // 💡 최신 좌석 상태를 백엔드 REST API에서 받아와 UI를 갱신하는 함수
+  async function fetchLatestSeatStatus() {
+    const scheduleId = /*[[${scheduleId}]]*/ null;
+    if (!scheduleId) return;
+
+    try {
+      const response = await fetch(`/api/seats/schedules/${scheduleId}`);
+      if (!response.ok) return;
+
+      const seats = await response.json();
+      seats.forEach(seat => {
+        const seatBtn = document.querySelector(`button[data-seat-id='${seat.id}']`);
+        // 내 장바구니에 없는 좌석인데, 서버 상태가 HELD면 회색 처리
+        if (seatBtn && seat.status !== 'AVAILABLE' && !selectedSeats.has(seat.id.toString())) {
+          seatBtn.classList.add('is-disabled');
+          seatBtn.disabled = true;
+          seatBtn.style.backgroundColor = '#ccc';
+          seatBtn.style.borderColor = '#ccc';
+        }
+      });
+    } catch (e) {
+      console.error("최신 좌석 상태 동기화 실패:", e);
+    }
+  }
+
+  // 5. 10분 타이머 + 최신 좌석 상태 동기화 (기존 타이머 유지)
   window.onload = function () {
+    // 1) 페이지 진입 시 최신 좌석 상태 동기화 실행
+    fetchLatestSeatStatus();
+
+    // 2) 기존 10분 타이머 로직 (그대로 유지)
     let time = 600; // 10분 = 600초
     let timerElement = document.querySelector('.timer');
 
@@ -242,6 +271,11 @@
     const seatBtn = document.querySelector(`button[data-seat-id='${data.seatId}']`);
 
     if (seatBtn) {
+
+      if ((data.status === 'HELD' || data.status === 'RESERVED') && selectedSeats.has(data.seatId.toString())) {
+        return;
+      }
+
       if (data.status === 'AVAILABLE') {
         seatBtn.classList.remove('is-disabled', 'is-held');
         seatBtn.disabled = false;
@@ -250,6 +284,7 @@
         seatBtn.style.opacity = '1';
       }
       else if (data.status === 'HELD' || data.status === 'RESERVED') {
+        // 남이 잡은 거라면 정상적으로 회색 처리
         seatBtn.classList.add('is-disabled');
         seatBtn.disabled = true;
         seatBtn.style.backgroundColor = '#ccc';
@@ -275,18 +310,10 @@
 
   function releaseHoldOnExit() {
     if (!isSubmitting) {
-      // 1. 내가 클릭해서 장바구니에 담아둔(Map) 좌석들을 싹 다 돌면서 Redis 락 해제
+      // 내가 클릭해서 장바구니에 담아둔 좌석들을 돌면서 개별 Redis 락 해제
       selectedSeats.forEach((value, seatId) => {
         navigator.sendBeacon(`/api/seats/${seatId}/uncheck`);
       });
-
-      // 2. 화면에 숨겨져 있거나 JS 변수로 가지고 있는 seatHoldId 취소
-      const seatHoldInput = document.querySelector('input[name="seatHoldId"]');
-      const holdId = seatHoldInput ? seatHoldInput.value : currentSeatHoldId;
-
-      if (holdId) {
-        navigator.sendBeacon(`/api/seats/holds/${holdId}/cancel`);
-      }
     }
   }
 
@@ -316,6 +343,7 @@
       window.location.reload();
     }
   });
+
 </script>
 </body>
 </html>

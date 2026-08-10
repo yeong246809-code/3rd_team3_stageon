@@ -36,7 +36,7 @@
         <dt>좌석</dt>
         <dd>
           <div th:each="item : ${holdItems}"
-               th:text="|${item.scheduleSeat.seat.sectionName} ${item.scheduleSeat.seat.rowLabel}열 ${item.scheduleSeat.seat.seatNumber}번|"
+               th:text="|${item.scheduleSeat.seat.sectionName} ${item.scheduleSeat.seat.rowLabel} ${item.scheduleSeat.seat.seatNumber}|"
                style="margin-bottom: 4px;">
           </div>
         </dd>

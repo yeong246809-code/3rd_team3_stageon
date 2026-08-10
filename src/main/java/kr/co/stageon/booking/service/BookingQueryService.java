@@ -1,12 +1,18 @@
 package kr.co.stageon.booking.service;
 
+import kr.co.stageon.booking.domain.ScheduleSeat;
 import kr.co.stageon.booking.dto.ReservationResponse;
 import kr.co.stageon.booking.dto.SeatResponse;
 import kr.co.stageon.booking.repository.ReservationRepository;
 import kr.co.stageon.booking.repository.ScheduleSeatRepository;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,11 +28,47 @@ public class BookingQueryService {
 
     private final ScheduleSeatRepository scheduleSeatRepository;
     private final ReservationRepository reservationRepository;
+    private final RedissonClient redissonClient;
 
     public List<SeatResponse> findSeats(Long scheduleId) {
+
+        // 🚨 1. 현재 화면을 조회하고 있는 유저의 ID 가져오기
+        String currentUserId = null;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UserDetails) {
+            currentUserId = ((UserDetails) auth.getPrincipal()).getUsername();
+        }
+        final String loggedInUserId = currentUserId;
+
         return scheduleSeatRepository
                 .findByScheduleIdOrderBySeatSectionNameAscSeatRowLabelAscSeatSeatNumberAsc(scheduleId)
-                .stream().map(SeatResponse::from).toList();
+                .stream()
+                .map(scheduleSeat -> {
+                    SeatResponse response = SeatResponse.from(scheduleSeat);
+
+                    // 🚨 2. Redis 락의 '주인'이 누구인지 확인
+                    RBucket<String> lockBucket = redissonClient.getBucket("seat:selecting:" + scheduleSeat.getId());
+                    String lockOwner = lockBucket.get();
+
+                    boolean isDbHeld = scheduleSeat.getStatus() != ScheduleSeat.Status.AVAILABLE;
+                    boolean isRedisLocked = lockOwner != null;
+
+                    // 락이 걸려있지만 그 주인이 '나' 인지 확인
+                    boolean isMyLock = isRedisLocked && lockOwner.equals(loggedInUserId);
+
+                    // 🚨 3. DB가 선점되었거나, (Redis 락이 걸려있는데 내 락이 아닌 경우)에만 HELD로 렌더링
+                    if (isDbHeld || (isRedisLocked && !isMyLock)) {
+                        return new SeatResponse(
+                                response.id(), response.scheduleId(), response.section(), response.row(),
+                                response.number(), response.grade(), response.displayColor(),
+                                response.seatsioObjectKey(), response.objectType(), response.price(),
+                                response.currency(), "HELD", response.accessible()
+                        );
+                    }
+
+                    return response;
+                })
+                .toList();
     }
 
     public Map<String, List<SeatResponse>> findGroupedSeats(Long scheduleId) {
@@ -74,4 +116,5 @@ public class BookingQueryService {
                 .distinct()
                 .toList();
     }
+
 }

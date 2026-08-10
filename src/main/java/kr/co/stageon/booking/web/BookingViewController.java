@@ -28,7 +28,6 @@ public class BookingViewController {
     @GetMapping({"/booking/seats", "/seat-select"})
     public String seats(@RequestParam(required = false) Long scheduleId, Model model) {
         model.addAttribute("scheduleId", scheduleId);
-
         if (scheduleId == null) {
             model.addAttribute("groupedSeats", Collections.emptyMap());
         } else {

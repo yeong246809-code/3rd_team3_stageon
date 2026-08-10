@@ -63,4 +63,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("performanceStatuses") List<Performance.Status> performanceStatuses,
             @Param("today") java.time.LocalDate today
     );
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule s JOIN FETCH s.performance p WHERE r.id = :reservationId")
+    Optional<Reservation> findByIdWithDetails(@Param("reservationId") Long reservationId);
 }

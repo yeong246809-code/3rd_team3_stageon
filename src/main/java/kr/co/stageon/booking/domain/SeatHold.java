@@ -74,4 +74,8 @@ public class SeatHold {
         this.expiresAt = LocalDateTime.now(); // 즉시 만료 처리
     }
 
+    public void complete() {
+        this.status = Status.BOOKED;
+    }
+
 }
