@@ -2,6 +2,8 @@ package kr.co.stageon.booking.repository;
 
 import kr.co.stageon.booking.domain.SeatHold;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,4 +29,12 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long> {
 
     // 만료 시간이 현재 시간보다 이전이고, 상태가 ACTIVE인 선점 내역 조회
     List<SeatHold> findByStatusAndExpiresAtBefore(SeatHold.Status status, LocalDateTime now);
+
+    /** AD08 좌석 재고 현황 - 특정 회차의 활성 선점 목록을 만료 임박 순으로 조회합니다(회원 정보 fetch join). */
+    @Query("SELECT sh FROM SeatHold sh " +
+            "JOIN FETCH sh.member m " +
+            "WHERE sh.schedule.id = :scheduleId AND sh.status = :status " +
+            "ORDER BY sh.expiresAt ASC")
+    List<SeatHold> findActiveHoldsByScheduleId(@Param("scheduleId") Long scheduleId,
+                                               @Param("status") SeatHold.Status status);
 }
