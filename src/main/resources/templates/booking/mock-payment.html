@@ -44,7 +44,7 @@
       <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
 
       <!-- 결제 성공 시 결과를 백엔드로 넘길 Hidden Form -->
-      <form id="completePaymentForm" th:action="@{/payment/process}" method="post" style="display: none;">
+      <form id="completePaymentForm" th:action="@{/payment/complete}" method="post" style="display: none;">
         <input type="hidden" name="impUid" id="inputImpUid"> <!-- V1에서는 imp_uid를 사용합니다 -->
         <input type="hidden" name="merchantUid" id="inputMerchantUid">
         <input type="hidden" name="seatHoldId" th:value="${paymentRequest.seatHoldId}">

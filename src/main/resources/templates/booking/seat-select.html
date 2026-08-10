@@ -55,7 +55,7 @@
                           th:style="${seat.status == 'AVAILABLE'} ? 'background-color: ' + ${seat.displayColor} : 'background-color: #ccc; border-color: #ccc;'"
                           th:data-original-color="${seat.displayColor}"
                           th:data-seat-id="${seat.id}"
-                          th:data-seat-name="${seat.section} + '구역 ' + ${seat.row} + '행 ' + ${seat.number} + '번'"
+                          th:data-seat-name="${seat.section} + ' ' + ${seat.row} + ' ' + ${seat.number}"
                           th:data-seat-price="${seat.price}"
                           th:disabled="${seat.status != 'AVAILABLE'}"
                           onclick="selectSeat(this)">
