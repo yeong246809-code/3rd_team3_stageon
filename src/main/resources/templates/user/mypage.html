@@ -34,6 +34,9 @@
 
       <section class="mypage-content">
 
+        <!-- =========================================================
+             마이페이지 상단 요약
+        ========================================================== -->
         <div class="mypage-summary">
 
           <article class="mypage-summary__member">
@@ -49,6 +52,7 @@
             <strong th:text="${upcomingCount}">0</strong>
           </a>
 
+          <!-- Phase 2에서 실제 쿠폰 데이터 연결 예정 -->
           <a class="mypage-summary__card"
              th:href="@{/mypage/coupons}"
              href="/mypage/coupons">
@@ -56,6 +60,7 @@
             <strong>0</strong>
           </a>
 
+          <!-- Phase 2에서 실제 포인트 데이터 연결 예정 -->
           <a class="mypage-summary__card"
              th:href="@{/mypage/points}"
              href="/mypage/points">
@@ -65,6 +70,130 @@
 
         </div>
 
+
+        <!-- =========================================================
+             다가오는 공연
+
+             MypageController에서 전달한 upcomingReservation 사용
+             - 데이터 있음 : 가장 가까운 공연 1건 표시
+             - 데이터 없음 : 빈 상태 안내 표시
+        ========================================================== -->
+        <section class="mypage-section">
+
+          <div class="mypage-section__heading">
+            <div>
+              <h2>다가오는 공연</h2>
+              <p>예매한 공연 중 가장 가까운 일정을 확인해 보세요.</p>
+            </div>
+
+            <a th:href="@{/mypage/reservations}"
+               href="/mypage/reservations">
+              예매 내역 보기
+            </a>
+          </div>
+
+
+          <!-- 다가오는 공연이 있을 때 -->
+          <div class="mypage-reservation-list"
+               th:if="${upcomingReservation != null}">
+
+            <a class="mypage-reservation-card"
+               th:href="@{/mypage/reservations/{id}(id=${upcomingReservation.id})}"
+               href="/mypage/reservations/1">
+
+              <!--
+                  포스터 URL이 있으면 실제 포스터를 보여주고,
+                  URL이 없으면 기존 STAGE ON 마크를 보여줍니다.
+              -->
+              <div class="mypage-ticket-mark mypage-ticket-mark--poster"
+                   aria-hidden="true">
+
+                <img class="mypage-ticket-mark__image"
+                     th:if="${upcomingReservation.posterUrl != null
+                              and !#strings.isEmpty(upcomingReservation.posterUrl)}"
+                     th:src="${upcomingReservation.posterUrl}"
+                     th:alt="|${upcomingReservation.performanceTitle} 포스터|">
+
+                <th:block th:unless="${upcomingReservation.posterUrl != null
+                                      and !#strings.isEmpty(upcomingReservation.posterUrl)}">
+                  <span>STAGE</span>
+                  <strong>ON</strong>
+                </th:block>
+
+              </div>
+
+
+              <div class="mypage-reservation-card__body">
+
+                <div class="mypage-reservation-card__top">
+
+                  <span class="mypage-status">
+                    다가오는 공연
+                  </span>
+
+                  <span class="mypage-booking-number"
+                        th:text="${upcomingReservation.bookingNumber}">
+                    STG-20260805-0001
+                  </span>
+
+                </div>
+
+                <!-- 공연명 -->
+                <h3 th:text="${upcomingReservation.performanceTitle}">
+                  뮤지컬 〈레드 커튼〉
+                </h3>
+
+                <!-- 공연 시작 일시 -->
+                <p>
+                  <time th:text="${#temporals.format(
+                                  upcomingReservation.startsAt,
+                                  'yyyy.MM.dd (E) HH:mm'
+                                )}">
+                    2026.08.15 (토) 14:00
+                  </time>
+                </p>
+
+                <!-- 최종 결제 금액 -->
+                <strong class="mypage-price"
+                        th:text="|${#numbers.formatInteger(
+                                    upcomingReservation.totalAmount,
+                                    0,
+                                    'COMMA'
+                                  )}원|">
+                  143,000원
+                </strong>
+
+              </div>
+
+              <span class="mypage-card-arrow" aria-hidden="true">›</span>
+
+            </a>
+
+          </div>
+
+
+          <!-- 다가오는 공연이 없을 때 -->
+          <div class="mypage-empty"
+               th:if="${upcomingReservation == null}">
+
+            <div class="mypage-empty__icon" aria-hidden="true">🎭</div>
+
+            <strong>다가오는 공연이 없습니다.</strong>
+            <p>새로운 공연을 찾아 예매해 보세요.</p>
+
+            <a th:href="@{/performances}"
+               href="/performances">
+              공연 둘러보기
+            </a>
+
+          </div>
+
+        </section>
+
+
+        <!-- =========================================================
+             최근 예매 내역
+        ========================================================== -->
         <section class="mypage-section">
 
           <div class="mypage-section__heading">
@@ -146,6 +275,10 @@
 
         </section>
 
+
+        <!-- =========================================================
+             최근 활동
+        ========================================================== -->
         <section class="mypage-activity">
 
           <div>
@@ -161,8 +294,16 @@
              href="/mypage/reviews">
             관람 후기 관리
           </a>
+
         </section>
 
+
+        <!-- =========================================================
+             취향 기반 추천 공연
+
+             현재는 기존 더미 UI 유지
+             다음 단계에서 실제 추천 Service와 연결 예정
+        ========================================================== -->
         <section class="mypage-recommendations">
 
           <div class="mypage-section__heading">

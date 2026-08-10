@@ -45,11 +45,18 @@ public class MypageController {
                 .filter(this::isUpcomingReservation)
                 .count();
 
+        // 가장 가까운 다가오는 공연 1건 조회
+        ReservationResponse upcomingReservation =
+                bookingQueryService
+                        .findNearestUpcomingReservation(member.getId())
+                        .orElse(null);
+
         model.addAttribute("memberName", member.getName());
         model.addAttribute("memberEmail", member.getEmail());
         model.addAttribute("reservations", reservations);
         model.addAttribute("reservationCount", reservations.size());
         model.addAttribute("upcomingCount", upcomingCount);
+        model.addAttribute("upcomingReservation", upcomingReservation);
 
         return "user/mypage";
     }
@@ -177,10 +184,8 @@ public class MypageController {
     ) {
         model.addAttribute("activeMenu", activeMenu);
         model.addAttribute("pageTitle", pageTitle);
-        model.addAttribute(
-                "pageDescription",
-                pageDescription
-        );
+        model.addAttribute("pageDescription", pageDescription);
+
 
         return "user/mypage-placeholder";
     }
