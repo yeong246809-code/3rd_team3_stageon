@@ -7,6 +7,7 @@
   <title>StageOn Admin | 좌석 재고·선점 현황</title>
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+  <link rel="stylesheet" th:href="@{/css/pages/seat-inventory.css}" href="/css/pages/seat-inventory.css">
 </head>
 <body>
 <div class="admin-page">
@@ -19,133 +20,264 @@
           <h1>좌석 재고·선점 현황</h1>
           <p>회차별 좌석 상태와 임시 선점 만료를 실시간 확인합니다.</p>
         </div>
-        <button class="btn" type="button" onclick="location.reload()">새로고침</button>
       </header>
 
-      <!-- 공연 · 회차 선택 -->
-      <form class="cluster" method="get" th:action="@{/admin/seat-inventory}" style="margin-bottom:18px">
-        <select class="select" name="performanceId" style="max-width:320px" onchange="this.form.submit()">
-          <option th:each="p : ${performances}"
-                  th:value="${p.id}"
-                  th:text="${p.title}"
-                  th:selected="${selectedPerformanceId != null and p.id.equals(selectedPerformanceId)}">공연명</option>
-        </select>
-        <select class="select" name="scheduleId" style="max-width:280px" onchange="this.form.submit()">
-          <option th:if="${#lists.isEmpty(scheduleOptions)}" value="">등록된 회차가 없습니다</option>
-          <option th:each="s : ${scheduleOptions}"
-                  th:value="${s.id}"
-                  th:text="${s.label}"
-                  th:selected="${selectedScheduleId != null and s.id.equals(selectedScheduleId)}">08.16(토) 19:00 · 1회</option>
-        </select>
-        <noscript><button class="btn btn--dark" type="submit">조회</button></noscript>
-      </form>
+      <!-- 공연 · 회차 선택 + 액션 -->
+      <div class="inv-toolbar">
+        <form class="inv-toolbar__filters" id="filterForm" method="get" th:action="@{/admin/seat-inventory}">
+          <select name="performanceId" onchange="this.form.submit()">
+            <option th:each="p : ${performances}"
+                    th:value="${p.id}"
+                    th:text="${p.title}"
+                    th:selected="${selectedPerformanceId != null and p.id.equals(selectedPerformanceId)}">공연명</option>
+          </select>
+          <select name="scheduleId" onchange="this.form.submit()">
+            <option th:if="${#lists.isEmpty(scheduleOptions)}" value="">등록된 회차가 없습니다</option>
+            <option th:each="s : ${scheduleOptions}"
+                    th:value="${s.id}"
+                    th:text="${s.label}"
+                    th:selected="${selectedScheduleId != null and s.id.equals(selectedScheduleId)}">08.16(토) 19:00 · 1회</option>
+          </select>
+        </form>
 
-      <div th:if="${selectedScheduleId == null}" class="venue-empty" style="padding:60px 0">
-        조회할 회차를 먼저 선택해주세요.
+        <div class="inv-toolbar__actions">
+          <form method="post" th:action="@{/admin/seat-inventory/generate}">
+            <input type="hidden" name="scheduleId" th:value="${selectedScheduleId}">
+            <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+            <button class="btn-plain btn-plain--brand" type="submit" th:disabled="${selectedScheduleId == null}">+ 좌석 생성</button>
+          </form>
+          <button class="btn-plain" type="button" onclick="refreshResults()">새로고침</button>
+        </div>
       </div>
 
-      <div th:if="${selectedScheduleId != null}">
-        <section class="stat-grid">
-          <div class="card stat">
-            <span>AVAILABLE</span>
-            <strong th:text="${stats.available}">1,327</strong>
-          </div>
-          <div class="card stat">
-            <span>HELD</span>
-            <strong th:text="${stats.held}">136</strong>
-          </div>
-          <div class="card stat">
-            <span>RESERVED</span>
-            <strong th:text="${stats.reserved}">287</strong>
-          </div>
-          <div class="card stat">
-            <span>BLOCKED</span>
-            <strong th:text="${stats.blocked}">16</strong>
-          </div>
-        </section>
+      <div th:if="${message}" class="inv-alert inv-alert--ok" th:text="${message}"></div>
+      <div th:if="${error}" class="inv-alert inv-alert--error" th:text="${error}"></div>
 
-        <section class="admin-grid" style="margin-top:18px">
-          <div class="card">
-            <div class="cluster" style="justify-content:space-between">
-              <h2>좌석 맵</h2>
-              <div class="seat-legend">
-                <span><i class="status-dot available"></i>AVAILABLE</span>
-                <span><i class="status-dot held"></i>HELD</span>
-                <span><i class="status-dot reserved"></i>RESERVED</span>
-                <span><i class="status-dot blocked"></i>BLOCKED</span>
-              </div>
+      <div id="invResults">
+        <div th:if="${selectedScheduleId == null}" class="inv-empty" style="padding:60px 0">
+          조회할 회차를 먼저 선택해주세요.
+        </div>
+
+        <div th:if="${selectedScheduleId != null}">
+          <section class="inv-stats">
+            <div class="inv-stat inv-stat--available">
+              <span class="inv-stat__label">AVAILABLE</span>
+              <strong class="inv-stat__value" th:text="${stats.available}">0</strong>
             </div>
+            <div class="inv-stat inv-stat--held">
+              <span class="inv-stat__label">HELD</span>
+              <strong class="inv-stat__value" th:text="${stats.held}">0</strong>
+            </div>
+            <div class="inv-stat inv-stat--reserved">
+              <span class="inv-stat__label">RESERVED</span>
+              <strong class="inv-stat__value" th:text="${stats.reserved}">0</strong>
+            </div>
+            <div class="inv-stat inv-stat--blocked">
+              <span class="inv-stat__label">BLOCKED</span>
+              <strong class="inv-stat__value" th:text="${stats.blocked}">0</strong>
+            </div>
+          </section>
 
-            <div th:if="${#lists.isEmpty(sections)}" class="venue-empty">좌석 데이터가 없습니다.</div>
+          <section class="inv-panels">
+            <div class="inv-card">
+              <div class="inv-card__head">
+                <h2>좌석 맵</h2>
+                <button type="button" class="inv-edit-btn" onclick="openEditModal()"
+                        th:if="${not #lists.isEmpty(sections)}">✎ 수정</button>
+              </div>
 
-            <div th:each="section : ${sections}">
-              <h3 style="margin:18px 0 8px;font-size:13px;font-weight:800;color:var(--muted)" th:text="${section.sectionName}">A구역</h3>
-              <div class="inventory-map">
-                <div class="seat-row" th:each="row : ${section.rows}">
-                  <i class="seat"
-                     th:each="seat : ${row.seats}"
-                     th:classappend="${seat.status == 'HELD'} ? 'is-held' : (${seat.status == 'RESERVED'} ? 'is-selected' : (${seat.status == 'BLOCKED'} ? 'is-disabled' : ''))"
-                     th:attr="title=${seat.gradeName} + ' ' + ${row.rowLabel} + '-' + ${seat.seatNumber} + ' · ' + ${seat.statusText} + ' · ' + ${seat.price} + '원'"></i>
+              <div th:if="${#lists.isEmpty(sections)}" class="inv-empty">
+                좌석 데이터가 없습니다. 상단의 "+ 좌석 생성" 버튼으로 좌석을 생성해주세요.
+              </div>
+
+              <!-- 조감도(읽기전용): 구역별로 등급 색상 블록만 표시합니다 -->
+              <div th:if="${not #lists.isEmpty(sections)}" class="inv-stage-board">
+                <div class="inv-stage-bar">STAGE</div>
+                <div class="inv-stage-section" th:each="section : ${sections}">
+                  <p class="inv-stage-section__title">
+                    <span th:text="${section.sectionName}">R구역</span> ·
+                    <span th:text="${section.rows[0].seats[0].gradeName}">R</span>
+                  </p>
+                  <div class="inv-stage-blocks">
+                    <th:block th:each="row : ${section.rows}">
+                          <span class="inv-stage-block" th:each="seat : ${row.seats}"
+                                th:style="'background:' + ${seat.displayColor}"
+                                th:title="${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번'"></span>
+                    </th:block>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div class="card">
-            <h2>활성 선점</h2>
-            <div class="table-wrap" style="margin-top:18px">
-              <table class="table">
-                <thead>
-                <tr>
-                  <th>선점 번호</th>
-                  <th>사용자</th>
-                  <th>좌석 수</th>
-                  <th>만료까지</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:if="${#lists.isEmpty(activeHolds)}">
-                  <td colspan="4" class="venue-empty">활성 선점이 없습니다.</td>
-                </tr>
-                <tr th:each="hold : ${activeHolds}">
-                  <td th:text="'#' + ${hold.holdId}">#1021</td>
-                  <td th:text="${hold.memberLabel}">member***</td>
-                  <td th:text="${hold.seatCount} + '석'">2석</td>
-                  <td>
-                    <span class="badge badge--warning hold-countdown" th:attr="data-expires-at=${hold.expiresAtIso}">--:--</span>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
+              <div th:if="${not #lists.isEmpty(grades)}" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+                <p class="inv-section-title">등급별 잔여석</p>
+                <table class="inv-grade-table">
+                  <thead>
+                  <tr><th>등급</th><th>전체</th><th>판매가능</th><th>선점중</th><th>판매완료</th><th>차단</th></tr>
+                  </thead>
+                  <tbody>
+                  <tr th:each="g : ${grades}">
+                    <td><span class="inv-grade-swatch" th:style="'background:' + ${g.displayColor}"></span><span th:text="${g.gradeName}">VIP</span></td>
+                    <td th:text="${g.total}">120</td>
+                    <td th:text="${g.available}">80</td>
+                    <td th:text="${g.held}">5</td>
+                    <td th:text="${g.reserved}">30</td>
+                    <td th:text="${g.blocked}">5</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        </section>
+
+            <div class="inv-card">
+              <h2>활성 선점</h2>
+              <div class="table-wrap" style="margin-top:14px">
+                <table class="inv-table">
+                  <thead>
+                  <tr><th>선점 번호</th><th>사용자</th><th>좌석 수</th><th>만료까지</th></tr>
+                  </thead>
+                  <tbody>
+                  <tr th:if="${#lists.isEmpty(activeHolds)}">
+                    <td colspan="4" class="inv-empty">활성 선점이 없습니다.</td>
+                  </tr>
+                  <tr th:each="hold : ${activeHolds}">
+                    <td th:text="'#' + ${hold.holdId}">#1021</td>
+                    <td th:text="${hold.memberLabel}">member***</td>
+                    <td th:text="${hold.seatCount} + '석'">2석</td>
+                    <td><span class="inv-badge hold-countdown" th:attr="data-expires-at=${hold.expiresAtIso}">--:--</span></td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </main>
 </div>
 
-<script>
-  (function () {
-    function formatRemaining(ms) {
-      if (ms <= 0) return '만료';
-      var totalSec = Math.floor(ms / 1000);
-      var m = Math.floor(totalSec / 60);
-      var s = totalSec % 60;
-      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-    }
+<!-- 좌석 상태 변경용 숨김 폼 -->
+<form id="statusForm" method="post" th:action="@{/admin/seat-inventory/seats/status}" style="display:none">
+  <input type="hidden" name="seatId" id="statusSeatId">
+  <input type="hidden" name="status" id="statusValue">
+  <input type="hidden" name="scheduleId" th:value="${selectedScheduleId}">
+  <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+</form>
 
-    function tick() {
-      document.querySelectorAll('.hold-countdown').forEach(function (el) {
-        var expiresAt = new Date(el.getAttribute('data-expires-at'));
-        var remaining = expiresAt.getTime() - Date.now();
-        el.textContent = formatRemaining(remaining);
-      });
-    }
+<!-- 좌석 하나 클릭 시 상태 선택 팝오버 -->
+<div class="inv-popover" id="invPopover">
+  <div class="inv-popover__title" id="invPopoverTitle">좌석 수정</div>
+  <button type="button" onclick="submitStatus('AVAILABLE')">판매가능으로 변경</button>
+  <button type="button" onclick="submitStatus('HELD')">선점중으로 변경</button>
+  <button type="button" onclick="submitStatus('RESERVED')">판매완료로 변경</button>
+  <button type="button" onclick="submitStatus('BLOCKED')">차단으로 변경</button>
+</div>
 
-    tick();
-    setInterval(tick, 1000);
-  })();
+<!-- 좌석 상태 수정 팝업(모달): 실제 좌석 배치도를 상태 색상으로 보여주고 클릭해서 변경합니다 -->
+<div class="poster-modal" id="seatEditModal">
+  <div class="poster-modal__backdrop" onclick="closeEditModal()"></div>
+  <div class="poster-modal__content">
+    <button class="poster-modal__close" type="button" onclick="closeEditModal()">×</button>
+    <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;color:#1a1a1a">좌석 상태 변경</h3>
+    <p class="inv-edit-modal__desc">좌석을 클릭하면 판매가능·선점중·판매완료·차단 상태로 바꿀 수 있습니다.</p>
+    <div class="inv-legend" style="margin-bottom:16px">
+      <span><i class="inv-dot inv-dot--available"></i>AVAILABLE</span>
+      <span><i class="inv-dot inv-dot--held"></i>HELD</span>
+      <span><i class="inv-dot inv-dot--reserved"></i>RESERVED</span>
+      <span><i class="inv-dot inv-dot--blocked"></i>BLOCKED</span>
+    </div>
+    <div class="inv-edit-modal__body">
+      <div th:each="section : ${sections}">
+        <p class="inv-section-title" th:text="${section.sectionName}">A구역</p>
+        <div class="inv-row" th:each="row : ${section.rows}">
+          <span class="inv-row__label" th:text="${row.rowLabel}">A</span>
+          <div class="inv-seats">
+            <button type="button" class="inv-seat"
+                    th:each="seat : ${row.seats}"
+                    th:classappend="${seat.status == 'HELD'} ? 'inv-seat--held' : (${seat.status == 'RESERVED'} ? 'inv-seat--reserved' : (${seat.status == 'BLOCKED'} ? 'inv-seat--blocked' : ''))"
+                    th:text="${seat.seatNumber}"
+                    th:attr="data-row=${row.rowLabel},data-seat-number=${seat.seatNumber}"
+                    th:title="${seat.gradeName} + ' ' + ${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.statusText} + ' · ' + ${seat.price} + '원'"
+                    th:onclick="'openPopover(event,' + ${seat.scheduleSeatId} + ')'">1</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  var currentSeatId = null;
+
+  function openEditModal() {
+    document.getElementById('seatEditModal').classList.add('is-open');
+  }
+
+  function closeEditModal() {
+    document.getElementById('seatEditModal').classList.remove('is-open');
+    document.getElementById('invPopover').classList.remove('is-open');
+  }
+
+  function openPopover(e, seatId) {
+    e.stopPropagation();
+    currentSeatId = seatId;
+
+    var rowLabel = e.target.getAttribute('data-row');
+    var seatNumber = e.target.getAttribute('data-seat-number');
+    document.getElementById('invPopoverTitle').textContent = rowLabel + '열 ' + seatNumber + '번 수정';
+
+    var pop = document.getElementById('invPopover');
+    var rect = e.target.getBoundingClientRect();
+    pop.style.top = (window.scrollY + rect.bottom + 4) + 'px';
+    pop.style.left = (window.scrollX + rect.left) + 'px';
+    pop.classList.add('is-open');
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.inv-popover') && !e.target.classList.contains('inv-seat')) {
+      document.getElementById('invPopover').classList.remove('is-open');
+    }
+  });
+
+  function submitStatus(status) {
+    document.getElementById('statusSeatId').value = currentSeatId;
+    document.getElementById('statusValue').value = status;
+    document.getElementById('statusForm').submit();
+  }
+
+  function refreshResults() {
+    var params = new URLSearchParams(window.location.search);
+    fetch(window.location.pathname + '?' + params.toString())
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+              var doc = new DOMParser().parseFromString(html, 'text/html');
+              var newResults = doc.getElementById('invResults');
+              var curResults = document.getElementById('invResults');
+              if (newResults && curResults) {
+                curResults.innerHTML = newResults.innerHTML;
+                tickCountdown();
+              }
+            });
+  }
+
+  function formatRemaining(ms) {
+    if (ms <= 0) return '만료';
+    var totalSec = Math.floor(ms / 1000);
+    var m = Math.floor(totalSec / 60);
+    var s = totalSec % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function tickCountdown() {
+    document.querySelectorAll('.hold-countdown').forEach(function (el) {
+      var expiresAt = new Date(el.getAttribute('data-expires-at'));
+      var remaining = expiresAt.getTime() - Date.now();
+      el.textContent = formatRemaining(remaining);
+    });
+  }
+
+  tickCountdown();
+  setInterval(tickCountdown, 1000);
 </script>
 </body>
 </html>

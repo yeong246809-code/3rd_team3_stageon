@@ -12,22 +12,28 @@ import kr.co.stageon.booking.domain.SeatHold;
 import kr.co.stageon.booking.repository.ScheduleSeatRepository;
 import kr.co.stageon.booking.repository.SeatHoldItemRepository;
 import kr.co.stageon.booking.repository.SeatHoldRepository;
+import kr.co.stageon.performance.domain.PerformanceSchedule;
 import kr.co.stageon.performance.repository.PerformanceScheduleRepository;
 import kr.co.stageon.venue.domain.Seat;
 import kr.co.stageon.venue.domain.SeatGrade;
+import kr.co.stageon.venue.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * AD08 "좌석 재고·선점 현황" 화면의 통계/등급별 잔여석/좌석 배치도/활성 선점 조회를 담당합니다.
+ * AD08 "좌석 재고·선점 현황" 화면의 통계/등급별 잔여석/좌석 배치도/활성 선점 조회와
+ * 회차 좌석 일괄 생성, 관리자 강제 상태 변경을 담당합니다.
  * Redis 대기열·TTL 기능은 이번 세션 범위에서 제외하고, schedule_seats·seat_holds DB 상태만 기준으로 조회합니다.
  */
 @Service
@@ -41,6 +47,7 @@ public class AdminSeatInventoryService {
     private final ScheduleSeatRepository scheduleSeatRepository;
     private final SeatHoldRepository seatHoldRepository;
     private final SeatHoldItemRepository seatHoldItemRepository;
+    private final SeatRepository seatRepository;
 
     /** 공연 선택 시 "회차 선택" 드롭다운에 채울 옵션입니다. */
     @Transactional(readOnly = true)
@@ -163,6 +170,43 @@ public class AdminSeatInventoryService {
                         h.getExpiresAt().format(ISO_FMT)
                 ))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * AD08 "좌석 생성" - 회차의 좌석도(seat_chart)에 속한 물리 좌석 중 아직 schedule_seats로
+     * 등록되지 않은 좌석을 찾아 AVAILABLE 상태로 일괄 생성합니다.
+     * 가격은 아직 등급별 가격 연동 전이므로 0원으로 생성되며, 추후 raw_price_text 연동 시 갱신이 필요합니다.
+     */
+    @Transactional
+    public int generateMissingScheduleSeats(Long scheduleId) {
+        PerformanceSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException("회차를 찾을 수 없습니다."));
+
+        List<Seat> allSeats = seatRepository
+                .findBySeatChartIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(schedule.getSeatChart().getId());
+
+        Set<Long> existingSeatIds = scheduleSeatRepository.findWithSeatInfoByScheduleId(scheduleId).stream()
+                .map(ss -> ss.getSeat().getId())
+                .collect(Collectors.toCollection(HashSet::new));
+
+        List<ScheduleSeat> toCreate = allSeats.stream()
+                .filter(seat -> !existingSeatIds.contains(seat.getId()))
+                .map(seat -> ScheduleSeat.create(schedule, seat, BigDecimal.ZERO, "KRW"))
+                .collect(Collectors.toList());
+
+        if (toCreate.isEmpty()) {
+            return 0;
+        }
+        scheduleSeatRepository.saveAll(toCreate);
+        return toCreate.size();
+    }
+
+    /** AD08 좌석 맵에서 관리자가 좌석 하나의 상태를 직접 지정합니다(선점 해제/차단 처리 등). */
+    @Transactional
+    public void updateSeatStatus(Long scheduleSeatId, ScheduleSeat.Status status) {
+        ScheduleSeat seat = scheduleSeatRepository.findByIdForUpdate(scheduleSeatId)
+                .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
+        seat.forceStatus(status);
     }
 
     /** 회원명 마스킹(예: "관리자" -> "관리***"). 두 글자 이하이면 마지막 한 글자만 마스킹합니다. */
