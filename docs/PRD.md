@@ -1,13 +1,25 @@
 # StageOn MVP PRD
 
-> AI 기반 실시간 공연 티켓팅 서비스  
+> Redis 기반 실시간 공연 티켓팅 서비스
 > 개발 기간: 1개월 / 개발 인원: 4명 / 목적: 취업 포트폴리오용 팀 프로젝트
+> 기준일: 2026-08-10
 
 ## 1. 프로젝트 개요
 
-StageOn은 인기 공연 예매 시 발생하는 순간 트래픽과 동일 좌석 중복 예약 문제를 Redis 대기열, 입장 토큰, 좌석 임시 선점, DB·분산락, 결제 멱등성으로 해결하는 공연 티켓팅 MVP다. 사용자는 공연 검색 또는 AI 추천을 통해 공연을 찾고, 대기열을 통과한 뒤 좌석을 임시 선점하여 모의 결제를 완료한다.
+StageOn은 인기 공연 예매 시 발생하는 순간 트래픽과 동일 좌석 중복 예약 문제를 Redis 대기열, 입장 토큰, 로컬 좌석 임시 선점, DB 락, 결제 멱등성으로 해결하는 공연 티켓팅 MVP다. 사용자는 공연을 탐색하고 대기열을 통과한 뒤 좌석을 임시 선점하여 모의 결제를 완료한다.
 
-AI는 Ollama와 Qwen3 8B를 사용하지만 좌석 수, 가격, 결제 결과, 대기 순번 등 운영 데이터를 생성하거나 판단하지 않는다. Spring Boot가 조회한 실제 데이터만 설명하며 AI 장애가 일반 예매 흐름에 영향을 주지 않도록 격리한다.
+1차 범위는 MySQL·Redis 기반 핵심 예매 사이트의 완성과 검증이다. 핵심 사이트 완료 후 PostgreSQL의 `pgvector`에 안내 문서와 FAQ 임베딩을 저장하고 Ollama가 검색 근거에 기반해 답변하는 RAG 챗봇을 2차로 추가한다. RAG 장애는 일반 예매 흐름에 영향을 주지 않도록 격리한다.
+
+### 현재 진행 상태
+
+| 영역 | 상태 | 남은 완료 조건 |
+| --- | --- | --- |
+| 홈·공연·회원·관리자 | 1차 배포 확인 | 실제 데이터와 예외 화면 최종 검수 |
+| Redis 대기열·입장 토큰 | 진행 중 | 자동 입장, DB 이력 백업, 만료·장애 검증 |
+| 로컬 좌석 선점 | 진행 중 | 5분 TTL과 DB 재고 복구, 동시성 결과 |
+| 예약·모의 결제 | 진행 중 | 멱등성·실패 보상을 포함한 E2E 완주 |
+| 자동화 테스트 | 실행 환경 보완 | ClassNotFound 원인 수정 후 전체 재실행 |
+| RAG 챗봇 | PHASE2 | 핵심 사이트와 테스트 완료 후 착수 |
 
 ### 기술 기준
 
@@ -15,7 +27,7 @@ AI는 Ollama와 Qwen3 8B를 사용하지만 좌석 수, 가격, 결제 결과, �
 - Spring Data JPA, MySQL
 - Redis, Redisson
 - 실시간 알림: SSE
-- AI: Ollama + Qwen3 8B
+- 2차 AI: PostgreSQL + pgvector + Ollama + Spring AI
 - 외부 데이터: KOPIS API
 - 화면: Thymeleaf + JavaScript
 - 테스트: JUnit 5, JMeter 또는 nGrinder
@@ -24,8 +36,8 @@ AI는 Ollama와 Qwen3 8B를 사용하지만 좌석 수, 가격, 결제 결과, �
 
 - 4명이 4주 안에 완성 가능한 범위만 구현한다.
 - 단순 CRUD보다 대기열·동시성·멱등성·장애 복구의 증명에 집중한다.
-- 실제 결제, 거래, 정산 등 법적·운영 복잡도가 큰 기능은 제외한다.
-- Redis와 AI가 중단되어도 잘못된 예약·결제가 생성되지 않아야 한다.
+- Seats.io, 실제 PG 결제, 거래·에스크로, QR 검표, 환불·정산은 제외한다.
+- Redis 장애 시 좌석 진입을 안전하게 차단하고 잘못된 예약·결제가 생성되지 않아야 한다.
 
 ## 2. 배경과 문제 정의
 
@@ -45,7 +57,7 @@ StageOn은 다음 네 문제를 MVP의 핵심으로 정의한다.
 - 사용자가 로그인부터 예매내역 확인까지 단절 없이 완료한다.
 - 허가된 사용자만 좌석 조회·선점 API를 호출한다.
 - 장애 상황에서 상태가 명확하고 복구 가능한 구조를 만든다.
-- AI와 외부 API를 핵심 예매 트랜잭션으로부터 분리한다.
+- 외부 API와 2차 RAG를 핵심 예매 트랜잭션으로부터 분리한다.
 
 ### 성공 기준
 
@@ -54,7 +66,7 @@ StageOn은 다음 네 문제를 MVP의 핵심으로 정의한다.
 | 동일 좌석 동시 요청 | 100개 요청 중 성공 1건 |
 | 결제 멱등성 | 동일 Idempotency-Key 반복 시 Payment 1건 |
 | 선점 복구 | TTL 만료 후 좌석이 AVAILABLE로 복구 |
-| AI 장애 격리 | Ollama 종료 상태에서도 검색·예매·결제 정상 |
+| 2차 RAG 장애 격리 | Ollama 종료 상태에서도 검색·예매·결제 정상 |
 | 대기열 효과 | 적용 전후 API 응답시간·DB 커넥션 수 비교 자료 확보 |
 | 부하 테스트 | TPS, 평균·p95 응답시간, 오류율 기록 |
 | 핵심 흐름 | 로그인부터 예매내역까지 시연 가능 |
@@ -63,7 +75,7 @@ StageOn은 다음 네 문제를 MVP의 핵심으로 정의한다.
 
 | 유형 | 목적 | 권한 |
 | --- | --- | --- |
-| 비회원 | 공연 탐색 | 공연 목록·상세·AI FAQ 조회 |
+| 비회원 | 공연 탐색 | 공연 목록·상세 조회 |
 | 회원 | 공연 예매 | 대기열, 좌석 선점, 결제, 예매내역 |
 | 관리자 | 공연과 좌석 운영 | 공연·공연장·회차·재고·주문 조회 및 관리 |
 
@@ -73,17 +85,17 @@ StageOn은 다음 네 문제를 MVP의 핵심으로 정의한다.
 
 ### 정상 예매
 
-로그인 → 공연 검색 또는 AI 추천 → 공연 상세 → 회차 선택 → Redis 대기열 등록 → 순번 확인 → 입장 토큰 발급 → 좌석 조회 → 좌석 임시 선점 → 주문 확인 → 모의 결제 → 예약 확정 → 마이페이지 예매내역 확인
+로그인 → 공연 검색 → 공연 상세 → 회차 선택 → Redis 대기열 등록 → 순번 확인 → 입장 토큰 발급 → 좌석 조회 → 좌석 임시 선점 → 주문 확인 → 모의 결제 → 예약 확정 → 마이페이지 예매내역 확인
 
-### AI 추천
+### 2차 RAG 챗봇
 
-사용자가 자연어로 조건 입력 → AI가 구조화 조건 JSON 추출 → Spring Boot가 DB/KOPIS 동기화 데이터 조회 → AI가 조회 결과만 설명 → 사용자가 공연 상세로 이동
+관리자가 안내 문서·FAQ 등록 → 문서 청크와 임베딩을 PostgreSQL(pgvector)에 저장 → 질문 임베딩으로 관련 청크 검색 → Ollama가 검색 근거만 사용해 답변 → 출처와 일반 검색 링크 제공
 
 ### 실패 복구
 
 - 결제 실패: Payment FAILED → Reservation CANCELLED 또는 PENDING 종료 → 좌석 AVAILABLE 복구
 - 선점 만료: HELD TTL 종료 → Reservation EXPIRED → 좌석 AVAILABLE 복구
-- AI 장애: 일반 검색 링크와 안내 메시지 제공
+- RAG 장애: 일반 검색 링크와 고정 안내 메시지 제공
 
 ## 6. 기능 요구사항
 
@@ -104,8 +116,8 @@ StageOn은 다음 네 문제를 MVP의 핵심으로 정의한다.
 | 마이페이지 | 본인 예매 목록·상세 조회 | P0 | 비전공자 B |
 | 관리자 현황 | 좌석 재고·선점·예매·주문 조회 | P1 | 비전공자 B |
 | KOPIS 연동 | 공연 데이터 수집, 실패 시 로컬 데이터 사용 | P1 | 팀장 |
-| AI 조건 추출 | 자연어를 검증 가능한 검색 조건 DTO로 변환 | P1 | 팀장 |
-| AI 추천·FAQ | 조회 결과 설명, FAQ 응답, 장애 Fallback | P1 | 팀장 |
+| RAG 문서 수집·검색 | 문서 청크·임베딩 저장, pgvector 유사도 검색 | PHASE2 | 팀장 |
+| RAG 답변·출처 | 검색 근거 기반 답변, 출처, 장애 Fallback | PHASE2 | 팀장 |
 | SSE | 대기 순번 또는 입장 허가 갱신 | P1 | 전공자 B |
 | 알림 | 화면 내 성공·오류 안내 | P2 | 비전공자 B |
 
@@ -131,7 +143,7 @@ StageOn은 다음 네 문제를 MVP의 핵심으로 정의한다.
 - 모든 오류는 공통 오류 코드와 HTTP 상태로 응답한다.
 - 요청 ID, 사용자 ID, 회차 ID, 예약 ID를 구조화 로그에 남긴다.
 - Actuator로 health 상태를 제공하되 상세 정보는 관리자에게만 공개한다.
-- Redis·Ollama·KOPIS 장애를 서로 다른 오류 코드로 구분한다.
+- Redis·KOPIS 장애를 서로 다른 오류 코드로 구분하고, PHASE2에서는 RAG 장애 코드를 추가한다.
 
 ### 유지보수성
 
@@ -186,14 +198,14 @@ StageOn은 다음 네 문제를 MVP의 핵심으로 정의한다.
 | 결제 중복 요청 | PAYMENT_DUPLICATED | 기존 결제 결과 반환 |
 | 결제 실패 | PAYMENT_FAILED | 예약 종료 및 좌석 복구 |
 | Redis 장애 | REDIS_UNAVAILABLE | 대기열·좌석 진입 차단, 503 |
-| Ollama 장애 | OLLAMA_UNAVAILABLE | AI만 비활성화, 일반 검색 유지 |
+| RAG 장애(PHASE2) | RAG_UNAVAILABLE | 챗봇만 비활성화, 일반 검색 유지 |
 | KOPIS 장애 | EXTERNAL_API_UNAVAILABLE | 로컬 저장 데이터 조회 |
 
 Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-open 전략은 사용하지 않는다. 잘못된 동시 진입보다 안전한 차단을 우선한다.
 
 ## 10. 화면 목록
 
-### 사용자 MVP 13개
+### 사용자 MVP 12개
 
 1. 홈
 2. 공연 검색 결과
@@ -207,7 +219,8 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 10. 로그인
 11. 회원가입
 12. 마이페이지·예매내역
-13. AI 추천·FAQ
+
+PHASE2에서 RAG 챗봇 화면을 추가한다.
 
 ### 관리자 MVP 7개
 
@@ -261,15 +274,14 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 | GET | `/api/reservations/{reservationId}` | 예약 상세 |
 | POST | `/api/reservations/{reservationId}/cancel` | 예약 취소 |
 
-### 결제·AI
+### 결제
 
 | Method | Path | 설명 |
 | --- | --- | --- |
 | POST | `/api/payments` | 모의 결제, Idempotency-Key 필수 |
 | GET | `/api/payments/{paymentId}` | 결제 결과 |
-| POST | `/api/ai/search-condition` | 자연어 조건 추출 |
-| POST | `/api/ai/recommend` | 실제 조회 결과 추천 설명 |
-| POST | `/api/ai/chat` | FAQ |
+
+PHASE2 목표 API는 `POST /api/rag/chat`, `POST /api/admin/rag/documents`, `POST /api/admin/rag/reindex`로 별도 정의한다.
 
 ### 관리자
 
@@ -292,10 +304,10 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 | Performance | id, kopisId, title, genre, runtimeMinutes, ageText, status |
 | Venue | id, kopisFacilityId, name, address, region |
 | VenueHall | id, venueId, kopisHallId, name, seatCapacity |
-| SeatChart | id, venueHallId, seatsioChartKey, version, active |
+| SeatChart | id, venueHallId, version, active |
 | SeatGrade | id, seatChartId, name, displayColor |
-| Seat | id, seatChartId, seatsioObjectKey, section, row, number, gradeId |
-| PerformanceSchedule | id, performanceId, venueHallId, seatChartId, startsAt, seatsioEventKey, status |
+| Seat | id, seatChartId, section, row, number, gradeId |
+| PerformanceSchedule | id, performanceId, venueHallId, seatChartId, startsAt, status |
 | ScheduleSeat | id, scheduleId, seatId, price, currency, status, version |
 | SeatHold | id, scheduleId, memberId, holdTokenHash, status, expiresAt |
 | SeatHoldItem | id, seatHoldId, scheduleSeatId |
@@ -303,11 +315,12 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 | ReservationSeat | id, reservationId, scheduleSeatId, capturedSeat, capturedGrade, capturedUnitPrice |
 | Payment | id, reservationId, provider, idempotencyKey, amount, status, requestedAt |
 | WaitingQueueHistory | id, memberId, scheduleId, status, enteredAt |
-| AiChatHistory | id, memberId, question, responseType, createdAt |
+| RagDocument (PHASE2) | id, title, sourceUrl, checksum, status, updatedAt |
+| RagDocumentChunk (PHASE2) | id, documentId, content, embedding, metadata |
 
 핵심 관계는 `Venue 1:N VenueHall`, `VenueHall 1:N SeatChart`, `SeatChart 1:N Seat`, `Performance 1:N PerformanceSchedule`, `PerformanceSchedule 1:N ScheduleSeat`, `SeatHold 1:N SeatHoldItem`, `Reservation 1:N ReservationSeat`, `ReservationSeat N:1 ScheduleSeat`, `Reservation 1:N Payment`다.
 
-물리 좌석 `Seat`와 회차별 판매 재고 `ScheduleSeat`를 반드시 분리한다. `SeatGrade`는 좌석도의 기본 구역만 나타내며 실제 판매 가격은 `ScheduleSeat.price`가 기준이다. `seatsioChartKey`, `seatsioEventKey`, `seatsioObjectKey`는 모두 선택값이며, 값이 없으면 로컬 좌석 방식으로 동작할 수 있다.
+물리 좌석 `Seat`와 회차별 판매 재고 `ScheduleSeat`를 반드시 분리한다. `SeatGrade`는 좌석도의 기본 구역만 나타내며 실제 판매 가격은 `ScheduleSeat.price`가 기준이다. 좌석 조회·선점의 기준은 MySQL의 로컬 좌석 데이터다. 기존 DDL에 남아 있는 Seats.io 식별자 컬럼은 사용하지 않으며 제거 대상으로 관리한다.
 
 `Performance.sourceType`은 두지 않는다. `kopisId`가 있으면 KOPIS 수집 공연, 없으면 관리자 등록 공연으로 판단한다.
 
@@ -322,13 +335,13 @@ Redis가 불안정할 때 대기열을 우회하여 좌석 API를 여는 Fail-op
 | `queue:entry:{queueToken}` | HASH | memberId, scheduleId, status | 대기열 TTL |
 | `queue:access:{entryToken}` | HASH | memberId, scheduleId | 5~10분 |
 | `seat:lock:{scheduleSeatId}` | Redisson Lock | lock owner | 수 초 lease |
-| `booking:session:{holdTokenHash}` | HASH | memberId, scheduleId | Seats.io hold TTL |
-| `seat:hold:{scheduleSeatId}` | HASH | memberId, seatHoldId, expiresAt | 로컬 좌석 모드 5분 |
+| `booking:session:{holdTokenHash}` | HASH | memberId, scheduleId | 좌석 선점 TTL과 동일 |
+| `seat:hold:{scheduleSeatId}` | HASH | memberId, seatHoldId, expiresAt | 5분 |
 | `payment:idempotency:{key}` | STRING | paymentId 또는 처리 결과 | 24시간 이상 |
 
 대기열 ZSET에서 제거되더라도 WaitingQueueHistory는 DB에 최소 이벤트만 저장하여 테스트와 발표 근거로 사용한다.
 
-Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis에 동일 좌석 상태를 중복 저장하지 않는다. Redis는 대기열, 입장 토큰, 예매 세션 연결만 담당한다. 로컬 좌석 모드에서만 Redis TTL과 DB 상태를 함께 사용하여 선점을 구현한다. 두 모드 모두 최종 예약·결제 기록은 MySQL이 기준이다.
+Redis는 대기열, 입장 토큰, 좌석 선점 TTL과 예매 세션 연결을 담당한다. 최종 좌석 재고와 예약·결제 기록은 MySQL을 기준으로 하며, TTL 만료 또는 결제 실패 시 DB 상태를 `AVAILABLE`로 복구한다.
 
 ## 14. 동시성 제어 전략
 
@@ -348,16 +361,16 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 ### 결론 기준
 
 - 정확성, 평균·p95 응답시간, DB 락 대기, 실패율을 비교한다.
-- 1개월 MVP에서는 두 전략을 동시에 운영하지 않고 프로필 또는 구현체로 선택한다.
-- Seats.io 모드에서는 Seats.io hold/book/release를 좌석 선점의 기준으로 사용하고, MySQL 트랜잭션은 예약·결제 장부의 최종 정합성을 검증한다.
+- 1개월 MVP에서는 두 전략을 동시에 운영하지 않고 기본 전략을 하나로 고정한 뒤 비교 테스트 결과를 남긴다.
 
-## 15. AI 역할과 제한
+## 15. 2차 RAG 역할과 제한
 
 ### 담당 역할
 
-- 자연어 검색 조건을 제한된 JSON 스키마로 추출
-- Spring Boot가 조회한 공연 후보의 추천 이유 설명
-- 예매 절차, 좌석 등급, 취소 정책 등 FAQ 응답
+- StageOn 이용 안내·FAQ 문서를 청크 단위로 저장
+- pgvector 유사도 검색으로 질문과 관련된 근거 검색
+- 검색된 근거를 사용한 예매 절차·좌석·서비스 안내 답변
+- 답변에 근거 문서 제목 또는 링크 제공
 
 ### 금지 역할
 
@@ -369,20 +382,20 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 
 ### 안전 구조
 
-1. AI 출력 JSON을 DTO와 Bean Validation으로 검증한다.
-2. 허용된 장르·지역·가격 범위만 수용한다.
-3. Spring Boot가 DB를 조회한다.
-4. AI에는 조회 결과와 설명에 필요한 최소 정보만 전달한다.
-5. Ollama 장애 시 `FallbackAiService`가 고정 안내를 반환한다.
+1. 문서 원문과 청크는 PostgreSQL에 저장하고 임베딩은 pgvector 컬럼으로 관리한다.
+2. 검색 결과가 없거나 유사도가 기준보다 낮으면 모른다고 답하고 일반 안내로 연결한다.
+3. 좌석 수·가격·대기 순번·결제 결과는 RAG가 판단하지 않고 Spring Boot의 실제 API만 사용한다.
+4. Ollama에는 검색된 최소 근거만 전달한다.
+5. Ollama 또는 벡터 저장소 장애 시 고정 안내와 일반 검색 링크를 반환한다.
 
 ## 16. 팀원 역할과 책임
 
 | 팀원 | 책임 | 주요 산출물 |
 | --- | --- | --- |
-| 전공자 A | 좌석 선점, 예약 코어, 비관적 락, Redisson 비교 | 동시성 테스트, 좌석 복구 테스트 |
-| 전공자 B | Redis 대기열, 입장 토큰, 모의 결제, 멱등성 | 대기열·결제 테스트, 부하 테스트 |
-| 비전공 팀장 | 공통 구조, KOPIS, Ollama/Qwen, Git·PR, 통합 | AI Fallback, 통합 문서, 발표 |
-| 비전공자 B | 공연·공연장·회차, 관리자, 좌석 등급·가격 | 관리자 화면, 운영 데이터 |
+| 이찬영 | 팀장, Redis 대기열, 성능 검증, 배포, 2차 RAG | 부하 테스트, 통합 문서, 배포, RAG |
+| 남수아 | 회원, 마이페이지, 예매 내역 | 회원·예매내역 화면과 연동 |
+| 강채은 | 좌석, 예약, 모의 결제, 유스케이스 | 좌석·결제 흐름과 동시성 테스트 |
+| 김민찬 | 관리자 기능 전반 | 공연·공연장·회차·좌석 운영 화면 |
 
 각 담당자는 Controller부터 화면 연결과 테스트까지 기능 단위로 소유한다. 공통 코드 변경은 팀장 리뷰를 거친다.
 
@@ -393,7 +406,7 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 - PRD, ERD, API, 상태 전이 확정
 - Spring Security 세션 로그인 검증
 - MySQL·Redis Docker Compose
-- 비관적 락·Redisson·SSE·Ollama·KOPIS 스파이크
+- 비관적 락·Redisson·SSE·KOPIS 스파이크
 - 공연·공연장·회차 기본 모델과 시드 데이터
 
 ### 2주차 — 기본 예매 흐름
@@ -408,7 +421,7 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 - Redis ZSET 대기열과 입장 토큰
 - 결제 멱등성과 실패 보상
 - 선점 만료 스케줄러
-- KOPIS Provider와 Ollama/Fallback
+- KOPIS Provider와 로컬 데이터 Fallback
 - 사용자·관리자 전체 흐름 연결
 
 ### 4주차 — 검증과 발표
@@ -431,7 +444,7 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 - 동일 Idempotency-Key 반복 시 Payment 1건
 - 결제 실패 시 예약·좌석 복구
 - 관리자 API 일반 사용자 접근 거부
-- Ollama 장애 시 일반 예매 정상
+- Redis 장애 시 안전 차단, KOPIS 장애 시 로컬 조회 정상
 - KOPIS 장애 시 LocalPerformanceProvider 동작
 
 ### 부하 테스트
@@ -453,11 +466,12 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 - 예약과 모의 결제 멱등성
 - 결제 실패·만료 복구
 - KOPIS/Local Provider
-- AI 검색 조건·추천 설명·FAQ/Fallback
 - 관리자 공연·공연장·회차·좌석·주문 조회
 
 ### PHASE2
 
+- PostgreSQL + pgvector 문서·청크·임베딩 저장소
+- Ollama 기반 RAG 챗봇, 출처 표시, 장애 Fallback
 - 찜한 공연
 - 이메일·웹 알림
 - 전체 예약 취소 자동화
@@ -467,6 +481,7 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 ### OUT
 
 - 실제 PG, 안전 티켓 거래, 에스크로
+- Seats.io 좌석도·선점 연동
 - 신고·분쟁, 부분 환불
 - 정산·수수료, 판매자 지급
 - 복잡한 쿠폰·할인
@@ -482,8 +497,8 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 4. 동일 좌석 100개 동시 요청에서 1건만 성공하는 자동화 테스트
 5. 결제 멱등키와 실패 보상으로 중복 결제·좌석 유실을 방지한 흐름
 6. 선점 TTL 만료 후 자동 복구 로그와 테스트
-7. Ollama 중단 시에도 일반 예매가 유지되는 장애 격리
-8. AI가 운영 데이터를 생성하지 않는 Guardrail 설계
+7. 핵심 사이트 완료 후 PostgreSQL·pgvector·Ollama를 분리 확장하는 단계적 설계
+8. RAG가 운영 데이터를 생성하거나 예매 상태를 변경하지 않는 Guardrail 설계
 9. 구현하지 않은 기능을 명확히 제외하여 1개월 내 완성도를 확보한 범위 관리
 
 ## 공통 응답과 핵심 오류 코드
@@ -497,4 +512,4 @@ Seats.io 모드에서는 좌석 임시 선점의 기준이 Seats.io이며 Redis�
 }
 ```
 
-필수 오류 코드는 `INVALID_REQUEST`, `UNAUTHORIZED`, `ACCESS_DENIED`, `PERFORMANCE_NOT_FOUND`, `SCHEDULE_NOT_FOUND`, `QUEUE_ALREADY_REGISTERED`, `QUEUE_TOKEN_EXPIRED`, `QUEUE_NOT_ENTERED`, `SEAT_NOT_FOUND`, `SEAT_ALREADY_HELD`, `SEAT_ALREADY_RESERVED`, `SEAT_HOLD_EXPIRED`, `RESERVATION_NOT_FOUND`, `PAYMENT_DUPLICATED`, `PAYMENT_FAILED`, `REDIS_UNAVAILABLE`, `OLLAMA_UNAVAILABLE`, `EXTERNAL_API_UNAVAILABLE`이다.
+MVP 필수 오류 코드는 `INVALID_REQUEST`, `UNAUTHORIZED`, `ACCESS_DENIED`, `PERFORMANCE_NOT_FOUND`, `SCHEDULE_NOT_FOUND`, `QUEUE_ALREADY_REGISTERED`, `QUEUE_TOKEN_EXPIRED`, `QUEUE_NOT_ENTERED`, `SEAT_NOT_FOUND`, `SEAT_ALREADY_HELD`, `SEAT_ALREADY_RESERVED`, `SEAT_HOLD_EXPIRED`, `RESERVATION_NOT_FOUND`, `PAYMENT_DUPLICATED`, `PAYMENT_FAILED`, `REDIS_UNAVAILABLE`, `EXTERNAL_API_UNAVAILABLE`이다. PHASE2에서는 `RAG_UNAVAILABLE`, `RAG_EVIDENCE_NOT_FOUND`를 추가한다.

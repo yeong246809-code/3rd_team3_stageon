@@ -12,11 +12,25 @@
 .performance-status.is-on-sale { color: #b42318; background: #fee4e2; }
 .performance-empty { display: grid; min-height: 300px; place-items: center; align-content: center; gap: 8px; padding: 40px; border: 1px dashed var(--line); border-radius: 14px; text-align: center; background: var(--surface); }
 .performance-empty p { margin-bottom: 12px; color: var(--muted); }
-.detail-hero { display: grid; grid-template-columns: 322px 1fr 304px; gap: 28px; align-items: start; }
-.detail-poster { width: 100%; aspect-ratio: 322 / 442; object-fit: cover; border-radius: 14px; }
-.info-list { display: grid; gap: 18px; }
-.info-list div { display: grid; grid-template-columns: 100px 1fr; gap: 12px; font-size: 14px; }
+.performance-detail-heading__meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.performance-detail-heading__meta .eyebrow { min-width: 0; }
+.detail-hero { display: grid; grid-template-columns: 322px minmax(0, 1fr) 304px; gap: 28px; align-items: start; }
+.detail-poster { width: 100%; aspect-ratio: 322 / 442; object-fit: cover; border-radius: 14px; background: var(--surface-2); }
+.detail-info-card h2, .detail-booking h2 { font-size: 22px; letter-spacing: -.03em; }
+.info-list { display: grid; gap: 18px; margin-top: 22px; }
+.info-list div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 12px; font-size: 14px; }
 .info-list dt { color: var(--muted); }
+.info-list dd { min-width: 0; line-height: 1.65; overflow-wrap: anywhere; }
+.detail-pre-line { white-space: pre-line; }
+.detail-booking { position: sticky; top: 24px; }
+.detail-booking__status { display: inline-flex; margin-bottom: 14px; padding: 5px 9px; border-radius: 999px; color: #8a5a00; background: #fff3d6; font-size: 11px; font-weight: 800; }
+.detail-booking__status.is-on-sale { color: #b42318; background: #fee4e2; }
+.detail-booking p { margin: 12px 0 22px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.performance-detail-section { padding-top: 70px; }
+.performance-detail-section .section-copy { max-width: 900px; line-height: 1.8; }
+.performance-venue { margin-top: 52px; padding: 28px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.performance-venue strong { display: block; margin-top: 16px; font-size: 16px; }
+.performance-venue p { margin-top: 7px; color: var(--muted); font-size: 14px; }
 .auth-wrap { width: min(calc(100% - 32px), 460px); margin: 30px auto; }
 .auth-card { padding: 36px; }
 .auth-card h1 { text-align: center; font-size: 30px; }
@@ -30,8 +44,8 @@
 .message { max-width: 75%; padding: 13px 16px; border-radius: 14px; background: var(--surface-2); font-size: 14px; }
 .message--user { margin-left: auto; color: #fff; background: var(--brand); }
 .chat-compose { margin-top: 18px; display: flex; gap: 10px; }
-@media (max-width: 900px) { .detail-hero { grid-template-columns: 220px 1fr; } .detail-hero > :last-child { grid-column: 1 / -1; } }
+@media (max-width: 900px) { .detail-hero { grid-template-columns: 220px minmax(0, 1fr); } .detail-hero > :last-child { grid-column: 1 / -1; } .detail-booking { position: static; } }
 @media (max-width: 1100px) { .performance-list-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 700px) { .detail-hero, .mypage-grid, .ai-grid { grid-template-columns: 1fr; } .detail-poster { max-width: 300px; } .search-toolbar { align-items: flex-start; flex-direction: column; } .performance-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; } .performance-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; } }
+@media (max-width: 700px) { .detail-hero, .mypage-grid, .ai-grid { grid-template-columns: 1fr; } .detail-poster { max-width: 300px; } .performance-detail-heading__meta { align-items: flex-start; flex-direction: column; gap: 8px; } .info-list div { grid-template-columns: 86px minmax(0, 1fr); } .performance-detail-section { padding-top: 48px; } .performance-venue { margin-top: 40px; padding: 22px; } .search-toolbar { align-items: flex-start; flex-direction: column; } .performance-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; } .performance-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; } }
 @media (max-width: 380px) { .performance-list-grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .performance-list-card { transition: none; } .performance-list-card:hover, .performance-list-card:focus-visible { transform: none; } }

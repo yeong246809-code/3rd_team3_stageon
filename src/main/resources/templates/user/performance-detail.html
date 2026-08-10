@@ -3,70 +3,103 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn | 공연 상세</title>
+    <title th:text="${performance.title + ' | StageOn'}">StageOn | 공연 상세</title>
     <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
     <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
   </head>
   <body id="top">
     <div th:replace="~{fragments/common/site-header :: header}"></div>
-    <main class="page">
+    <main class="page performance-detail-page">
       <div class="shell">
-        <!-- 공연 기본 정보와 예매 진입 영역 -->
-        <header class="page-heading">
-          <span class="eyebrow">뮤지컬 · 서울</span>
-          <h1>뮤지컬 〈오페라의 유령〉</h1>
-          <p>The Phantom of the Opera</p>
+        <header class="page-heading performance-detail-heading">
+          <div class="performance-detail-heading__meta">
+            <span class="eyebrow"
+                  th:text="${performance.genreLabel + (#strings.isEmpty(performance.region) ? '' : ' · ' + performance.region)}">뮤지컬 · 서울</span>
+            <span class="performance-status"
+                  th:classappend="${performance.status == 'ON_SALE'} ? ' is-on-sale'"
+                  th:text="${performance.statusLabel}">예매 가능</span>
+          </div>
+          <h1 th:text="${performance.title}">공연명</h1>
         </header>
-        <section class="detail-hero">
-          <img class="detail-poster" th:src="@{/images/figma/detail-04.jpg}" src="/images/figma/detail-04.jpg" alt="오페라의 유령 공연 포스터">
-          <div class="card">
+
+        <section class="detail-hero" aria-label="공연 주요 정보">
+          <img class="detail-poster"
+               th:src="${#strings.isEmpty(performance.posterUrl) ? performance.fallbackPosterUrl : performance.posterUrl}"
+               src="/images/posters/default-performance.webp"
+               th:attr="data-poster-fallback=${performance.fallbackPosterUrl}"
+               th:alt="${#strings.isEmpty(performance.posterUrl) ? '' : performance.title + ' 포스터'}"
+               alt="">
+
+          <section class="card detail-info-card">
             <h2>관람 정보</h2>
-            <dl class="info-list" style="margin-top:22px">
+            <dl class="info-list">
               <div>
                 <dt>공연 기간</dt>
-                <dd>2026.07.18 ~ 2026.10.11</dd>
+                <dd>
+                  <time th:datetime="${performance.startDate}"
+                        th:text="${#temporals.format(performance.startDate, 'yyyy.MM.dd')}">2026.01.01</time>
+                  <span aria-hidden="true"> ~ </span>
+                  <time th:datetime="${performance.endDate}"
+                        th:text="${#temporals.format(performance.endDate, 'yyyy.MM.dd')}">2026.12.31</time>
+                </dd>
               </div>
               <div>
                 <dt>공연 시간</dt>
-                <dd>화·목 19:30 / 토 14:00, 19:00</dd>
+                <dd class="detail-pre-line"
+                    th:text="${#strings.isEmpty(performance.rawScheduleText) ? '상세 공연 일정은 예매 단계에서 확인해 주세요.' : performance.rawScheduleText}">상세 공연 일정은 예매 단계에서 확인해 주세요.</dd>
               </div>
               <div>
                 <dt>공연장</dt>
-                <dd>블루스퀘어 신한카드홀</dd>
+                <dd th:if="${!#strings.isEmpty(performance.venueName)}"
+                    th:text="${performance.venueName + (#strings.isEmpty(performance.venueHallName) ? '' : ' · ' + performance.venueHallName)}">공연장 · 공연홀</dd>
+                <dd th:if="${#strings.isEmpty(performance.venueName)}">공연장 정보 준비 중</dd>
+              </div>
+              <div>
+                <dt>러닝타임</dt>
+                <dd th:text="${#strings.isEmpty(performance.runtimeText) ? '공연별 상이' : performance.runtimeText}">2시간 30분</dd>
               </div>
               <div>
                 <dt>관람 등급</dt>
-                <dd>만 7세 이상</dd>
+                <dd th:text="${#strings.isEmpty(performance.ageText) ? '관람 등급 정보 없음' : performance.ageText}">관람 등급 정보 없음</dd>
               </div>
               <div>
                 <dt>가격</dt>
-                <dd>VIP 160,000 · R 130,000 · S 100,000원</dd>
+                <dd class="detail-pre-line"
+                    th:text="${#strings.isEmpty(performance.priceText) ? '가격 정보 준비 중' : performance.priceText}">가격 정보 준비 중</dd>
               </div>
             </dl>
-          </div>
-          <aside class="card card--shadow">
-            <h2>예매하기</h2>
-            <div class="field" style="margin-top:18px">
-              <label>날짜</label>
-              <select class="select">
-                <option>2026.08.15 (토)</option>
-              </select>
-            </div>
-            <div class="field" style="margin-top:14px">
-              <label>회차</label>
-              <button class="btn" type="button">2회 19:00</button>
-            </div>
-            <div class="notice" style="margin:16px 0">잔여석 VIP 42 · R 81 · S 96</div>
-            <a class="btn btn--primary btn--wide" th:href="@{/schedule-select}" href="/schedule-select">날짜·회차 선택</a>
+          </section>
+
+          <aside class="card card--shadow detail-booking">
+            <span class="detail-booking__status"
+                  th:classappend="${performance.status == 'ON_SALE'} ? ' is-on-sale'"
+                  th:text="${performance.statusLabel}">예매 가능</span>
+            <h2 th:text="${performance.status == 'ON_SALE' ? '지금 예매할 수 있어요' : '예매 일정을 확인해 보세요'}">예매 일정을 확인해 보세요</h2>
+            <p>날짜와 회차, 잔여 좌석은 다음 단계에서 확인할 수 있습니다.</p>
+            <a class="btn btn--primary btn--wide"
+               th:href="@{/booking/performances/{id}/schedules(id=${performance.id})}"
+               href="/performances">예매 일정 확인</a>
           </aside>
         </section>
-        <section style="padding-top:70px">
+
+        <section class="performance-detail-section">
           <h2 class="section-title">공연 소개</h2>
-          <p class="section-copy">파리 오페라 하우스를 배경으로 한 사랑과 비극의 이야기를 압도적인 무대와 오케스트라로 만나보세요.</p>
+          <p class="section-copy detail-pre-line"
+             th:text="${#strings.isEmpty(performance.story) ? '공연 소개가 준비 중입니다.' : performance.story}">공연 소개가 준비 중입니다.</p>
+        </section>
+
+        <section class="performance-detail-section performance-venue"
+                 th:if="${!#strings.isEmpty(performance.venueName) or !#strings.isEmpty(performance.venueAddress)}">
+          <h2 class="section-title">공연장 안내</h2>
+          <strong th:if="${!#strings.isEmpty(performance.venueName)}"
+                  th:text="${performance.venueName + (#strings.isEmpty(performance.venueHallName) ? '' : ' · ' + performance.venueHallName)}">공연장 · 공연홀</strong>
+          <p th:if="${!#strings.isEmpty(performance.venueAddress)}"
+             th:text="${performance.venueAddress}">공연장 주소</p>
         </section>
       </div>
     </main>
     <div th:replace="~{fragments/common/site-footer :: footer}"></div>
     <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+    <script defer th:src="@{/js/poster-fallback.js}" src="/js/poster-fallback.js"></script>
   </body>
 </html>
