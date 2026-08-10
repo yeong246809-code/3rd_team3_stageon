@@ -26,6 +26,7 @@ public class SeatHoldService {
     private final SeatHoldRepository seatHoldRepository;
     private final MemberRepository memberRepository;
     private final SeatHoldItemRepository seatHoldItemRepository;
+    private final SeatRealtimeService seatRealtimeService;
 
     @Transactional
     public void processSeatHolds(SeatHoldRequest request) {
@@ -68,6 +69,7 @@ public class SeatHoldService {
         for (ScheduleSeat seat : seats) {
             SeatHoldItem item = SeatHoldItem.create(seatHold, seat);
             seatHoldItemRepository.save(item);
+            seatRealtimeService.notifySeatStatus(seat.getId(), "RESERVED"); // 또는 "HELD"
         }
     }
 

@@ -71,4 +71,8 @@ public class ScheduleSeat {
     public void release() {
         this.status = Status.AVAILABLE;
     }
+
+    public void reserve() {
+        this.status = Status.RESERVED;
+    }
 }

@@ -36,7 +36,7 @@ public class OrderReviewController {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
 
-        SeatHold seatHold = seatHoldRepository.findByMemberIdAndScheduleIdAndStatus(
+        SeatHold seatHold = seatHoldRepository.findFirstByMemberIdAndScheduleIdAndStatusOrderByStartedAtDesc(
                 member.getId(),
                 scheduleId,
                 SeatHold.Status.ACTIVE

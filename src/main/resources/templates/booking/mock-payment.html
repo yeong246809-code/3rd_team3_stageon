@@ -1,49 +1,121 @@
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn | 모의 결제</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
-  </head>
-  <body id="top">
-    <div th:replace="~{fragments/booking/booking-header :: bookingHeader}"></div>
-    <main class="booking-page">
-      <div class="shell booking-grid">
-        <!-- STEP 04: 실제 승인이 없는 포트폴리오용 결제 시뮬레이션 -->
-        <section class="stack">
-          <header class="page-heading">
-            <span class="eyebrow">STEP 04 · MOCK PAYMENT</span>
-            <h1>모의 결제</h1>
-            <p>실제 PG나 카드 승인은 발생하지 않습니다.</p>
-          </header>
-          <div class="notice notice--ai">
-            <b>포트폴리오용 모의 결제</b>
-            · 같은 멱등키의 요청은 결제 한 건으로 처리합니다.
-          </div>
-          <div class="card">
-            <h2>결제 수단</h2>
-            <div class="payment-methods" style="margin-top:18px">
-              <button type="button" class="payment-method is-active">신용카드 시뮬레이션</button>
-              <button type="button" class="payment-method">간편결제 시뮬레이션</button>
-              <button type="button" class="payment-method">실패 상황 테스트</button>
-            </div>
-            <div class="field" style="margin-top:22px">
-              <label>테스트 카드 번호</label>
-              <input class="input" value="4242 4242 4242 4242" readonly>
-            </div>
-          </div>
-          <div class="notice notice--danger">
-            <b>실패 시나리오</b>
-            · 결제 실패 시 예약을 취소하고 HELD 좌석을 AVAILABLE로 복구합니다.
-          </div>
-        </section>
-        <aside class="stack">
-          <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
-          <a class="btn btn--primary btn--wide" th:href="@{/booking-complete}" href="/booking-complete">162,000원 모의 결제 완료</a>
-        </aside>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StageOn | 결제 진행</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+  <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
+
+  <!-- ✅ 포트원 V1 SDK 추가 -->
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+</head>
+<body id="top">
+<div th:replace="~{fragments/booking/booking-header :: bookingHeader(4)}"></div>
+
+<main class="booking-page">
+  <div class="shell booking-grid">
+
+    <section class="stack">
+      <header class="page-heading">
+        <span class="eyebrow">STEP 04 · PAYMENT</span>
+        <h1>결제를 진행해 주세요</h1>
+        <p>안전한 결제를 위해 포트원(PortOne) 결제 시스템을 사용합니다.</p>
+      </header>
+
+      <div class="card" style="margin-top:20px;">
+        <h2>주문 및 예매자 정보</h2>
+        <div style="margin-top:18px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+          <p style="margin-bottom: 8px;"><strong>이름:</strong> <span th:text="${paymentRequest.bookerName}">테스터</span></p>
+          <p style="margin-bottom: 8px;"><strong>이메일:</strong> <span th:text="${paymentRequest.bookerEmail}">tester@example.com</span></p>
+          <p style="margin-bottom: 8px;"><strong>연락처:</strong> <span th:text="${paymentRequest.bookerPhone}">010-1234-5678</span></p>
+          <p style="margin-bottom: 8px;"><strong>수령 방법:</strong> <span th:text="${paymentRequest.receiveMethod.name() == 'MOBILE' ? '모바일 티켓' : '현장 수령'}">모바일 티켓</span></p>
+          <p><strong>결제 예정 금액:</strong> <span th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'" style="color: #f03e3e; font-weight: bold;">162,000원</span></p>
+        </div>
       </div>
-    </main>
-  </body>
+
+      <div class="notice notice--ai" style="margin-top:20px;">
+        <b>테스트 결제 안내</b>
+        · 현재 환경은 테스트 모드입니다. 실제 과금이 발생하지 않는 테스트용 카드를 사용해 주세요.
+      </div>
+    </section>
+
+    <aside class="stack">
+      <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
+
+      <!-- 결제 성공 시 결과를 백엔드로 넘길 Hidden Form -->
+      <form id="completePaymentForm" th:action="@{/payment/process}" method="post" style="display: none;">
+        <input type="hidden" name="impUid" id="inputImpUid"> <!-- V1에서는 imp_uid를 사용합니다 -->
+        <input type="hidden" name="merchantUid" id="inputMerchantUid">
+        <input type="hidden" name="seatHoldId" th:value="${paymentRequest.seatHoldId}">
+        <input type="hidden" name="holdTokenHash" th:value="${paymentRequest.holdTokenHash}">
+
+        <input type="hidden" name="bookerName" th:value="${paymentRequest.bookerName}">
+        <input type="hidden" name="bookerEmail" th:value="${paymentRequest.bookerEmail}">
+        <input type="hidden" name="bookerPhone" th:value="${paymentRequest.bookerPhone}">
+        <input type="hidden" name="receiveMethod" th:value="${paymentRequest.receiveMethod}">
+      </form>
+
+      <button type="button" class="btn btn--primary btn--wide" onclick="requestPayment()">
+        <span th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'">162,000원</span> 결제하기
+      </button>
+
+      <div style="margin-top: 15px; text-align: center;">
+        <button type="button" class="btn btn--secondary btn--wide" onclick="cancelPayment()" style="background-color: #f8f9fa; color: #495057; border: 1px solid #ced4da;">결제 취소 (좌석 해제)</button>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script th:inline="javascript">
+  IMP.init("imp71218338");
+
+  function requestPayment() {
+    const totalAmount = /*[[${totalAmount}]]*/ 162000;
+    const orderName = /*[[${performanceTitle ?: 'StageOn 티켓 예매'}]]*/ 'StageOn 티켓 예매';
+
+    const customerName = /*[[${paymentRequest.bookerName}]]*/ '테스터';
+    const customerEmail = /*[[${paymentRequest.bookerEmail}]]*/ 'tester@example.com';
+    const customerPhone = /*[[${paymentRequest.bookerPhone}]]*/ '010-1234-5678';
+
+    // 주문번호(merchant_uid) 생성 (고유해야 함)
+    const merchantUid = 'order_' + new Date().getTime();
+
+    // ✅ 포트원 V1 결제창 호출
+    IMP.request_pay({
+      pg: "html5_inicis",        // KG이니시스 웹표준결제창
+      pay_method: "card",        // 결제수단
+      merchant_uid: merchantUid, // 주문번호
+      name: orderName,           // 주문명
+      amount: totalAmount,       // 결제금액
+      buyer_email: customerEmail,
+      buyer_name: customerName,
+      buyer_tel: customerPhone
+    }, function (rsp) { // 콜백 함수
+      if (rsp.success) {
+        console.log("결제 성공:", rsp);
+        // 결제 성공 시 hidden form에 고유 ID 세팅 후 백엔드 전송
+        document.getElementById('inputImpUid').value = rsp.imp_uid;
+        document.getElementById('inputMerchantUid').value = rsp.merchant_uid;
+        document.getElementById('completePaymentForm').submit();
+      } else {
+        alert("결제에 실패했습니다. 에러 내용: " + rsp.error_msg);
+      }
+    });
+  }
+
+  function cancelPayment() {
+    if(confirm("결제를 취소하고 선택하신 좌석을 해제하시겠습니까?")) {
+      const seatHoldId = /*[[${paymentRequest.seatHoldId}]]*/ null;
+      if (seatHoldId) {
+        navigator.sendBeacon(`/api/seats/holds/${seatHoldId}/cancel`);
+        alert("취소되었습니다.");
+        window.location.href = '/';
+      } else {
+        window.location.href = '/';
+      }
+    }
+  }
+</script>
+</body>
 </html>
