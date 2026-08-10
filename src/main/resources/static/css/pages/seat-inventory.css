@@ -1,0 +1,120 @@
+/* AD08 좌석 재고·선점 현황 전용 스타일입니다. tokens.css의 CSS 변수를 사용합니다. */
+
+.inv-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.inv-toolbar__filters { display: flex; gap: 10px; flex-wrap: wrap; }
+.inv-toolbar__filters select {
+    padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    background: var(--canvas); font-size: 14px; color: var(--ink); min-width: 200px;
+}
+.inv-toolbar__actions { display: flex; gap: 8px; }
+
+.btn-plain {
+    padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+    background: var(--canvas); color: var(--ink-2); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .15s ease;
+}
+.btn-plain:hover { background: var(--surface); }
+.btn-plain:disabled { opacity: .5; cursor: not-allowed; }
+.btn-plain--brand { background: var(--brand); border-color: var(--brand); color: #fff; }
+.btn-plain--brand:hover:not(:disabled) { filter: brightness(1.08); }
+
+.inv-alert { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+.inv-alert--ok { background: #e4f7ec; color: #1a8a4a; }
+.inv-alert--error { background: #fde8e8; color: #c0392b; }
+
+.inv-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+.inv-stat { background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 18px 20px; }
+.inv-stat__label { font-size: 12px; font-weight: 700; letter-spacing: .03em; color: var(--muted); }
+.inv-stat__value { display: block; margin-top: 8px; font-size: 26px; font-weight: 800; color: var(--ink); }
+.inv-stat--available .inv-stat__value { color: #2f9e5b; }
+.inv-stat--held .inv-stat__value { color: #d98c1a; }
+.inv-stat--reserved .inv-stat__value { color: var(--brand); }
+.inv-stat--blocked .inv-stat__value { color: var(--subtle); }
+
+.inv-panels { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 1000px) { .inv-panels { grid-template-columns: 1fr; } .inv-stats { grid-template-columns: repeat(2, 1fr); } }
+
+.inv-card { background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; }
+.inv-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 14px; }
+.inv-card__head h2 { font-size: 15px; font-weight: 800; color: var(--ink); margin: 0; }
+
+/* 좌석 상태 수정 팝업을 여는 버튼 */
+.inv-edit-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--canvas); color: var(--ink-2); font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .15s ease;
+}
+.inv-edit-btn:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+/* 기본 화면: STAGE 조감도(등급색 블록, 읽기전용) */
+.inv-stage-board { padding: 6px 6px 2px; }
+.inv-stage-bar {
+    background: #1f2440; color: #fff; text-align: center; font-size: 12px; font-weight: 800;
+    letter-spacing: .1em; padding: 11px; border-radius: 10px; margin-bottom: 28px;
+}
+.inv-stage-section { margin-bottom: 22px; text-align: center; }
+.inv-stage-section:last-child { margin-bottom: 0; }
+.inv-stage-section__title { font-size: 13px; font-weight: 700; color: var(--ink-2); margin: 0 0 10px; }
+.inv-stage-blocks { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.inv-stage-block { width: 22px; height: 22px; border-radius: 5px; display: inline-block; }
+
+.inv-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.inv-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.inv-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.inv-dot--available { background: #2f9e5b; }
+.inv-dot--held { background: #d98c1a; }
+.inv-dot--reserved { background: var(--brand); }
+.inv-dot--blocked { background: var(--subtle); }
+
+.inv-section-title { font-size: 12px; font-weight: 700; color: var(--muted); margin: 18px 0 8px; }
+.inv-section-title:first-of-type { margin-top: 0; }
+.inv-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.inv-row__label { flex: 0 0 20px; font-size: 11px; font-weight: 700; color: var(--subtle); text-align: center; }
+.inv-seats { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.inv-seat {
+    width: 24px; height: 24px; border-radius: 5px; border: none;
+    font-size: 9px; font-weight: 700; color: #fff; cursor: pointer;
+    background: #2f9e5b; transition: transform .1s ease; padding: 0;
+}
+.inv-seat:hover { transform: scale(1.18); box-shadow: 0 0 0 2px var(--ink) inset; }
+.inv-seat--held { background: #d98c1a; }
+.inv-seat--reserved { background: var(--brand); }
+.inv-seat--blocked { background: var(--subtle); }
+
+.inv-empty { padding: 40px 0; text-align: center; color: var(--subtle); font-size: 13px; }
+
+.inv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.inv-table th { text-align: left; padding: 10px 8px; font-size: 11px; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--line); }
+.inv-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.inv-table tbody tr:last-child td { border-bottom: none; }
+
+.inv-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: #fff3cd; color: #92700e; }
+
+.inv-grade-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+.inv-grade-table th { text-align: left; padding: 9px 8px; font-size: 11px; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--line); }
+.inv-grade-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.inv-grade-swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; margin-right: 8px; vertical-align: middle; }
+
+/* 좌석 상태 수정 모달 (admin-pages.css의 .poster-modal 오버레이 패턴 재사용) */
+#seatEditModal .poster-modal__content { max-width: 760px; width: min(760px, 94vw); text-align: left; }
+.inv-edit-modal__desc { margin: 0 0 18px; font-size: 12px; color: var(--muted); }
+.inv-edit-modal__body { max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+
+/* 좌석 클릭 시 상태 변경 팝오버 (모달 위에 뜨므로 z-index를 모달보다 높게) */
+.inv-popover {
+    position: absolute; z-index: 1100; background: var(--canvas); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 6px; display: none;
+    min-width: 160px;
+}
+.inv-popover.is-open { display: block; }
+.inv-popover__title {
+    padding: 8px 12px 6px; font-size: 11px; font-weight: 700; color: var(--muted);
+    border-bottom: 1px solid var(--line); margin-bottom: 4px;
+}
+.inv-popover button {
+    display: block; width: 100%; padding: 8px 14px; border: none; background: none;
+    text-align: left; font-size: 12px; color: var(--ink); cursor: pointer; border-radius: 6px; white-space: nowrap;
+}
+.inv-popover button:hover { background: var(--surface); }

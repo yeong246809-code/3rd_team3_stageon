@@ -61,6 +61,17 @@ public class ScheduleSeat {
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
+    /** AD08 "좌석 생성" - 회차에 아직 없는 물리 좌석을 회차 좌석 재고로 등록할 때 사용합니다. */
+    public static ScheduleSeat create(PerformanceSchedule schedule, Seat seat, BigDecimal price, String currency) {
+        ScheduleSeat ss = new ScheduleSeat();
+        ss.schedule = schedule;
+        ss.seat = seat;
+        ss.price = price;
+        ss.currency = currency;
+        ss.status = Status.AVAILABLE;
+        return ss;
+    }
+
     public void hold() {
         if (this.status != Status.AVAILABLE) {
             throw new IllegalStateException("이미 선택되었거나 선점된 좌석입니다.");
@@ -72,7 +83,19 @@ public class ScheduleSeat {
         this.status = Status.AVAILABLE;
     }
 
+    /** 결제 완료 시 좌석을 최종 판매완료 상태로 전환합니다. HELD 상태에서만 예매 확정할 수 있습니다. */
     public void reserve() {
+        if (this.status != Status.HELD) {
+            throw new IllegalStateException("선점되지 않은 좌석은 예매 확정할 수 없습니다.");
+        }
         this.status = Status.RESERVED;
+    }
+
+    /**
+     * AD08 관리자 화면에서 좌석 상태를 강제로 변경합니다.
+     * 일반 예매 흐름(hold/release/reserve)과 달리 상태 전이 검증 없이 관리자가 직접 지정한 상태로 덮어씁니다.
+     */
+    public void forceStatus(Status status) {
+        this.status = status;
     }
 }
