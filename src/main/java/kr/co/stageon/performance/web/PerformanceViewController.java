@@ -3,11 +3,13 @@ package kr.co.stageon.performance.web;
 import kr.co.stageon.performance.service.PerformanceQueryService;
 import kr.co.stageon.performance.support.PerformanceGenres;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 /** 공연 검색·상세·회차 선택 Thymeleaf 화면을 연결합니다. */
 @Controller
@@ -31,9 +33,12 @@ public class PerformanceViewController {
 
     @GetMapping("/performances/{performanceId}")
     public String detail(@PathVariable Long performanceId, Model model) {
-        performanceQueryService.findPerformance(performanceId)
-                .ifPresent(performance -> model.addAttribute("performance", performance));
-        model.addAttribute("schedules", performanceQueryService.findSchedules(performanceId));
+        var performance = performanceQueryService.findPerformance(performanceId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "공연을 찾을 수 없습니다."
+                ));
+        model.addAttribute("performance", performance);
         return "user/performance-detail";
     }
 

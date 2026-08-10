@@ -2,6 +2,7 @@ package kr.co.stageon.performance.repository;
 
 import kr.co.stageon.performance.domain.Performance;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -63,6 +64,22 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
               AND p.endDate >= :today
             """)
     Optional<Performance> findPublishedByIdForHome(
+            @Param("performanceId") Long performanceId,
+            @Param("statuses") List<Performance.Status> statuses,
+            @Param("today") LocalDate today
+    );
+
+    /** 공개 공연 상세 화면에 필요한 공연장·홀 정보까지 한 번에 조회합니다. */
+    @EntityGraph(attributePaths = {"venueHall", "venueHall.venue"})
+    @Query("""
+            SELECT p
+            FROM Performance p
+            WHERE p.id = :performanceId
+              AND p.draft = false
+              AND p.status IN :statuses
+              AND p.endDate >= :today
+            """)
+    Optional<Performance> findPublishedDetailById(
             @Param("performanceId") Long performanceId,
             @Param("statuses") List<Performance.Status> statuses,
             @Param("today") LocalDate today
