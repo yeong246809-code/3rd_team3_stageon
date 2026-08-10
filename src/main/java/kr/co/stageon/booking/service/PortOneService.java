@@ -45,7 +45,7 @@ public class PortOneService {
     // 2. imp_uid로 결제 정보 조회 후 금액 검증
     public boolean verifyPayment(String impUid, BigDecimal expectedAmount) {
         String token = getAccessToken();
-        String url = "https://api.iamport.kr/payments/" + impUid;
+        String url = "https://api.iamport.kr/payments/" + impUid + "?include_sandbox=true";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token); // Authorization: Bearer {token}

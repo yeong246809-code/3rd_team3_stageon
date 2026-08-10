@@ -1,8 +1,11 @@
 package kr.co.stageon.booking.dto;
 
+import kr.co.stageon.booking.domain.Reservation;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 마이페이지 예매 상세 화면에 필요한 정보를 한 번에 전달합니다.
@@ -44,4 +47,13 @@ public record ReservationDetailResponse(
             BigDecimal unitPrice
     ) {
     }
+
+
+    // 좌석 정보용 내부 DTO
+    public record SeatInfoDto(
+            String gradeName,
+            String sectionName,
+            String rowLabel,
+            Integer seatNumber
+    ) {}
 }

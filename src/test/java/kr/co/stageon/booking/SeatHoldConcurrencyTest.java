@@ -1,11 +1,15 @@
 package kr.co.stageon.booking;
 
 import kr.co.stageon.booking.dto.SeatHoldRequest;
+import kr.co.stageon.booking.facade.SeatHoldRedissonFacade;
+import kr.co.stageon.booking.repository.SeatHoldRepository;
+import kr.co.stageon.booking.repository.ScheduleSeatRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import kr.co.stageon.booking.facade.SeatHoldRedissonFacade;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,57 +26,119 @@ class SeatHoldConcurrencyTest {
     @Autowired
     private SeatHoldRedissonFacade seatHoldRedissonFacade;
 
+    @Autowired
+    private SeatHoldRepository seatHoldRepository;
+
+    @Autowired
+    private ScheduleSeatRepository scheduleSeatRepository;
+
+    private final Long scheduleId = 88L;
+    private final List<Long> targetSeatIds = new ArrayList<>(List.of(801L, 802L));
+
+    @BeforeEach
+    @Transactional
+    void setUp() {
+        // 1. 해당 스케줄과 좌석에 걸려있는 기존 선점 데이터(SeatHold 등) 삭제
+        // (프로젝트 엔티티 구조에 맞춰 메서드 이름이나 쿼리를 수정해주세요)
+        try {
+            // 예: seatHoldRepository.deleteByScheduleIdAndSeatIds(...); 또는 전체 삭제 후 재삽입
+            // 만약 락 정보나 연관 데이터를 지워야 한다면 여기에 작성합니다.
+
+            // 2. ScheduleSeat 상태를 AVAILABLE(선점 가능) 상태로 원복하는 로직
+            // 예시:
+            // List<ScheduleSeat> seats = scheduleSeatRepository.findAllByScheduleIdAndSeatIdIn(scheduleId, targetSeatIds);
+            // seats.forEach(ScheduleSeat::releaseSeat); // 가용 상태로 변경하는 엔티티 메서드
+            // scheduleSeatRepository.saveAll(seats);
+
+        } catch (Exception e) {
+            // 초기화 중 발생하는 예외 무시 또는 로그
+        }
+
+        System.out.println("🧹 [BeforeEach] 테스트 좌석 초기화 실행 완료");
+    }
+
     @Test
-    @DisplayName("100명이 동시에 같은 좌석을 선점하려고 하면 단 1명만 성공해야 한다.")
+    @DisplayName("100명이 동시에 같은 좌석을 선점하려고 하면 단 1명만 성공해야 한다 (동시 선점)")
     void holdSeats_concurrency() throws InterruptedException {
         // given
-        int threadCount = 100; // 동시에 100명 접속 시뮬레이션
-        // 스레드 풀 100개 생성 (100명의 유저 역할)
+        int threadCount = 100;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        // 모든 스레드가 작업을 마칠 때까지 기다리기 위한 장치
         CountDownLatch latch = new CountDownLatch(threadCount);
 
-        // 성공 및 실패 횟수를 안전하게 카운트할 객체
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
 
-        // 테스트용 좌석 ID (DB에 있는 실제 좌석 ID로 변경하세요)
-        List<Long> targetSeatIds = new ArrayList<>(List.of(801L, 802L));
-        Long scheduleId = 88L;
-
         // when
         for (int i = 1; i <= threadCount; i++) {
-            Long mockMemberId = (long) i; // 1번~100번 유저 생성
+            Long mockMemberId = (long) i;
 
             executorService.submit(() -> {
                 try {
-                    // 각 유저가 동일한 회차의 동일한 좌석 선점 요청
                     SeatHoldRequest request = new SeatHoldRequest(mockMemberId, scheduleId, targetSeatIds);
                     seatHoldRedissonFacade.holdSeats(request);
-
-                    // 예외가 안 터지고 여기까지 왔다면 선점 성공
                     successCount.incrementAndGet();
                 } catch (Exception e) {
-                    // 락을 획득하지 못했거나 이미 HELD 상태라서 예외가 터지면 실패로 카운트
                     failCount.incrementAndGet();
-                    e.printStackTrace();
                 } finally {
-                    latch.countDown(); // 스레드 작업 완료 알림
+                    latch.countDown();
                 }
             });
         }
 
-        // 100명의 유저가 모두 요청을 끝낼 때까지 메인 스레드 대기
         latch.await();
         executorService.shutdown();
 
         System.out.println("=================================================");
-        System.out.println("🎉 테스트 결과: " + successCount.get() + "명 성공, " + failCount.get() + "명 실패");
+        System.out.println("🎉 [동시 선점] 테스트 결과: " + successCount.get() + "명 성공, " + failCount.get() + "명 실패");
         System.out.println("=================================================");
 
         // then
-        // 100명 중 단 1명만 성공하고, 99명은 튕겨나가야(실패해야) 정상!
         assertThat(successCount.get()).isEqualTo(1);
         assertThat(failCount.get()).isEqualTo(99);
+    }
+
+    @Test
+    @DisplayName("이미 선점된 좌석에 대해 시간차를 두고(0.5초 간격) 요청하면 모두 실패해야 한다 (시간차 선점)")
+    void holdSeats_sequential_delay() throws InterruptedException {
+        // given
+        Long firstUserId = 1L;
+        SeatHoldRequest firstRequest = new SeatHoldRequest(firstUserId, scheduleId, targetSeatIds);
+
+        try {
+            seatHoldRedissonFacade.holdSeats(firstRequest);
+            System.out.println("=================================================");
+            System.out.println("🎉 [시간차 선점] 첫 번째 유저(" + firstUserId + ") 선점 성공");
+            System.out.println("=================================================");
+        } catch (Exception e) {
+            org.junit.jupiter.api.Assertions.fail("첫 번째 유저 선점은 성공해야 합니다: " + e.getMessage());
+        }
+
+        int subsequentUsers = 5;
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        for (int i = 2; i <= subsequentUsers + 1; i++) {
+            Long laterUserId = (long) i;
+            Thread.sleep(500);
+
+            try {
+                SeatHoldRequest laterRequest = new SeatHoldRequest(laterUserId, scheduleId, targetSeatIds);
+                seatHoldRedissonFacade.holdSeats(laterRequest);
+
+                successCount.incrementAndGet();
+                System.out.println("❌ 유저 " + laterUserId + " 선점 성공 (실패해야 함!)");
+            } catch (Exception e) {
+                failCount.incrementAndGet();
+                System.out.println("✅ 유저 " + laterUserId + " 선점 차단됨 (정상): " + e.getMessage());
+            }
+        }
+
+        System.out.println("=================================================");
+        System.out.println("🎉 [시간차 선점] 결과: 추가 성공 " + successCount.get() + "명, 차단(실패) " + failCount.get() + "명");
+        System.out.println("=================================================");
+
+        // then
+        assertThat(successCount.get()).isEqualTo(0);
+        assertThat(failCount.get()).isEqualTo(subsequentUsers);
     }
 }
