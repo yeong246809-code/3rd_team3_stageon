@@ -81,9 +81,7 @@ public class AdminViewController {
 
     // "/admin/venues" 관련 GET·POST 매핑은 AdminVenueController로 이동했습니다.
     // "/admin/schedules" 매핑은 AdminScheduleController로 이동했습니다.
-
-    @GetMapping("/admin/seat-inventory")
-    public String seatInventory() { return "admin/seat-inventory"; }
+    // "/admin/seat-inventory" 매핑은 AdminSeatInventoryController로 이동했습니다.
 
     @GetMapping("/admin/orders")
     public String orders() { return "admin/orders"; }
