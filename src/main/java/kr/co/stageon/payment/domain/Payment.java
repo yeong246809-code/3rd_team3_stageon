@@ -25,6 +25,7 @@ public class Payment {
 
     public enum Status { READY, SUCCESS, FAILED, CANCELLED }
     public enum Provider { MOCK }
+    public enum PayMethod { CARD, VBANK } //결제수단 - 카드, 가상계좌
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,11 +39,27 @@ public class Payment {
     @Column(nullable = false, length = 30)
     private Provider provider;
 
-    @Column(name = "idempotency_key", nullable = false, length = 100)
-    private String idempotencyKey;
+    @Column(name = "payment_key", nullable = false, length = 200)
+    private String paymentKey;
+
+    @Column(name = "order_id", nullable = false, length = 100)
+    private String orderId;
+
+    // 가상계좌 필드 추가 (nullable)
+    @Column(name = "vbank_num", length = 50)
+    private String vbankNum;
+
+    //결제수단
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pay_method", nullable = false, length = 30)
+    private PayMethod payMethod;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
+
+    // 환불 누적 금액
+    @Column(name = "cancel_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal cancelAmount = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

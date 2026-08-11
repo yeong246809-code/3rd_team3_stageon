@@ -7,8 +7,9 @@
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/booking-pages.css}" href="/css/pages/booking-pages.css">
 
-  <!-- ✅ 포트원 V1 SDK 추가 -->
-  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+  <!-- 토스 페이먼츠 -->
+  <script src="https://js.tosspayments.com/v1/payment"></script>
+
 </head>
 <body id="top">
 <div th:replace="~{fragments/booking/booking-header :: bookingHeader(4)}"></div>
@@ -68,53 +69,32 @@
 </main>
 
 <script th:inline="javascript">
-  IMP.init("imp71218338");
+  // 1. 토스페이먼츠 객체 초기화 (발급받은 테스트 클라이언트 키)
+  // 함수 밖에서 미리 초기화해두는 것이 좋습니다.
+  const tossPayments = TossPayments("test_ck_ORzdMaqN3wnw4wQk6KJB85AkYXQG");
 
   function requestPayment() {
-    const totalAmount = /*[[${totalAmount}]]*/ 162000;
+    // 2. Thymeleaf를 통해 서버(Model)에서 넘어온 실제 데이터를 JS 변수에 할당합니다.
+    const amount = /*[[${totalAmount}]]*/ 162000;
     const orderName = /*[[${performanceTitle ?: 'StageOn 티켓 예매'}]]*/ 'StageOn 티켓 예매';
-
     const customerName = /*[[${paymentRequest.bookerName}]]*/ '테스터';
     const customerEmail = /*[[${paymentRequest.bookerEmail}]]*/ 'tester@example.com';
-    const customerPhone = /*[[${paymentRequest.bookerPhone}]]*/ '010-1234-5678';
 
-    // 주문번호(merchant_uid) 생성 (고유해야 함)
-    const merchantUid = 'order_' + new Date().getTime();
+    // 백엔드 컨트롤러(Model)에서 반드시 생성해서 넘겨주어야 하는 결제 고유 번호(멱등키)입니다.
+    const orderId = /*[[${orderId}]]*/ 'STAGEON-TEST-0001';
 
-    // ✅ 포트원 V1 결제창 호출
-    IMP.request_pay({
-      pg: "html5_inicis",        // KG이니시스 웹표준결제창
-      pay_method: "card",        // 결제수단
-      merchant_uid: merchantUid, // 주문번호
-      name: orderName,           // 주문명
-      amount: totalAmount,       // 결제금액
-      buyer_email: customerEmail,
-      buyer_name: customerName,
-      buyer_tel: customerPhone
-    }, function (rsp) { // 콜백 함수
-      if (rsp.success) {
-        console.log("결제 성공:", rsp);
-        // 결제 성공 시 hidden form에 고유 ID 세팅 후 백엔드 전송
-        document.getElementById('inputImpUid').value = rsp.imp_uid;
-        document.getElementById('inputMerchantUid').value = rsp.merchant_uid;
-        document.getElementById('completePaymentForm').submit();
-      } else {
-        alert("결제에 실패했습니다. 에러 내용: " + rsp.error_msg);
-      }
+    const baseUrl = window.location.origin;
+
+    // 3. 토스 결제창 호출 (하드코딩 제거 및 변수 매핑)
+    tossPayments.requestPayment('카드', {
+      amount: amount,                 // 서버에서 계산된 실제 금액 적용
+      orderId: orderId,               // 서버에서 생성된 고유 주문번호
+      orderName: orderName,           // 예매하는 실제 공연명
+      customerName: customerName,     // 예매자 이름
+      customerEmail: customerEmail,   // 예매자 이메일
+      successUrl: `${baseUrl}/payment/success`,
+      failUrl: `${baseUrl}/payment/fail`
     });
-  }
-
-  function cancelPayment() {
-    if(confirm("결제를 취소하고 선택하신 좌석을 해제하시겠습니까?")) {
-      const seatHoldId = /*[[${paymentRequest.seatHoldId}]]*/ null;
-      if (seatHoldId) {
-        navigator.sendBeacon(`/api/seats/holds/${seatHoldId}/cancel`);
-        alert("취소되었습니다.");
-        window.location.href = '/';
-      } else {
-        window.location.href = '/';
-      }
-    }
   }
 </script>
 </body>

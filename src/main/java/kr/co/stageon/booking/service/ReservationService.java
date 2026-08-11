@@ -27,7 +27,7 @@ public class ReservationService {
      * 포트원 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
      */
     @Transactional
-    public Long confirmReservation(PaymentRequest request, String impUid, String merchantUid, BigDecimal expectedAmount) {
+    public Long confirmReservation(PaymentRequest request, String paymentKey, String orderId, BigDecimal expectedAmount) {
 
         // 1. 임시 선점(SeatHold) 내역 조회
         SeatHold seatHold = seatHoldRepository.findById(request.seatHoldId())
@@ -38,7 +38,7 @@ public class ReservationService {
         }
 
         Reservation reservation = Reservation.create(
-                merchantUid,
+                orderId,
                 seatHold.getMember(),
                 seatHold.getSchedule(),
                 seatHold,

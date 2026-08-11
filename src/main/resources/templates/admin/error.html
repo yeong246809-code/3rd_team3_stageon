@@ -1,0 +1,64 @@
+
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${errorTitle} + ' | StageOn Admin'">오류 | StageOn Admin</title>
+    <link rel="stylesheet" th:href="@{/css/pages/admin-error.css}" href="/css/pages/admin-error.css">
+</head>
+<body class="admin-error-page">
+<main class="admin-error">
+    <svg class="admin-error__marionette" viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+        <line x1="90" y1="20" x2="150" y2="20" stroke="#B8BEE0" stroke-width="3" stroke-linecap="round"/>
+
+        <path d="M 96 20 Q 60 70 108 96" fill="none" stroke="#B8BEE0" stroke-width="2"/>
+        <path d="M 144 20 Q 176 66 132 94" fill="none" stroke="#B8BEE0" stroke-width="2"/>
+        <path d="M 100 20 Q 70 130 118 172" fill="none" stroke="#B8BEE0" stroke-width="2"/>
+        <path d="M 140 20 Q 150 140 150 210" fill="none" stroke="#B8BEE0" stroke-width="2"/>
+
+        <g transform="translate(120,150) rotate(8)">
+            <circle cx="0" cy="0" r="30" fill="#A7B0E8" stroke="#8B96DE" stroke-width="2"/>
+            <circle cx="-10" cy="-4" r="4" fill="#4A4FA0"/>
+            <circle cx="10" cy="-4" r="4" fill="#4A4FA0"/>
+            <path d="M -9 10 Q 0 5 9 10" stroke="#4A4FA0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M -30 -20 Q 0 -42 30 -20" fill="#E24C4C"/>
+            <circle cx="-24" cy="-10" r="4" fill="#FFD54A"/>
+            <circle cx="24" cy="-10" r="4" fill="#FFD54A"/>
+
+            <rect x="-22" y="26" width="44" height="52" rx="10" fill="#6C77BE" transform="rotate(-6)"/>
+
+            <g transform="rotate(35) translate(20,50)">
+                <rect x="-6" y="0" width="12" height="34" rx="6" fill="#8B96DE"/>
+                <circle cx="0" cy="38" r="7" fill="#A7B0E8"/>
+            </g>
+            <g transform="rotate(-50) translate(-24,44)">
+                <rect x="-6" y="0" width="12" height="34" rx="6" fill="#8B96DE"/>
+                <circle cx="0" cy="38" r="7" fill="#A7B0E8"/>
+            </g>
+
+            <g transform="translate(-8,70) rotate(20)">
+                <rect x="-6" y="0" width="12" height="40" rx="6" fill="#6C77BE"/>
+                <ellipse cx="0" cy="44" rx="10" ry="6" fill="#4A4FA0"/>
+            </g>
+            <g transform="translate(10,70) rotate(-55)">
+                <rect x="-6" y="0" width="12" height="40" rx="6" fill="#6C77BE"/>
+                <ellipse cx="0" cy="44" rx="10" ry="6" fill="#4A4FA0"/>
+            </g>
+        </g>
+
+        <ellipse cx="118" cy="238" rx="66" ry="8" fill="#E8EAF6"/>
+    </svg>
+
+    <p class="admin-error__code" th:text="${status}">500</p>
+    <h1 class="admin-error__title" th:text="${errorTitle}">무대에 문제가 생겼어요</h1>
+    <p class="admin-error__message" th:text="${errorMessage}">잠시 후 다시 시도해주세요.</p>
+
+    <div class="admin-error__actions">
+        <a class="admin-error__btn admin-error__btn--primary" th:href="@{/admin/dashboard}">관리자 홈으로</a>
+        <button type="button" class="admin-error__btn admin-error__btn--ghost" onclick="history.back()">이전으로</button>
+    </div>
+</main>
+</body>
+</html>
