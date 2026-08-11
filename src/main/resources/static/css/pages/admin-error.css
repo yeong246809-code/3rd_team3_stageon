@@ -1,0 +1,79 @@
+.admin-error-page {
+    margin: 0;
+    min-height: 100vh;
+    background: #F5F6FC;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+}
+
+.admin-error {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.admin-error__marionette {
+    width: 220px;
+    height: auto;
+    margin-bottom: 8px;
+}
+
+.admin-error__code {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #8B96DE;
+}
+
+.admin-error__title {
+    margin: 8px 0 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: #2B2E4A;
+}
+
+.admin-error__message {
+    margin: 12px 0 0;
+    font-size: 15px;
+    color: #6B7080;
+    line-height: 1.6;
+    max-width: 420px;
+}
+
+.admin-error__actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.admin-error__btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.admin-error__btn:hover {
+    opacity: 0.85;
+}
+
+.admin-error__btn--primary {
+    background: #6C77BE;
+    color: #ffffff;
+}
+
+.admin-error__btn--ghost {
+    background: transparent;
+    color: #6B7080;
+    border: 1px solid #D8DAEC;
+}

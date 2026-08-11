@@ -7,6 +7,8 @@ import kr.co.stageon.admin.dto.SeatInventorySeatDto;
 import kr.co.stageon.admin.dto.SeatInventorySectionDto;
 import kr.co.stageon.admin.dto.SeatInventoryScheduleOptionDto;
 import kr.co.stageon.admin.dto.SeatInventoryStatsDto;
+import kr.co.stageon.admin.dto.SeatInventoryUnassignedSeatDto;
+import kr.co.stageon.admin.dto.SeatInventoryUnassignedSectionDto;
 import kr.co.stageon.booking.domain.ScheduleSeat;
 import kr.co.stageon.booking.domain.SeatHold;
 import kr.co.stageon.booking.repository.ScheduleSeatRepository;
@@ -33,7 +35,7 @@ import java.util.stream.Collectors;
 
 /**
  * AD08 "좌석 재고·선점 현황" 화면의 통계/등급별 잔여석/좌석 배치도/활성 선점 조회와
- * 회차 좌석 일괄 생성, 관리자 강제 상태 변경을 담당합니다.
+ * 회차 좌석 구성(개별·일괄 생성, 개별 삭제), 관리자 좌석 상태 일괄 변경을 담당합니다.
  * Redis 대기열·TTL 기능은 이번 세션 범위에서 제외하고, schedule_seats·seat_holds DB 상태만 기준으로 조회합니다.
  */
 @Service
@@ -172,9 +174,39 @@ public class AdminSeatInventoryService {
                 .collect(Collectors.toList());
     }
 
+    /** AD08 "좌석 구성 관리" 모달 - 회차에 아직 등록되지 않은 물리 좌석 목록을 구역별로 묶어 조회합니다. */
+    @Transactional(readOnly = true)
+    public List<SeatInventoryUnassignedSectionDto> getUnassignedSeats(Long scheduleId) {
+        if (scheduleId == null) {
+            return List.of();
+        }
+        PerformanceSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException("회차를 찾을 수 없습니다."));
+
+        Map<String, List<SeatInventoryUnassignedSeatDto>> grouped = new LinkedHashMap<>();
+        for (Seat seat : findMissingSeats(schedule)) {
+            String sectionKey = seat.getSectionName() != null ? seat.getSectionName() : "구역 미지정";
+            SeatInventoryUnassignedSeatDto dto = new SeatInventoryUnassignedSeatDto(
+                    seat.getId(),
+                    seat.getSectionName(),
+                    seat.getRowLabel(),
+                    seat.getSeatNumber(),
+                    seat.getSeatGrade().getName(),
+                    seat.getSeatGrade().getDisplayColor()
+            );
+            grouped.computeIfAbsent(sectionKey, k -> new ArrayList<>()).add(dto);
+        }
+
+        List<SeatInventoryUnassignedSectionDto> result = new ArrayList<>();
+        for (Map.Entry<String, List<SeatInventoryUnassignedSeatDto>> entry : grouped.entrySet()) {
+            result.add(new SeatInventoryUnassignedSectionDto(entry.getKey(), entry.getValue()));
+        }
+        return result;
+    }
+
     /**
-     * AD08 "좌석 생성" - 회차의 좌석도(seat_chart)에 속한 물리 좌석 중 아직 schedule_seats로
-     * 등록되지 않은 좌석을 찾아 AVAILABLE 상태로 일괄 생성합니다.
+     * AD08 "좌석 구성 관리" - 회차의 좌석도(seat_chart)에 속한 물리 좌석 중 아직 schedule_seats로
+     * 등록되지 않은 좌석을 전부 AVAILABLE 상태로 일괄 생성합니다.
      * 가격은 아직 등급별 가격 연동 전이므로 0원으로 생성되며, 추후 raw_price_text 연동 시 갱신이 필요합니다.
      */
     @Transactional
@@ -182,31 +214,70 @@ public class AdminSeatInventoryService {
         PerformanceSchedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("회차를 찾을 수 없습니다."));
 
-        List<Seat> allSeats = seatRepository
-                .findBySeatChartIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(schedule.getSeatChart().getId());
-
-        Set<Long> existingSeatIds = scheduleSeatRepository.findWithSeatInfoByScheduleId(scheduleId).stream()
-                .map(ss -> ss.getSeat().getId())
-                .collect(Collectors.toCollection(HashSet::new));
-
-        List<ScheduleSeat> toCreate = allSeats.stream()
-                .filter(seat -> !existingSeatIds.contains(seat.getId()))
-                .map(seat -> ScheduleSeat.create(schedule, seat, BigDecimal.ZERO, "KRW"))
-                .collect(Collectors.toList());
-
-        if (toCreate.isEmpty()) {
+        List<Seat> toCreateSeats = findMissingSeats(schedule);
+        if (toCreateSeats.isEmpty()) {
             return 0;
         }
+        List<ScheduleSeat> toCreate = toCreateSeats.stream()
+                .map(seat -> ScheduleSeat.create(schedule, seat, BigDecimal.ZERO, "KRW"))
+                .collect(Collectors.toList());
         scheduleSeatRepository.saveAll(toCreate);
         return toCreate.size();
     }
 
-    /** AD08 좌석 맵에서 관리자가 좌석 하나의 상태를 직접 지정합니다(선점 해제/차단 처리 등). */
+    /** AD08 "좌석 구성 관리" - 물리 좌석 하나를 회차 좌석으로 개별 추가합니다. */
     @Transactional
-    public void updateSeatStatus(Long scheduleSeatId, ScheduleSeat.Status status) {
+    public void addSingleSeat(Long scheduleId, Long seatId) {
+        PerformanceSchedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException("회차를 찾을 수 없습니다."));
+        Seat seat = seatRepository.findById(seatId)
+                .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
+
+        boolean alreadyExists = scheduleSeatRepository.findWithSeatInfoByScheduleId(scheduleId).stream()
+                .anyMatch(ss -> ss.getSeat().getId().equals(seatId));
+        if (alreadyExists) {
+            throw new IllegalStateException("이미 등록된 좌석입니다.");
+        }
+        scheduleSeatRepository.save(ScheduleSeat.create(schedule, seat, BigDecimal.ZERO, "KRW"));
+    }
+
+    /** AD08 "좌석 구성 관리" - 회차 좌석 하나를 삭제합니다. 판매가능(AVAILABLE) 상태인 좌석만 삭제할 수 있습니다. */
+    @Transactional
+    public void deleteScheduleSeat(Long scheduleSeatId) {
         ScheduleSeat seat = scheduleSeatRepository.findByIdForUpdate(scheduleSeatId)
                 .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
-        seat.forceStatus(status);
+        if (seat.getStatus() != ScheduleSeat.Status.AVAILABLE) {
+            throw new IllegalStateException("판매가능 상태의 좌석만 삭제할 수 있습니다.");
+        }
+        scheduleSeatRepository.delete(seat);
+    }
+
+    /** AD08 좌석 맵에서 여러 좌석을 선택해 한 번에 같은 상태로 변경합니다. */
+    @Transactional
+    public int bulkUpdateSeatStatus(List<Long> scheduleSeatIds, ScheduleSeat.Status status) {
+        if (scheduleSeatIds == null || scheduleSeatIds.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Long id : scheduleSeatIds) {
+            scheduleSeatRepository.findByIdForUpdate(id).ifPresent(seat -> seat.forceStatus(status));
+            count++;
+        }
+        return count;
+    }
+
+    /** 회차의 좌석도에 속한 물리 좌석 중 아직 schedule_seats로 등록되지 않은 좌석 목록을 조회합니다. */
+    private List<Seat> findMissingSeats(PerformanceSchedule schedule) {
+        List<Seat> allSeats = seatRepository
+                .findBySeatChartIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(schedule.getSeatChart().getId());
+
+        Set<Long> existingSeatIds = scheduleSeatRepository.findWithSeatInfoByScheduleId(schedule.getId()).stream()
+                .map(ss -> ss.getSeat().getId())
+                .collect(Collectors.toCollection(HashSet::new));
+
+        return allSeats.stream()
+                .filter(seat -> !existingSeatIds.contains(seat.getId()))
+                .collect(Collectors.toList());
     }
 
     /** 회원명 마스킹(예: "관리자" -> "관리***"). 두 글자 이하이면 마지막 한 글자만 마스킹합니다. */
