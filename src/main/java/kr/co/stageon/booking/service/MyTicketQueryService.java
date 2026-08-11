@@ -24,8 +24,7 @@ public class MyTicketQueryService {
 
 
     /**
-     * 로그인 회원이 보유한 모바일 티켓 목록 조회
-     *
+     * 로그인 회원의 보유 티켓 조회
      * 좌석 1개 = 모바일 티켓 1장
      */
     public List<MyTicketResponse> findMemberTickets(Long memberId) {
@@ -38,21 +37,14 @@ public class MyTicketQueryService {
 
         for (Reservation reservation : reservations) {
 
-            /*
-             * RESERVED 예매만 보유 티켓에 표시합니다.
-             *
-             * CANCELLED / PENDING / EXPIRED 예매는
-             * 보유 티켓 화면에서 제외합니다.
-             */
+            // 확정된 예매만 보유 티켓에 노출
             if (reservation.getStatus() != Reservation.Status.RESERVED) {
                 continue;
             }
 
-
             List<ReservationSeat> reservationSeats =
                     reservationSeatRepository
                             .findByReservationIdOrderByIdAsc(reservation.getId());
-
 
             var schedule = reservation.getSchedule();
             var performance = schedule.getPerformance();
@@ -62,42 +54,41 @@ public class MyTicketQueryService {
 
             for (ReservationSeat seat : reservationSeats) {
 
-                /*
-                 * 현재 티켓 상태 계산
-                 *
-                 * AVAILABLE : 이용 가능
-                 * ENDED : 공연 종료
-                 *
-                 * TRANSFERRED는 TicketTransfer 구현 후
-                 * 이 메서드에 추가합니다.
-                 */
+                // 공연 시간 기준으로 현재 티켓 상태 계산
                 String ticketStatus =
                         determineTicketStatus(
                                 schedule.getStartsAt(),
-                                performance.getRuntimeMinutes());
+                                performance.getRuntimeMinutes()
+                        );
 
 
                 /*
-                 * 좌석별 QR 생성
+                 * QR은 공연 시작 24시간 전부터만 생성
+                 *
+                 * UPCOMING  → QR 없음
+                 * AVAILABLE → QR 생성
+                 * ENDED     → QR 없음
                  */
-                String qrContent =
-                        "STAGEON:TICKET:" + seat.getId();
+                String qrCodeImage = null;
 
-                String qrCodeImage =
-                        qrCodeService.generateQrCode(qrContent);
+                if ("AVAILABLE".equals(ticketStatus)) {
+
+                    String qrContent =
+                            "STAGEON:TICKET:" + seat.getId();
+
+                    qrCodeImage =
+                            qrCodeService.generateQrCode(qrContent);
+                }
 
 
                 MyTicketResponse ticket =
                         new MyTicketResponse(
-
                                 seat.getId(),
-
                                 reservation.getId(),
                                 reservation.getBookingNumber(),
 
                                 performance.getTitle(),
                                 performance.getPosterUrl(),
-
                                 schedule.getStartsAt(),
 
                                 venue.getName(),
@@ -110,7 +101,6 @@ public class MyTicketQueryService {
                                 seat.getCapturedUnitPrice(),
 
                                 ticketStatus,
-
                                 qrCodeImage
                         );
 
@@ -123,41 +113,48 @@ public class MyTicketQueryService {
 
 
     /**
-     * 모바일 티켓의 현재 상태를 판단합니다.
+     * 티켓 화면 상태 계산
      *
-     * 공연 시작 시간 + 러닝타임을 기준으로
-     * 공연 종료 여부를 계산합니다.
-     *
-     * AVAILABLE : 이용 가능
+     * UPCOMING  : QR 오픈 전
+     * AVAILABLE : QR 이용 가능
      * ENDED     : 공연 종료
-     *
-     * TRANSFERRED는 티켓 전달 기능 구현 후 추가합니다.
      */
     private String determineTicketStatus(
             LocalDateTime startsAt,
             Integer runtimeMinutes
     ) {
 
-        // 공연 시작 시간이 없으면 우선 이용 가능 처리
+        // 공연 시작 정보가 없으면 QR 오픈 전으로 처리
         if (startsAt == null) {
-            return "AVAILABLE";
+            return "UPCOMING";
         }
 
-        // 러닝타임 정보가 없거나 잘못된 값이면
-        // 임의로 종료 처리하지 않습니다.
-        if (runtimeMinutes == null || runtimeMinutes <= 0) {
-            return "AVAILABLE";
+        LocalDateTime now = LocalDateTime.now();
+
+        // QR 공개 시각 = 공연 시작 24시간 전
+        LocalDateTime qrOpenAt =
+                startsAt.minusHours(24);
+
+
+        // 아직 QR 공개 전
+        if (now.isBefore(qrOpenAt)) {
+            return "UPCOMING";
         }
 
-        // 공연 종료 시각 = 공연 시작 시각 + 러닝타임(분)
-        LocalDateTime endTime =
-                startsAt.plusMinutes(runtimeMinutes);
 
-        // 현재 시간이 공연 종료 시각을 지났으면 공연 종료
-        if (LocalDateTime.now().isAfter(endTime)) {
-            return "ENDED";
+        // 러닝타임이 있다면 실제 공연 종료 시각 계산
+        if (runtimeMinutes != null && runtimeMinutes > 0) {
+
+            LocalDateTime endTime =
+                    startsAt.plusMinutes(runtimeMinutes);
+
+            if (now.isAfter(endTime)) {
+                return "ENDED";
+            }
         }
 
+
+        // QR 공개 후 ~ 공연 종료 전
         return "AVAILABLE";
     }
 }

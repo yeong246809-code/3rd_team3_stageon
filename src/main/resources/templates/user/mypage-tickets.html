@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StageOn | 보유 티켓</title>
 
-    <!-- 공통 CSS -->
+    <!-- 공통 / 마이페이지 / 보유 티켓 전용 CSS -->
     <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
     <link rel="stylesheet" th:href="@{/css/pages/mypage.css}" href="/css/pages/mypage.css">
-
-    <!-- 보유 티켓 전용 CSS -->
-    <link rel="stylesheet"
-          th:href="@{/css/pages/mypage-tickets.css}"
-          href="/css/pages/mypage-tickets.css">
+    <link rel="stylesheet" th:href="@{/css/pages/mypage-tickets.css}" href="/css/pages/mypage-tickets.css">
 </head>
 
 <body id="top">
@@ -27,39 +23,33 @@
         <header class="mypage-heading ticket-heading">
             <div>
                 <h1>보유 티켓</h1>
-                <p>입장 시 모바일 티켓의 QR 코드를 제시해 주세요.</p>
+                <p>공연 시작 24시간 전부터 입장용 QR 코드가 활성화됩니다.</p>
             </div>
 
-            <!-- 보유 티켓 개수 -->
             <span class="ticket-count"
                   th:text="|총 ${#lists.size(tickets)}장|">
-    총 0장
-</span>
+                총 0장
+            </span>
         </header>
 
         <div class="mypage-layout">
 
-            <!-- 기존 마이페이지 사이드바 그대로 사용 -->
+            <!-- 마이페이지 공통 사이드바 -->
             <div th:replace="~{fragments/mypage/mypage-sidebar :: sidebar('tickets')}"></div>
 
             <section class="mypage-content ticket-content">
 
                 <!-- =====================================================
-                     실제 보유 티켓 목록
-                     좌석 1개당 모바일 티켓 1장이 반복 출력됩니다.
+                     모바일 티켓
+                     좌석 1개 = 모바일 티켓 1장
                 ====================================================== -->
                 <article class="mobile-ticket"
                          th:each="ticket, stat : ${tickets}"
-
                          th:classappend="${stat.index % 2 == 0}
                                         ? ' mobile-ticket--purple'
                                         : ' mobile-ticket--red'">
 
-                    <!-- =================================================
-                         공연 포스터
-                         posterUrl이 있으면 실제 이미지를 보여주고
-                         없으면 STAGE ON 기본 표시를 보여줍니다.
-                    ================================================== -->
+                    <!-- 포스터 -->
                     <div class="ticket-poster">
 
                         <img class="ticket-poster__image"
@@ -76,38 +66,49 @@
                     </div>
 
 
-                    <!-- =================================================
-                         공연 / 좌석 정보
-                    ================================================== -->
+                    <!-- 공연 / 좌석 정보 -->
                     <div class="ticket-info">
 
                         <div class="ticket-info__top">
                             <span class="ticket-genre">MOBILE TICKET</span>
 
-                            <!-- 현재는 RESERVED 티켓만 조회하므로 입장 가능 표시 -->
-                            <span class="ticket-status">
-                                입장 가능
+                            <!--
+                                UPCOMING  : QR 오픈 전
+                                AVAILABLE : 이용 가능
+                                ENDED     : 공연 종료
+                            -->
+                            <span class="ticket-status"
+                                  th:classappend="${ticket.ticketStatus == 'AVAILABLE'
+                                                    ? ' ticket-status--available'
+                                                    : ticket.ticketStatus == 'UPCOMING'
+                                                        ? ' ticket-status--upcoming'
+                                                        : ' ticket-status--disabled'}"
+                                  th:text="${ticket.ticketStatus == 'AVAILABLE'
+                                                ? '이용 가능'
+                                                : ticket.ticketStatus == 'UPCOMING'
+                                                    ? 'QR 오픈 전'
+                                                    : ticket.ticketStatus == 'ENDED'
+                                                        ? '공연 종료'
+                                                        : '사용 불가'}">
+                                이용 가능
                             </span>
                         </div>
 
-                        <!-- 공연명 -->
                         <h2 th:text="${ticket.performanceTitle}">
                             공연명
                         </h2>
 
                         <ul class="ticket-info__list">
 
-                            <!-- 공연 일시 -->
                             <li>
                                 <span>일시</span>
-                                <strong th:text="${ticket.startsAt != null}
-                                                ? ${#temporals.format(ticket.startsAt, 'yyyy.MM.dd (E) HH:mm')}
-                                                : '-'">
+                                <strong th:text="${ticket.startsAt != null
+                                                    ? #temporals.format(ticket.startsAt, 'yyyy.MM.dd (E) HH:mm')
+                                                    : '-'}">
                                     2026.08.15 (토) 19:00
                                 </strong>
                             </li>
 
-                            <!-- 공연장 -->
                             <li>
                                 <span>장소</span>
                                 <strong th:text="|${ticket.venueName} ${ticket.hallName}|">
@@ -115,7 +116,6 @@
                                 </strong>
                             </li>
 
-                            <!-- 좌석 -->
                             <li>
                                 <span>좌석</span>
                                 <strong th:text="|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|">
@@ -123,12 +123,11 @@
                                 </strong>
                             </li>
 
-                            <!-- 좌석 가격 -->
                             <li>
                                 <span>가격</span>
-                                <strong th:text="${ticket.unitPrice != null}
-                                                ? |${#numbers.formatInteger(ticket.unitPrice, 0, 'COMMA')}원|
-                                                : '-'">
+                                <strong th:text="${ticket.unitPrice != null
+                                                    ? #numbers.formatInteger(ticket.unitPrice, 0, 'COMMA') + '원'
+                                                    : '-'}">
                                     0원
                                 </strong>
                             </li>
@@ -146,45 +145,129 @@
                     </div>
 
 
-                    <!-- 티켓 절취선 -->
+                    <!-- 절취선 -->
                     <div class="ticket-cut" aria-hidden="true"></div>
 
 
-                    <!-- =================================================
+                    <!-- =====================================================
                          QR 영역
-                         현재는 QR 생성 기능 전이므로 자리만 유지합니다.
-                         다음 단계에서 실제 QR 이미지로 변경할 예정입니다.
-                    ================================================== -->
+
+                         UPCOMING
+                         → 실제 QR 없음
+                         → QR 오픈 전 안내
+
+                         AVAILABLE
+                         → 실제 QR 표시
+                         → 클릭 시 확대 모달 예정
+
+                         ENDED
+                         → 사용 불가 표시
+                    ====================================================== -->
                     <div class="ticket-qr">
 
                         <small>STAGEON</small>
                         <strong>MOBILE TICKET</strong>
 
-                        <img class="ticket-qr__image"
-                             th:src="${ticket.qrCodeImage}"
-                             alt="모바일 티켓 QR 코드">
 
-                        <p>입장 시 화면을 밝게 해주세요.</p>
+                        <!-- AVAILABLE : 실제 QR -->
+                        <button type="button"
+                                class="ticket-qr__button"
+                                th:if="${ticket.ticketStatus == 'AVAILABLE'}"
+                                th:attr="
+                                    data-ticket-status=${ticket.ticketStatus},
+                                    data-ticket-title=${ticket.performanceTitle},
+                                    data-ticket-seat=|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|,
+                                    data-qr-image=${ticket.qrCodeImage}
+                                ">
+
+                            <img class="ticket-qr__image"
+                                 th:src="${ticket.qrCodeImage}"
+                                 alt="모바일 티켓 QR 코드">
+
+                        </button>
+
+
+                        <!-- UPCOMING : QR 오픈 전 -->
+                        <button type="button"
+                                class="ticket-qr__button is-disabled"
+                                th:if="${ticket.ticketStatus == 'UPCOMING'}"
+                                th:attr="
+                                    data-ticket-status=${ticket.ticketStatus},
+                                    data-ticket-title=${ticket.performanceTitle},
+                                    data-ticket-seat=|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|
+                                ">
+
+                            <span class="ticket-qr__placeholder">
+                                <strong>QR</strong>
+                                <small>OPEN 24H</small>
+                            </span>
+
+                            <span class="ticket-qr__disabled">
+                                QR 오픈 전
+                            </span>
+
+                        </button>
+
+
+                        <!-- ENDED : 공연 종료 -->
+                        <button type="button"
+                                class="ticket-qr__button is-disabled"
+                                th:if="${ticket.ticketStatus == 'ENDED'}"
+                                th:attr="
+                                    data-ticket-status=${ticket.ticketStatus},
+                                    data-ticket-title=${ticket.performanceTitle},
+                                    data-ticket-seat=|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|
+                                ">
+
+                            <span class="ticket-qr__placeholder">
+                                <strong>QR</strong>
+                                <small>CLOSED</small>
+                            </span>
+
+                            <span class="ticket-qr__disabled">
+                                사용 불가
+                            </span>
+
+                        </button>
+
+
+                        <!-- 상태별 안내 -->
+                        <p th:text="${ticket.ticketStatus == 'AVAILABLE'
+                                    ? 'QR 코드를 눌러 크게 볼 수 있습니다.'
+                                    : ticket.ticketStatus == 'UPCOMING'
+                                        ? '공연 시작 24시간 전부터 QR이 활성화됩니다.'
+                                        : '공연이 종료된 티켓입니다.'}">
+                            QR 안내
+                        </p>
 
                     </div>
 
 
-                    <!-- =================================================
+                    <!-- =====================================================
                          티켓 기능 버튼
-                         티켓 보내기는 다음 단계에서 실제 기능 연결 예정
-                    ================================================== -->
+                    ====================================================== -->
                     <div class="ticket-actions">
 
+                        <!--
+                            UPCOMING / AVAILABLE → 전달 가능
+                            ENDED → 전달 불가
+                        -->
                         <button type="button"
                                 class="ticket-send"
-                                th:attr="data-ticket-id=${ticket.reservationSeatId}">
+                                th:disabled="${ticket.ticketStatus == 'ENDED'}"
+                                th:attr="
+                                    data-ticket-id=${ticket.reservationSeatId},
+                                    data-ticket-status=${ticket.ticketStatus},
+                                    data-ticket-title=${ticket.performanceTitle},
+                                    data-ticket-seat=|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|
+                                ">
                             티켓 보내기
                         </button>
 
-                        <!-- 현재는 해당 예매의 예매 상세 화면으로 이동 -->
+                        <!-- 취소 / 환불은 예매 상세에서 처리 -->
                         <a class="ticket-detail"
                            th:href="@{/mypage/reservations/{id}(id=${ticket.reservationId})}">
-                            자세히 보기
+                            예매 상세
                         </a>
 
                     </div>
@@ -193,39 +276,39 @@
 
 
                 <!-- =====================================================
-                     티켓이 하나도 없을 때
+                     보유 티켓 없음
                 ====================================================== -->
                 <div class="ticket-empty"
                      th:if="${#lists.isEmpty(tickets)}">
 
-                    <div class="ticket-empty__icon" aria-hidden="true">
-                        🎫
-                    </div>
+                    <div class="ticket-empty__icon" aria-hidden="true">🎫</div>
 
-                    <strong>사용 가능한 모바일 티켓이 없습니다.</strong>
+                    <strong>보유한 모바일 티켓이 없습니다.</strong>
 
                     <p>
                         예매가 완료된 공연의 티켓이 이곳에 표시됩니다.
                     </p>
 
-                    <a th:href="@{/performances}"
-                       href="/performances">
+                    <a th:href="@{/performances}" href="/performances">
                         공연 둘러보기
                     </a>
 
                 </div>
 
 
-                <!-- 티켓 이용 안내 -->
+                <!-- =====================================================
+                     티켓 이용 안내
+                ====================================================== -->
                 <section class="ticket-guide"
                          th:if="${!#lists.isEmpty(tickets)}">
 
                     <strong>티켓 이용 안내</strong>
 
                     <ul>
-                        <li>입장 시 모바일 티켓의 QR 코드를 제시해 주세요.</li>
-                        <li>티켓은 좌석별로 각각 발급됩니다.</li>
-                        <li>티켓 보내기 기능은 추후 카카오톡·이메일 전달 기능과 연결됩니다.</li>
+                        <li>입장용 QR 코드는 공연 시작 24시간 전부터 활성화됩니다.</li>
+                        <li>공연 종료 후에는 QR 코드를 사용할 수 없습니다.</li>
+                        <li>예매 취소 및 환불은 예매 상세 페이지에서 진행할 수 있습니다.</li>
+                        <li>취소 가능 여부와 수수료는 취소 시점 및 예매 조건에 따라 달라질 수 있습니다.</li>
                     </ul>
 
                 </section>
@@ -235,11 +318,162 @@
     </div>
 </main>
 
-<!-- 공통 푸터 -->
-<div th:replace="~{fragments/common/site-footer :: footer}"></div>
 
-<!-- 기존 플로팅 버튼 -->
+<!-- =========================================================
+     QR 확대 / QR 이용불가 안내 모달
+
+     JS 연결 후:
+     AVAILABLE → 큰 QR 표시
+     UPCOMING  → QR 오픈 전 안내
+     ENDED     → 공연 종료 안내
+========================================================= -->
+<div class="ticket-modal"
+     id="ticketQrModal"
+     aria-hidden="true">
+
+    <div class="ticket-modal__overlay"></div>
+
+    <section class="ticket-modal__panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="ticketQrModalTitle">
+
+        <button type="button"
+                class="ticket-modal__close"
+                aria-label="닫기">
+            ×
+        </button>
+
+        <div class="ticket-modal__header">
+            <small>STAGEON MOBILE TICKET</small>
+            <h2 id="ticketQrModalTitle">모바일 티켓</h2>
+        </div>
+
+        <!-- 선택한 티켓 정보 -->
+        <div class="ticket-modal__summary">
+            <strong data-modal-title>공연명</strong>
+            <span data-modal-seat>좌석 정보</span>
+        </div>
+
+
+        <!-- AVAILABLE : 확대 QR -->
+        <div class="ticket-modal__qr-view"
+             data-modal-qr-view>
+
+            <img src=""
+                 alt="확대된 모바일 티켓 QR 코드"
+                 data-modal-qr-image>
+
+            <strong>입장용 QR CODE</strong>
+            <p>입장 시 직원에게 이 화면을 보여주세요.</p>
+
+        </div>
+
+
+        <!-- UPCOMING / ENDED : 안내 -->
+        <div class="ticket-modal__unavailable"
+             data-modal-unavailable
+             hidden>
+
+            <div class="ticket-modal__unavailable-icon">!</div>
+
+            <strong data-modal-unavailable-title>
+                현재 QR 코드를 사용할 수 없습니다.
+            </strong>
+
+            <p data-modal-unavailable-message>
+                티켓 상태를 확인해 주세요.
+            </p>
+
+        </div>
+
+    </section>
+</div>
+
+
+<!-- =========================================================
+     티켓 보내기 모달
+
+     UI만 미리 준비.
+     추후 JS + 백엔드 연결 예정.
+========================================================= -->
+<div class="ticket-modal"
+     id="ticketShareModal"
+     aria-hidden="true">
+
+    <div class="ticket-modal__overlay"></div>
+
+    <section class="ticket-modal__panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="ticketShareModalTitle">
+
+        <button type="button"
+                class="ticket-modal__close"
+                aria-label="닫기">
+            ×
+        </button>
+
+        <div class="ticket-modal__header">
+            <small>STAGEON MOBILE TICKET</small>
+            <h2 id="ticketShareModalTitle">티켓 보내기</h2>
+        </div>
+
+        <!-- 보낼 티켓 정보 -->
+        <div class="ticket-modal__summary">
+            <strong data-share-title>공연명</strong>
+            <span data-share-seat>좌석 정보</span>
+        </div>
+
+        <p class="ticket-share-description">
+            티켓을 전달할 방법을 선택해 주세요.
+        </p>
+
+        <div class="ticket-share-options">
+
+            <button type="button"
+                    class="ticket-share-option"
+                    data-share-type="kakao">
+                <strong>카카오톡</strong>
+                <span>카카오톡으로 티켓 전달</span>
+            </button>
+
+            <button type="button"
+                    class="ticket-share-option"
+                    data-share-type="email">
+                <strong>이메일</strong>
+                <span>이메일 주소로 티켓 전달</span>
+            </button>
+
+            <button type="button"
+                    class="ticket-share-option"
+                    data-share-type="link">
+                <strong>링크 복사</strong>
+                <span>티켓 전달 링크 복사</span>
+            </button>
+
+        </div>
+
+        <div class="ticket-share-notice">
+            티켓 전달이 완료되면 기존 입장용 QR은 사용할 수 없도록 처리됩니다.
+        </div>
+
+    </section>
+</div>
+
+
+<!-- 공통 푸터 / 플로팅 버튼 -->
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
 <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+<!--
+    다음 단계에서 생성할 JS
+    static/js/pages/mypage-tickets.js
+-->
+<!--
+<script th:src="@{/js/pages/mypage-tickets.js}"
+        src="/js/pages/mypage-tickets.js"></script>
+-->
 
 </body>
 </html>
