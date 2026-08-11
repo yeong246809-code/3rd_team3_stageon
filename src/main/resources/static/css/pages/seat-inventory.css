@@ -17,6 +17,7 @@
 .btn-plain:disabled { opacity: .5; cursor: not-allowed; }
 .btn-plain--brand { background: var(--brand); border-color: var(--brand); color: #fff; }
 .btn-plain--brand:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-plain--sm { padding: 6px 12px; font-size: 11px; }
 
 .inv-alert { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; margin-bottom: 16px; }
 .inv-alert--ok { background: #e4f7ec; color: #1a8a4a; }
@@ -37,9 +38,7 @@
 .inv-card { background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; }
 .inv-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 14px; }
 .inv-card__head h2 { font-size: 15px; font-weight: 800; color: var(--ink); margin: 0; }
-.inv-card__head-actions { display: flex; align-items: center; gap: 8px; }
 
-/* 카드 헤더의 팝업 여는 버튼(수정 / 좌석 구성 관리) */
 .inv-edit-btn {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
@@ -47,14 +46,84 @@
     cursor: pointer; transition: all .15s ease;
 }
 .inv-edit-btn:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
-.inv-edit-btn--outline:hover { background: var(--surface); border-color: var(--line); color: var(--ink); }
 
 /* 기본 화면: STAGE 조감도(등급색 블록, 읽기전용) */
 .inv-stage-board { padding: 6px 6px 2px; }
 .inv-stage-bar {
+    position: relative;
     background: #1f2440; color: #fff; text-align: center; font-size: 12px; font-weight: 800;
     letter-spacing: .1em; padding: 11px; border-radius: 10px; margin-bottom: 28px;
+    overflow: hidden;
 }
+.inv-stage-bar--dance { height: 88px; display: flex; align-items: flex-start; justify-content: center; padding-top: 10px; }
+.inv-stage-bar__label { position: relative; z-index: 1; }
+
+/* 춤추는 삐에로 2명 (메인 좌석 맵 STAGE 바 전용) */
+.inv-pierrot {
+    position: absolute;
+    bottom: 2px;
+    width: 42px;
+    height: auto;
+    transform-origin: bottom center;
+    animation: inv-pierrot-sway 900ms ease-in-out infinite;
+}
+.inv-pierrot--left { left: 47%; margin-left: -21px; animation-delay: 0ms; }
+.inv-pierrot--right { left: 53%; margin-left: -21px; animation-delay: 450ms; }
+
+/* 삐에로 머리 위 은은한 스포트라이트 */
+.inv-stage-bar--dance::before,
+.inv-stage-bar--dance::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 70px;
+    height: 100%;
+    background: radial-gradient(ellipse at top, rgba(255,255,255,.4), rgba(255,255,255,0) 72%);
+    animation: inv-spotlight-pulse 2400ms ease-in-out infinite;
+    pointer-events: none;
+}
+.inv-stage-bar--dance::before { left: calc(47% - 35px); animation-delay: 0ms; }
+.inv-stage-bar--dance::after { left: calc(53% - 35px); animation-delay: 300ms; }
+
+@keyframes inv-spotlight-pulse {
+    0%, 100% { opacity: .35; }
+    50% { opacity: .75; }
+}
+
+.inv-pierrot__armL,
+.inv-pierrot__armR,
+.inv-pierrot__legL,
+.inv-pierrot__legR { animation-duration: 900ms; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+.inv-pierrot__armL { animation-name: inv-pierrot-arm-l; transform-origin: 13px 37px; }
+.inv-pierrot__armR { animation-name: inv-pierrot-arm-r; transform-origin: 46px 37px; }
+.inv-pierrot__legL { animation-name: inv-pierrot-leg-l; transform-origin: 24px 56px; }
+.inv-pierrot__legR { animation-name: inv-pierrot-leg-r; transform-origin: 35px 56px; }
+.inv-pierrot--right .inv-pierrot__armL,
+.inv-pierrot--right .inv-pierrot__armR,
+.inv-pierrot--right .inv-pierrot__legL,
+.inv-pierrot--right .inv-pierrot__legR { animation-delay: 450ms; }
+
+@keyframes inv-pierrot-sway {
+    0%, 100% { transform: rotate(-8deg) translateY(0); }
+    50% { transform: rotate(8deg) translateY(-4px); }
+}
+@keyframes inv-pierrot-arm-l {
+    0%, 100% { transform: rotate(-25deg); }
+    50% { transform: rotate(35deg); }
+}
+@keyframes inv-pierrot-arm-r {
+    0%, 100% { transform: rotate(25deg); }
+    50% { transform: rotate(-35deg); }
+}
+@keyframes inv-pierrot-leg-l {
+    0%, 100% { transform: rotate(12deg); }
+    50% { transform: rotate(-12deg); }
+}
+@keyframes inv-pierrot-leg-r {
+    0%, 100% { transform: rotate(-12deg); }
+    50% { transform: rotate(12deg); }
+}
+
 .inv-stage-section { margin-bottom: 22px; text-align: center; }
 .inv-stage-section:last-child { margin-bottom: 0; }
 .inv-stage-section__title { font-size: 13px; font-weight: 700; color: var(--ink-2); margin: 0 0 10px; }
@@ -86,11 +155,11 @@
 .inv-grade-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); color: var(--ink); }
 .inv-grade-swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; margin-right: 8px; vertical-align: middle; }
 
-/* ===== 공통 모달 레이아웃 (admin-pages.css .poster-modal 오버레이 재사용) ===== */
+/* ===== 공통 모달 레이아웃 ===== */
 #seatEditModal .poster-modal__content,
 #seatManageModal .poster-modal__content {
     max-width: 760px; width: min(760px, 94vw); text-align: left;
-    padding: 30px 30px 0; display: flex; flex-direction: column; max-height: 82vh;
+    padding: 30px 30px 0; display: flex; flex-direction: column; max-height: 85vh;
 }
 .inv-modal__header { flex-shrink: 0; }
 .inv-modal__title { margin: 0 0 4px; font-size: 18px; font-weight: 800; color: #1a1a1a; }
@@ -131,6 +200,7 @@
 .inv-status-btn--held { background: #d98c1a; }
 .inv-status-btn--reserved { background: var(--brand); }
 .inv-status-btn--blocked { background: var(--subtle); }
+.inv-status-btn--danger { background: #c0392b; }
 
 .inv-clear-btn {
     background: none; border: none; color: var(--muted); font-size: 12px; font-weight: 600;
@@ -141,27 +211,24 @@
 /* ===== 좌석 구성 관리 모달 (추가/삭제) ===== */
 .inv-manage-section { margin-bottom: 26px; }
 .inv-manage-section:last-child { margin-bottom: 4px; }
-.inv-manage-section__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.inv-manage-section__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
 .inv-manage-section__head h4 { margin: 0; font-size: 13px; font-weight: 800; color: var(--ink); }
-.inv-manage-section__head .count { font-size: 12px; color: var(--muted); font-weight: 600; }
+.inv-manage-section__hint { font-size: 11px; color: var(--muted); font-weight: 500; }
 
-/* 생성된 좌석: 등급색 블록, 판매가능 상태만 삭제 가능(호버 시 × 표시) */
+/* 생성된 좌석 블록: 클릭하면 선택(체크) 상태로 토글 */
 .inv-manage-block {
     width: 24px; height: 24px; border-radius: 6px; border: none; padding: 0; position: relative;
     cursor: pointer; transition: transform .1s ease;
 }
 .inv-manage-block:hover { transform: scale(1.15); }
-.inv-manage-block:hover::after {
-    content: '\00d7'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,.55); color: #fff; font-size: 14px; font-weight: 800; border-radius: 6px;
+.inv-manage-block.is-selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #c0392b; transform: scale(1.1); }
+.inv-manage-block.is-selected::after {
+    content: '\2713'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 12px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.5);
 }
 .inv-manage-block--locked { cursor: not-allowed; opacity: .55; }
-.inv-manage-block--locked:hover::after { content: '\1F512'; font-size: 10px; background: rgba(0,0,0,.4); }
 
-/* 미등록 좌석: 점선 테두리 + 등급색, 클릭 시 추가 */
-.inv-manage-block--empty {
-    background: var(--surface); border: 1.5px dashed var(--line);
-}
+.inv-manage-block--empty { background: var(--surface); border: 1.5px dashed var(--line); }
 .inv-manage-block--empty:hover { border-color: var(--brand); }
 .inv-manage-block--empty:hover::after {
     content: '+'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -169,3 +236,37 @@
 }
 
 .inv-manage-blocks { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* 생성된 좌석 선택 삭제 하단 툴바 */
+.inv-manage-toolbar {
+    margin: 0 -30px 20px; padding: 12px 30px; background: #fef4f3; border-top: 1px solid #fbd5d5;
+    border-bottom: 1px solid #fbd5d5; display: none; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+}
+.inv-manage-toolbar.is-visible { display: flex; }
+.inv-manage-toolbar__count { font-size: 12px; font-weight: 700; color: #c0392b; }
+
+/* 새 좌석 추가 버튼: 다른 버튼들과 톤을 맞춘 아웃라인 버튼 */
+.inv-new-seat-toggle {
+    padding: 6px 14px; font-size: 11px; border-radius: var(--radius-sm); border: 1px solid var(--brand);
+    background: var(--canvas); color: var(--brand); font-weight: 700; cursor: pointer; transition: all .15s ease;
+}
+.inv-new-seat-toggle:hover { background: var(--brand); color: #fff; }
+
+.inv-new-seat-form {
+    display: none; margin-top: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-md);
+    background: var(--surface); gap: 10px; grid-template-columns: repeat(4, 1fr) auto; align-items: end;
+}
+.inv-new-seat-form.is-open { display: grid; }
+.inv-new-seat-form label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 5px; }
+.inv-new-seat-form input,
+.inv-new-seat-form select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--ink); background: var(--canvas);
+}
+.inv-new-seat-form button {
+    padding: 8px 16px; border-radius: var(--radius-sm); border: none; background: var(--brand);
+    color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+}
+.inv-new-seat-form button:hover { filter: brightness(1.08); }
+@media (max-width: 700px) { .inv-new-seat-form { grid-template-columns: 1fr 1fr; } }

@@ -1,5 +1,6 @@
 package kr.co.stageon.admin.web;
 
+import kr.co.stageon.admin.dto.SeatInventoryDeleteResultDto;
 import kr.co.stageon.admin.dto.SeatInventoryScheduleOptionDto;
 import kr.co.stageon.admin.service.AdminSeatInventoryService;
 import kr.co.stageon.booking.domain.ScheduleSeat;
@@ -49,6 +50,7 @@ public class AdminSeatInventoryController {
         model.addAttribute("sections", adminSeatInventoryService.getSeatMap(selectedScheduleId));
         model.addAttribute("activeHolds", adminSeatInventoryService.getActiveHolds(selectedScheduleId));
         model.addAttribute("unassignedSeats", adminSeatInventoryService.getUnassignedSeats(selectedScheduleId));
+        model.addAttribute("gradeOptions", adminSeatInventoryService.getGradeOptions(selectedScheduleId));
         return "admin/seat-inventory";
     }
 
@@ -66,7 +68,7 @@ public class AdminSeatInventoryController {
         return buildRedirect(performanceId, scheduleId);
     }
 
-    /** 좌석 구성 관리 모달에서 물리 좌석 하나를 회차 좌석으로 개별 추가합니다. */
+    /** 좌석 구성 관리 모달에서 좌석도에 이미 있는 물리 좌석 하나를 회차 좌석으로 개별 추가합니다. */
     @PostMapping("/admin/seat-inventory/seats/add")
     public String addSeat(@RequestParam Long seatId,
                           @RequestParam Long scheduleId,
@@ -81,15 +83,41 @@ public class AdminSeatInventoryController {
         return buildRedirect(performanceId, scheduleId);
     }
 
-    /** 좌석 구성 관리 모달에서 회차 좌석 하나를 삭제합니다(판매가능 상태만 가능). */
-    @PostMapping("/admin/seat-inventory/seats/delete")
-    public String deleteSeat(@RequestParam Long scheduleSeatId,
+    /** 좌석 구성 관리 모달에서 좌석도에도 없던 완전히 새로운 좌석을 만들어 이 회차에 추가합니다. */
+    @PostMapping("/admin/seat-inventory/seats/create")
+    public String createSeat(@RequestParam Long scheduleId,
+                             @RequestParam String sectionName,
+                             @RequestParam String rowLabel,
+                             @RequestParam String seatNumber,
+                             @RequestParam Long gradeId,
                              @RequestParam(required = false) Long performanceId,
-                             @RequestParam(required = false) Long scheduleId,
                              RedirectAttributes ra) {
         try {
-            adminSeatInventoryService.deleteScheduleSeat(scheduleSeatId);
-            ra.addFlashAttribute("message", "좌석이 삭제되었습니다.");
+            adminSeatInventoryService.createNewSeat(scheduleId, sectionName, rowLabel, seatNumber, gradeId);
+            ra.addFlashAttribute("message", "새 좌석이 생성되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return buildRedirect(performanceId, scheduleId);
+    }
+
+    /** 좌석 구성 관리 모달에서 선택한 좌석(1개 이상)을 한 번에 삭제합니다(판매가능 상태만 가능). */
+    @PostMapping("/admin/seat-inventory/seats/bulk-delete")
+    public String bulkDeleteSeat(@RequestParam String scheduleSeatIds,
+                                 @RequestParam(required = false) Long performanceId,
+                                 @RequestParam(required = false) Long scheduleId,
+                                 RedirectAttributes ra) {
+        try {
+            List<Long> ids = Arrays.stream(scheduleSeatIds.split(","))
+                    .filter(s -> !s.isBlank())
+                    .map(Long::valueOf)
+                    .collect(Collectors.toList());
+            SeatInventoryDeleteResultDto result = adminSeatInventoryService.bulkDeleteScheduleSeats(ids);
+            String msg = result.deleted() + "개 좌석이 삭제되었습니다.";
+            if (result.skipped() > 0) {
+                msg += " (" + result.skipped() + "개는 선점 이력이 있어 건너뜀)";
+            }
+            ra.addFlashAttribute("message", msg);
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }

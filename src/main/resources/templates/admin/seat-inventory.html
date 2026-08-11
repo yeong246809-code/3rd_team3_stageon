@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -43,7 +44,6 @@
         <div class="inv-toolbar__actions">
           <button class="btn-plain btn-plain--brand" type="button" onclick="openManageModal()"
                   th:disabled="${selectedScheduleId == null}">+ 좌석 구성 관리</button>
-          <button class="btn-plain" type="button" onclick="refreshResults()">새로고침</button>
         </div>
       </div>
 
@@ -89,7 +89,45 @@
 
               <!-- 조감도(읽기전용): 구역별로 등급 색상 블록만 표시합니다 -->
               <div th:if="${not #lists.isEmpty(sections)}" class="inv-stage-board">
-                <div class="inv-stage-bar">STAGE</div>
+                <div class="inv-stage-bar inv-stage-bar--dance">
+                  <span class="inv-stage-bar__label">STAGE</span>
+                  <svg class="inv-pierrot inv-pierrot--left" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M30 6 L20 18 L40 18 Z" fill="#F2A93B"/>
+                    <circle cx="30" cy="24" r="9" fill="#FFE3D1"/>
+                    <circle cx="27" cy="23" r="1.4" fill="#3A3A3A"/>
+                    <circle cx="33" cy="23" r="1.4" fill="#3A3A3A"/>
+                    <circle cx="24" cy="27" r="1.6" fill="#E24C4C"/>
+                    <circle cx="36" cy="27" r="1.6" fill="#E24C4C"/>
+                    <path d="M26 28 Q30 31 34 28" stroke="#B9791A" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                    <path d="M17 33 Q30 26 43 33 L40 34 Q30 30 20 34 Z" fill="#fff"/>
+                    <rect x="22" y="33" width="16" height="22" rx="6" fill="#6C77BE"/>
+                    <circle cx="26" cy="40" r="1.6" fill="#FFD54A"/>
+                    <circle cx="30" cy="45" r="1.6" fill="#E24C4C"/>
+                    <circle cx="34" cy="40" r="1.6" fill="#FFD54A"/>
+                    <g class="inv-pierrot__armL"><rect x="10" y="35" width="7" height="20" rx="3.5" fill="#6C77BE"/></g>
+                    <g class="inv-pierrot__armR"><rect x="43" y="35" width="7" height="20" rx="3.5" fill="#6C77BE"/></g>
+                    <g class="inv-pierrot__legL"><rect x="21" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+                    <g class="inv-pierrot__legR"><rect x="32" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+                  </svg>
+                  <svg class="inv-pierrot inv-pierrot--right" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M30 6 L20 18 L40 18 Z" fill="#4CAF7D"/>
+                    <circle cx="30" cy="24" r="9" fill="#FFE3D1"/>
+                    <circle cx="27" cy="23" r="1.4" fill="#3A3A3A"/>
+                    <circle cx="33" cy="23" r="1.4" fill="#3A3A3A"/>
+                    <circle cx="24" cy="27" r="1.6" fill="#E24C4C"/>
+                    <circle cx="36" cy="27" r="1.6" fill="#E24C4C"/>
+                    <path d="M26 28 Q30 31 34 28" stroke="#B9791A" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                    <path d="M17 33 Q30 26 43 33 L40 34 Q30 30 20 34 Z" fill="#fff"/>
+                    <rect x="22" y="33" width="16" height="22" rx="6" fill="#E24C4C"/>
+                    <circle cx="26" cy="40" r="1.6" fill="#FFD54A"/>
+                    <circle cx="30" cy="45" r="1.6" fill="#8B96DE"/>
+                    <circle cx="34" cy="40" r="1.6" fill="#FFD54A"/>
+                    <g class="inv-pierrot__armL"><rect x="10" y="35" width="7" height="20" rx="3.5" fill="#E24C4C"/></g>
+                    <g class="inv-pierrot__armR"><rect x="43" y="35" width="7" height="20" rx="3.5" fill="#E24C4C"/></g>
+                    <g class="inv-pierrot__legL"><rect x="21" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+                    <g class="inv-pierrot__legR"><rect x="32" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+                  </svg>
+                </div>
                 <div class="inv-stage-section" th:each="section : ${sections}">
                   <p class="inv-stage-section__title">
                     <span th:text="${section.sectionName}">R구역</span> ·
@@ -161,19 +199,21 @@
   <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
 </form>
 
-<!-- 좌석 추가/삭제용 숨김 폼 -->
+<!-- 기존 좌석 추가용 숨김 폼 -->
 <form id="addSeatForm" method="post" th:action="@{/admin/seat-inventory/seats/add}" style="display:none">
   <input type="hidden" name="seatId" id="addSeatId">
   <input type="hidden" name="scheduleId" th:value="${selectedScheduleId}">
   <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
 </form>
-<form id="deleteSeatForm" method="post" th:action="@{/admin/seat-inventory/seats/delete}" style="display:none">
-  <input type="hidden" name="scheduleSeatId" id="deleteSeatId">
+
+<!-- 좌석 일괄 삭제용 숨김 폼 -->
+<form id="bulkDeleteForm" method="post" th:action="@{/admin/seat-inventory/seats/bulk-delete}" style="display:none">
+  <input type="hidden" name="scheduleSeatIds" id="bulkDeleteIds">
   <input type="hidden" name="scheduleId" th:value="${selectedScheduleId}">
   <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
 </form>
 
-<!-- 좌석 상태 수정 팝업(모달): 조감도와 같은 배치를 보여주고, 좌석을 클릭해 선택한 뒤 하단에서 일괄 적용합니다 -->
+<!-- 좌석 상태 수정 팝업(모달) -->
 <div class="poster-modal" id="seatEditModal">
   <div class="poster-modal__backdrop" onclick="closeEditModal()"></div>
   <div class="poster-modal__content">
@@ -223,20 +263,30 @@
   </div>
 </div>
 
-<!-- 좌석 구성 관리 팝업(모달): 생성된 좌석은 클릭해 삭제, 미등록 좌석은 클릭해 추가합니다 -->
+<!-- 좌석 구성 관리 팝업(모달) -->
 <div class="poster-modal" id="seatManageModal">
   <div class="poster-modal__backdrop" onclick="closeManageModal()"></div>
   <div class="poster-modal__content">
     <button class="poster-modal__close" type="button" onclick="closeManageModal()">×</button>
     <div class="inv-modal__header">
       <h3 class="inv-modal__title">좌석 구성 관리</h3>
-      <p class="inv-modal__desc">생성된 좌석을 클릭하면 삭제(판매가능 상태만), 미등록 좌석을 클릭하면 추가됩니다.</p>
+      <p class="inv-modal__desc">생성된 좌석은 클릭해 선택한 뒤 하단에서 삭제하고, 미등록 좌석은 클릭하면 바로 추가됩니다.</p>
+    </div>
+
+    <!-- 선택된 좌석 삭제 툴바: 좌석을 하나 이상 선택하면 나타납니다 -->
+    <div class="inv-manage-toolbar" id="manageDeleteToolbar">
+      <span class="inv-manage-toolbar__count" id="manageSelectedCount">0석 선택됨</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" class="inv-clear-btn" onclick="clearManageSelection()">선택 해제</button>
+        <button type="button" class="inv-status-btn inv-status-btn--danger" onclick="submitBulkDelete()">선택 삭제</button>
+      </div>
     </div>
 
     <div class="inv-modal__body">
       <div class="inv-manage-section" th:if="${not #lists.isEmpty(sections)}">
         <div class="inv-manage-section__head">
           <h4>생성된 좌석</h4>
+          <span class="inv-manage-section__hint">판매가능 상태만 선택·삭제할 수 있습니다</span>
         </div>
         <div th:each="section : ${sections}" style="margin-bottom:14px">
           <p class="inv-section-title" th:text="${section.sectionName}">R구역</p>
@@ -246,23 +296,55 @@
                       th:each="seat : ${row.seats}"
                       th:classappend="${seat.status != 'AVAILABLE'} ? 'inv-manage-block--locked'"
                       th:style="'background:' + ${seat.displayColor}"
-                      th:title="${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.gradeName} + (${seat.status != 'AVAILABLE'} ? ' · 판매가능 상태만 삭제 가능' : ' · 클릭 시 삭제')"
-                      th:onclick="${seat.status == 'AVAILABLE'} ? ('deleteSeat(' + ${seat.scheduleSeatId} + ')') : ''"></button>
+                      th:title="${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.gradeName} + (${seat.status != 'AVAILABLE'} ? ' · 판매가능 상태만 삭제 가능' : ' · 클릭해서 삭제 선택')"
+                      th:onclick="${seat.status == 'AVAILABLE'} ? ('toggleManageSelect(this,' + ${seat.scheduleSeatId} + ')') : ''"></button>
             </th:block>
           </div>
         </div>
       </div>
 
-      <div class="inv-manage-section" th:if="${not #lists.isEmpty(unassignedSeats)}">
+      <div class="inv-manage-section">
         <div class="inv-manage-section__head">
           <h4>미등록 좌석</h4>
-          <form method="post" th:action="@{/admin/seat-inventory/generate}">
-            <input type="hidden" name="scheduleId" th:value="${selectedScheduleId}">
-            <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
-            <button class="btn-plain" type="submit" style="padding:6px 12px;font-size:11px">전체 추가</button>
-          </form>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <form method="post" th:action="@{/admin/seat-inventory/generate}" th:if="${not #lists.isEmpty(unassignedSeats)}">
+              <input type="hidden" name="scheduleId" th:value="${selectedScheduleId}">
+              <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+              <button class="btn-plain btn-plain--sm" type="submit">전체 추가</button>
+            </form>
+            <button type="button" class="inv-new-seat-toggle" onclick="toggleNewSeatForm()">+ 새 좌석 추가</button>
+          </div>
         </div>
-        <div th:each="section : ${unassignedSeats}" style="margin-bottom:14px">
+
+        <!-- 좌석도에도 없던 완전히 새로운 좌석을 만드는 폼 -->
+        <form class="inv-new-seat-form" id="newSeatForm" method="post" th:action="@{/admin/seat-inventory/seats/create}">
+          <input type="hidden" name="scheduleId" th:value="${selectedScheduleId}">
+          <input type="hidden" name="performanceId" th:value="${selectedPerformanceId}">
+          <div>
+            <label>구역</label>
+            <input type="text" name="sectionName" placeholder="예: VIP구역" required>
+          </div>
+          <div>
+            <label>열</label>
+            <input type="text" name="rowLabel" placeholder="예: A" required>
+          </div>
+          <div>
+            <label>번호</label>
+            <input type="text" name="seatNumber" placeholder="예: 5" required>
+          </div>
+          <div>
+            <label>등급</label>
+            <select name="gradeId" required>
+              <option th:each="g : ${gradeOptions}" th:value="${g.gradeId}" th:text="${g.gradeName}">VIP</option>
+            </select>
+          </div>
+          <button type="submit">추가</button>
+        </form>
+
+        <div th:if="${#lists.isEmpty(unassignedSeats)}" class="inv-empty" style="padding:16px 0">
+          좌석도의 모든 좌석이 이미 이 회차에 생성되어 있습니다. 완전히 새 좌석은 위 "+ 새 좌석 추가"로 만들 수 있습니다.
+        </div>
+        <div th:each="section : ${unassignedSeats}" style="margin-top:14px">
           <p class="inv-section-title" th:text="${section.sectionName}">R구역</p>
           <div class="inv-manage-blocks">
             <button type="button" class="inv-manage-block inv-manage-block--empty"
@@ -273,17 +355,17 @@
         </div>
       </div>
 
-      <div th:if="${#lists.isEmpty(sections) and #lists.isEmpty(unassignedSeats)}" class="inv-empty">
-        좌석도에 등록된 물리 좌석이 없습니다.
+      <div th:if="${#lists.isEmpty(sections) and #lists.isEmpty(unassignedSeats) and #lists.isEmpty(gradeOptions)}" class="inv-empty">
+        좌석도에 등록된 등급이 없어 좌석을 만들 수 없습니다. 먼저 "공연장·좌석 관리"에서 좌석 등급을 등록해주세요.
       </div>
     </div>
   </div>
 </div>
 
 <script th:inline="javascript">
+  /* ---- 상태 변경 모달 ---- */
   var selectedSeats = new Set();
 
-  /* ---- 상태 변경 모달 ---- */
   function openEditModal() { document.getElementById('seatEditModal').classList.add('is-open'); }
   function closeEditModal() { document.getElementById('seatEditModal').classList.remove('is-open'); clearSelection(); }
 
@@ -307,7 +389,7 @@
   function updateToolbar() {
     var count = selectedSeats.size;
     document.getElementById('selectedCount').textContent = count + '석 선택됨';
-    document.querySelectorAll('.inv-status-btn').forEach(function (b) { b.disabled = count === 0; });
+    document.querySelectorAll('.inv-status-btn:not(.inv-status-btn--danger)').forEach(function (b) { b.disabled = count === 0; });
   }
 
   function applyStatus(status) {
@@ -317,35 +399,49 @@
     document.getElementById('bulkStatusForm').submit();
   }
 
-  /* ---- 좌석 구성 관리 모달 ---- */
+  /* ---- 좌석 구성 관리 모달: 추가 ---- */
   function openManageModal() { document.getElementById('seatManageModal').classList.add('is-open'); }
-  function closeManageModal() { document.getElementById('seatManageModal').classList.remove('is-open'); }
+  function closeManageModal() { document.getElementById('seatManageModal').classList.remove('is-open'); clearManageSelection(); }
 
   function addSeat(seatId) {
     document.getElementById('addSeatId').value = seatId;
     document.getElementById('addSeatForm').submit();
   }
 
-  function deleteSeat(scheduleSeatId) {
-    if (!confirm('이 좌석을 삭제할까요?')) return;
-    document.getElementById('deleteSeatId').value = scheduleSeatId;
-    document.getElementById('deleteSeatForm').submit();
+  function toggleNewSeatForm() {
+    document.getElementById('newSeatForm').classList.toggle('is-open');
   }
 
-  /* ---- 새로고침(AJAX 부분 갱신) ---- */
-  function refreshResults() {
-    var params = new URLSearchParams(window.location.search);
-    fetch(window.location.pathname + '?' + params.toString())
-            .then(function (r) { return r.text(); })
-            .then(function (html) {
-              var doc = new DOMParser().parseFromString(html, 'text/html');
-              var newResults = doc.getElementById('invResults');
-              var curResults = document.getElementById('invResults');
-              if (newResults && curResults) {
-                curResults.innerHTML = newResults.innerHTML;
-                tickCountdown();
-              }
-            });
+  /* ---- 좌석 구성 관리 모달: 선택 삭제 ---- */
+  var manageSelectedSeats = new Set();
+
+  function toggleManageSelect(btn, scheduleSeatId) {
+    if (manageSelectedSeats.has(scheduleSeatId)) {
+      manageSelectedSeats.delete(scheduleSeatId);
+      btn.classList.remove('is-selected');
+    } else {
+      manageSelectedSeats.add(scheduleSeatId);
+      btn.classList.add('is-selected');
+    }
+    updateManageToolbar();
+  }
+
+  function clearManageSelection() {
+    manageSelectedSeats.clear();
+    document.querySelectorAll('.inv-manage-block.is-selected').forEach(function (b) { b.classList.remove('is-selected'); });
+    updateManageToolbar();
+  }
+
+  function updateManageToolbar() {
+    var count = manageSelectedSeats.size;
+    document.getElementById('manageSelectedCount').textContent = count + '석 선택됨';
+    document.getElementById('manageDeleteToolbar').classList.toggle('is-visible', count > 0);
+  }
+
+  function submitBulkDelete() {
+    if (manageSelectedSeats.size === 0) return;
+    document.getElementById('bulkDeleteIds').value = Array.from(manageSelectedSeats).join(',');
+    document.getElementById('bulkDeleteForm').submit();
   }
 
   /* ---- 활성 선점 만료 카운트다운 ---- */

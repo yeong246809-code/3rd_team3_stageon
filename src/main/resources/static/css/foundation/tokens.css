@@ -27,3 +27,27 @@
   --shadow: 0 16px 42px rgba(17, 24, 39, .1);
 }
 
+/* 다크모드 - <html data-theme="dark">일 때 라이트 변수를 이 값으로 덮어씁니다.
+   변수 이름은 라이트모드와 완전히 동일하므로, var(--xxx)를 쓰는 기존 CSS는 수정 불필요합니다. */
+:root[data-theme="dark"] {
+  --brand: #ff6b61;
+  --brand-dark: #e5483f;
+  --brand-soft: #3a201f;
+  --ink: #f3f4f6;
+  --ink-2: #d1d5db;
+  --muted: #9ca3af;
+  --subtle: #6b7280;
+  --line: #2e323d;
+  --canvas: #1a1c24;
+  --surface: #22252f;
+  --surface-2: #2a2d38;
+  --success: #34d399;
+  --success-soft: #16302559;
+  --warning: #fbbf24;
+  --warning-soft: #3a2c0f59;
+  --danger: #f87171;
+  --info: #60a5fa;
+  --sidebar: #0c0f17;
+  --violet: #a78bfa;
+  --shadow: 0 16px 42px rgba(0, 0, 0, .45);
+}
