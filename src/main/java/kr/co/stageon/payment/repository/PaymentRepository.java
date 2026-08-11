@@ -10,11 +10,13 @@ import java.util.Optional;
 /** 예매별 결제 및 멱등키 조회 DAO입니다. */
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByReservationIdOrderByRequestedAtDesc(Long reservationId);
-    Optional<Payment> findByProviderAndIdempotencyKey(Payment.Provider provider, String idempotencyKey);
+    //Optional<Payment> findByProviderAndIdempotencyKey(Payment.Provider provider, String idempotencyKey);
 
     /** 대시보드 - 기간 내 특정 상태(예: SUCCESS) 결제 건수 */
     long countByStatusAndRequestedAtBetween(Payment.Status status, LocalDateTime start, LocalDateTime end);
 
     /** 대시보드 - 기간 내 전체 결제 시도 건수 (성공률 분모) */
     long countByRequestedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    Optional<Payment> findByOrderId(String orderId);
 }
