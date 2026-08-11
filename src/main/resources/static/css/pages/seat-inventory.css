@@ -37,8 +37,9 @@
 .inv-card { background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; }
 .inv-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 14px; }
 .inv-card__head h2 { font-size: 15px; font-weight: 800; color: var(--ink); margin: 0; }
+.inv-card__head-actions { display: flex; align-items: center; gap: 8px; }
 
-/* 좌석 상태 수정 팝업을 여는 버튼 */
+/* 카드 헤더의 팝업 여는 버튼(수정 / 좌석 구성 관리) */
 .inv-edit-btn {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line);
@@ -46,6 +47,7 @@
     cursor: pointer; transition: all .15s ease;
 }
 .inv-edit-btn:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
+.inv-edit-btn--outline:hover { background: var(--surface); border-color: var(--line); color: var(--ink); }
 
 /* 기본 화면: STAGE 조감도(등급색 블록, 읽기전용) */
 .inv-stage-board { padding: 6px 6px 2px; }
@@ -69,19 +71,6 @@
 
 .inv-section-title { font-size: 12px; font-weight: 700; color: var(--muted); margin: 18px 0 8px; }
 .inv-section-title:first-of-type { margin-top: 0; }
-.inv-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-.inv-row__label { flex: 0 0 20px; font-size: 11px; font-weight: 700; color: var(--subtle); text-align: center; }
-.inv-seats { display: flex; flex-wrap: wrap; gap: 4px; }
-
-.inv-seat {
-    width: 24px; height: 24px; border-radius: 5px; border: none;
-    font-size: 9px; font-weight: 700; color: #fff; cursor: pointer;
-    background: #2f9e5b; transition: transform .1s ease; padding: 0;
-}
-.inv-seat:hover { transform: scale(1.18); box-shadow: 0 0 0 2px var(--ink) inset; }
-.inv-seat--held { background: #d98c1a; }
-.inv-seat--reserved { background: var(--brand); }
-.inv-seat--blocked { background: var(--subtle); }
 
 .inv-empty { padding: 40px 0; text-align: center; color: var(--subtle); font-size: 13px; }
 
@@ -97,24 +86,86 @@
 .inv-grade-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); color: var(--ink); }
 .inv-grade-swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; margin-right: 8px; vertical-align: middle; }
 
-/* 좌석 상태 수정 모달 (admin-pages.css의 .poster-modal 오버레이 패턴 재사용) */
-#seatEditModal .poster-modal__content { max-width: 760px; width: min(760px, 94vw); text-align: left; }
-.inv-edit-modal__desc { margin: 0 0 18px; font-size: 12px; color: var(--muted); }
-.inv-edit-modal__body { max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+/* ===== 공통 모달 레이아웃 (admin-pages.css .poster-modal 오버레이 재사용) ===== */
+#seatEditModal .poster-modal__content,
+#seatManageModal .poster-modal__content {
+    max-width: 760px; width: min(760px, 94vw); text-align: left;
+    padding: 30px 30px 0; display: flex; flex-direction: column; max-height: 82vh;
+}
+.inv-modal__header { flex-shrink: 0; }
+.inv-modal__title { margin: 0 0 4px; font-size: 18px; font-weight: 800; color: #1a1a1a; }
+.inv-modal__desc { margin: 0 0 16px; font-size: 12px; color: var(--muted); }
+.inv-modal__body { flex: 1; overflow-y: auto; padding-bottom: 20px; }
 
-/* 좌석 클릭 시 상태 변경 팝오버 (모달 위에 뜨므로 z-index를 모달보다 높게) */
-.inv-popover {
-    position: absolute; z-index: 1100; background: var(--canvas); border: 1px solid var(--line);
-    border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 6px; display: none;
-    min-width: 160px;
+/* ===== 좌석 상태 수정 모달 ===== */
+.inv-edit-block {
+    width: 24px; height: 24px; border-radius: 6px; border: none; padding: 0;
+    cursor: pointer; position: relative; transition: transform .1s ease;
 }
-.inv-popover.is-open { display: block; }
-.inv-popover__title {
-    padding: 8px 12px 6px; font-size: 11px; font-weight: 700; color: var(--muted);
-    border-bottom: 1px solid var(--line); margin-bottom: 4px;
+.inv-edit-block:hover { transform: scale(1.15); }
+.inv-edit-block--available { background: #2f9e5b; }
+.inv-edit-block--held { background: #d98c1a; }
+.inv-edit-block--reserved { background: var(--brand); }
+.inv-edit-block--blocked { background: var(--subtle); }
+.inv-edit-block.is-selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink); transform: scale(1.1); }
+.inv-edit-block.is-selected::after {
+    content: '\2713'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 12px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.45);
 }
-.inv-popover button {
-    display: block; width: 100%; padding: 8px 14px; border: none; background: none;
-    text-align: left; font-size: 12px; color: var(--ink); cursor: pointer; border-radius: 6px; white-space: nowrap;
+
+.inv-edit-toolbar {
+    flex-shrink: 0; margin: 0 -30px; padding: 16px 30px; background: var(--canvas);
+    border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
 }
-.inv-popover button:hover { background: var(--surface); }
+.inv-edit-toolbar__count { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.inv-edit-toolbar__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.inv-status-btn {
+    padding: 9px 15px; border-radius: 8px; border: none; color: #fff;
+    font-size: 12px; font-weight: 700; cursor: pointer; transition: filter .15s ease, opacity .15s ease;
+}
+.inv-status-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.inv-status-btn:disabled { opacity: .35; cursor: not-allowed; }
+.inv-status-btn--available { background: #2f9e5b; }
+.inv-status-btn--held { background: #d98c1a; }
+.inv-status-btn--reserved { background: var(--brand); }
+.inv-status-btn--blocked { background: var(--subtle); }
+
+.inv-clear-btn {
+    background: none; border: none; color: var(--muted); font-size: 12px; font-weight: 600;
+    cursor: pointer; text-decoration: underline; padding: 4px 2px;
+}
+.inv-clear-btn:hover { color: var(--ink); }
+
+/* ===== 좌석 구성 관리 모달 (추가/삭제) ===== */
+.inv-manage-section { margin-bottom: 26px; }
+.inv-manage-section:last-child { margin-bottom: 4px; }
+.inv-manage-section__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.inv-manage-section__head h4 { margin: 0; font-size: 13px; font-weight: 800; color: var(--ink); }
+.inv-manage-section__head .count { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+/* 생성된 좌석: 등급색 블록, 판매가능 상태만 삭제 가능(호버 시 × 표시) */
+.inv-manage-block {
+    width: 24px; height: 24px; border-radius: 6px; border: none; padding: 0; position: relative;
+    cursor: pointer; transition: transform .1s ease;
+}
+.inv-manage-block:hover { transform: scale(1.15); }
+.inv-manage-block:hover::after {
+    content: '\00d7'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.55); color: #fff; font-size: 14px; font-weight: 800; border-radius: 6px;
+}
+.inv-manage-block--locked { cursor: not-allowed; opacity: .55; }
+.inv-manage-block--locked:hover::after { content: '\1F512'; font-size: 10px; background: rgba(0,0,0,.4); }
+
+/* 미등록 좌석: 점선 테두리 + 등급색, 클릭 시 추가 */
+.inv-manage-block--empty {
+    background: var(--surface); border: 1.5px dashed var(--line);
+}
+.inv-manage-block--empty:hover { border-color: var(--brand); }
+.inv-manage-block--empty:hover::after {
+    content: '+'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--brand); font-size: 14px; font-weight: 800; background: none; border-radius: 6px;
+}
+
+.inv-manage-blocks { display: flex; flex-wrap: wrap; gap: 5px; }

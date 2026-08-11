@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** AD08 "좌석 재고·선점 현황" 화면 라우팅을 담당합니다. */
 @Controller
@@ -46,10 +48,11 @@ public class AdminSeatInventoryController {
         model.addAttribute("grades", adminSeatInventoryService.getGradeBreakdown(selectedScheduleId));
         model.addAttribute("sections", adminSeatInventoryService.getSeatMap(selectedScheduleId));
         model.addAttribute("activeHolds", adminSeatInventoryService.getActiveHolds(selectedScheduleId));
+        model.addAttribute("unassignedSeats", adminSeatInventoryService.getUnassignedSeats(selectedScheduleId));
         return "admin/seat-inventory";
     }
 
-    /** 회차의 좌석도에 있는 물리 좌석 중 아직 생성되지 않은 좌석을 일괄 생성합니다. */
+    /** 회차의 좌석도에 있는 물리 좌석 중 아직 생성되지 않은 좌석을 전부 일괄 생성합니다. */
     @PostMapping("/admin/seat-inventory/generate")
     public String generate(@RequestParam Long scheduleId,
                            @RequestParam(required = false) Long performanceId,
@@ -63,16 +66,50 @@ public class AdminSeatInventoryController {
         return buildRedirect(performanceId, scheduleId);
     }
 
-    /** 좌석 맵에서 관리자가 좌석 하나의 상태를 직접 변경합니다. */
-    @PostMapping("/admin/seat-inventory/seats/status")
-    public String changeSeatStatus(@RequestParam Long seatId,
-                                   @RequestParam String status,
-                                   @RequestParam(required = false) Long performanceId,
-                                   @RequestParam(required = false) Long scheduleId,
-                                   RedirectAttributes ra) {
+    /** 좌석 구성 관리 모달에서 물리 좌석 하나를 회차 좌석으로 개별 추가합니다. */
+    @PostMapping("/admin/seat-inventory/seats/add")
+    public String addSeat(@RequestParam Long seatId,
+                          @RequestParam Long scheduleId,
+                          @RequestParam(required = false) Long performanceId,
+                          RedirectAttributes ra) {
         try {
-            adminSeatInventoryService.updateSeatStatus(seatId, ScheduleSeat.Status.valueOf(status));
-            ra.addFlashAttribute("message", "좌석 상태가 변경되었습니다.");
+            adminSeatInventoryService.addSingleSeat(scheduleId, seatId);
+            ra.addFlashAttribute("message", "좌석이 추가되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return buildRedirect(performanceId, scheduleId);
+    }
+
+    /** 좌석 구성 관리 모달에서 회차 좌석 하나를 삭제합니다(판매가능 상태만 가능). */
+    @PostMapping("/admin/seat-inventory/seats/delete")
+    public String deleteSeat(@RequestParam Long scheduleSeatId,
+                             @RequestParam(required = false) Long performanceId,
+                             @RequestParam(required = false) Long scheduleId,
+                             RedirectAttributes ra) {
+        try {
+            adminSeatInventoryService.deleteScheduleSeat(scheduleSeatId);
+            ra.addFlashAttribute("message", "좌석이 삭제되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return buildRedirect(performanceId, scheduleId);
+    }
+
+    /** 좌석 맵에서 선택한 좌석(1개 이상)을 한 번에 같은 상태로 변경합니다. */
+    @PostMapping("/admin/seat-inventory/seats/bulk-status")
+    public String bulkChangeSeatStatus(@RequestParam String seatIds,
+                                       @RequestParam String status,
+                                       @RequestParam(required = false) Long performanceId,
+                                       @RequestParam(required = false) Long scheduleId,
+                                       RedirectAttributes ra) {
+        try {
+            List<Long> ids = Arrays.stream(seatIds.split(","))
+                    .filter(s -> !s.isBlank())
+                    .map(Long::valueOf)
+                    .collect(Collectors.toList());
+            int count = adminSeatInventoryService.bulkUpdateSeatStatus(ids, ScheduleSeat.Status.valueOf(status));
+            ra.addFlashAttribute("message", count + "개 좌석 상태가 변경되었습니다.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
