@@ -1,7 +1,10 @@
 package kr.co.stageon.global;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.TypedJsonJacksonCodec;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +43,10 @@ public class RedisConfig {
     @Bean
     public RedissonClient redissonClient() {
         Config config = new Config();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule()); // LocalDateTime 등 Java 8 날짜 타입 지원
+        config.setCodec(new TypedJsonJacksonCodec(Object.class, Object.class, objectMapper));
 
         // 1. 호스트와 포트 설정
         var singleServerConfig = config.useSingleServer()
