@@ -12,6 +12,9 @@ import kr.co.stageon.booking.repository.ScheduleSeatRepository;
 import kr.co.stageon.booking.dto.PaymentSummaryDto;
 import kr.co.stageon.booking.repository.SeatHoldItemRepository;
 import kr.co.stageon.booking.repository.SeatHoldRepository;
+import kr.co.stageon.booking.repository.ReservationSeatRepository;
+import kr.co.stageon.payment.domain.Payment;
+import kr.co.stageon.payment.repository.PaymentRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBucket;
@@ -40,6 +43,8 @@ public class BookingQueryService {
     private final RedissonClient redissonClient;
     private final SeatHoldRepository seatHoldRepository;
     private final SeatHoldItemRepository seatHoldItemRepository;
+    private final ReservationSeatRepository reservationSeatRepository;
+    private final PaymentRepository paymentRepository;
 
     public List<SeatResponse> findSeats(Long scheduleId) {
 
@@ -173,34 +178,61 @@ public class BookingQueryService {
     }
 
     public ReservationDetailResponse getReservationDetail(Long reservationId) {
-        // 엔티티 매핑 에러를 무시하고 1원 결제 테스트를 통과하기 위한 하드코딩 데이터
+
+        // 1. DB에서 진짜 예매 내역 조회
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예매 내역을 찾을 수 없습니다."));
+
+        // 2. 예매한 진짜 좌석 목록 조회
+        List<ReservationDetailResponse.ReservedSeatItem> seats =
+                reservationSeatRepository.findByReservationIdOrderByIdAsc(reservationId)
+                        .stream()
+                        .map(seat -> new ReservationDetailResponse.ReservedSeatItem(
+                                seat.getCapturedGradeName(),
+                                seat.getCapturedSectionName(),
+                                seat.getCapturedRowLabel(),
+                                seat.getCapturedSeatNumber(),
+                                seat.getCapturedUnitPrice()
+                        ))
+                        .toList();
+
+        // 3. 결제 내역 조회 (가장 최근 결제 1건)
+        Payment latestPayment = paymentRepository
+                .findByReservationIdOrderByRequestedAtDesc(reservationId)
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        var schedule = reservation.getSchedule();
+        var performance = schedule.getPerformance();
+        var hall = schedule.getVenueHall();
+        var venue = hall.getVenue();
+
         return new ReservationDetailResponse(
-                reservationId,                           // reservationId
-                "STG-TEST-" + reservationId,             // bookingNumber
-                1L,                                      // memberId
-                "테스트 공연(1원 결제)",                 // performanceTitle
-                null,                                    // posterUrl
-                java.time.LocalDateTime.now(),           // startsAt
-                1,                                       // roundNumber
-                "테스트 공연장",                         // venueName
-                "테스트홀",                              // hallName
-                "테스트 주소",                           // venueAddress
-                "RESERVED",                              // reservationStatus
-                "MOBILE",                                // receiveMethod
-                java.math.BigDecimal.ZERO,               // seatAmount
-                java.math.BigDecimal.ZERO,               // feeAmount
-                java.math.BigDecimal.ZERO,               // discountAmount
-                new java.math.BigDecimal("1"),           // totalAmount (1원 고정!)
-                java.time.LocalDateTime.now(),           // reservedAt
-                null,                                    // cancelledAt
-                null,                                    // cancelReason
-                "PORTONE",                               // paymentProvider
-                "SUCCESS",                               // paymentStatus
-                java.time.LocalDateTime.now(),           // paymentRequestedAt
-                java.time.LocalDateTime.now(),           // paymentProcessedAt
-                java.util.List.of(                       // seats (가짜 좌석 1개)
-                        new ReservationDetailResponse.ReservedSeatItem("VIP", "A", "1", "1", new java.math.BigDecimal("1"))
-                )
+                reservation.getId(),
+                reservation.getBookingNumber(),
+                reservation.getMember().getId(),
+                performance.getTitle(),
+                performance.getPosterUrl(),
+                schedule.getStartsAt(),
+                schedule.getRoundNumber(),
+                venue.getName(),
+                hall.getName(),
+                venue.getAddress(),
+                reservation.getStatus().name(),
+                reservation.getReceiveMethod().name(),
+                reservation.getSeatAmount(),
+                reservation.getFeeAmount(),
+                reservation.getDiscountAmount(),
+                reservation.getTotalAmount(),     // 진짜 총 결제 금액
+                reservation.getReservedAt(),
+                reservation.getCancelledAt(),
+                reservation.getCancelReason(),
+                "TOSSPAYMENTS",                   // PG사 고정
+                latestPayment == null ? null : latestPayment.getStatus().name(),
+                latestPayment == null ? null : latestPayment.getRequestedAt(),
+                latestPayment == null ? null : latestPayment.getProcessedAt(),
+                seats                             // 진짜 선택한 좌석 리스트
         );
     }
 
