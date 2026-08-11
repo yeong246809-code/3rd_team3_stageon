@@ -9,7 +9,6 @@
 
   <!-- 토스 페이먼츠 -->
   <script src="https://js.tosspayments.com/v1/payment"></script>
-
 </head>
 <body id="top">
 <div th:replace="~{fragments/booking/booking-header :: bookingHeader(4)}"></div>
@@ -21,7 +20,7 @@
       <header class="page-heading">
         <span class="eyebrow">STEP 04 · PAYMENT</span>
         <h1>결제를 진행해 주세요</h1>
-        <p>안전한 결제를 위해 포트원(PortOne) 결제 시스템을 사용합니다.</p>
+        <p>안전한 결제를 위해 토스페이먼츠(Toss Payments) 시스템을 사용합니다.</p>
       </header>
 
       <div class="card" style="margin-top:20px;">
@@ -31,7 +30,37 @@
           <p style="margin-bottom: 8px;"><strong>이메일:</strong> <span th:text="${paymentRequest.bookerEmail}">tester@example.com</span></p>
           <p style="margin-bottom: 8px;"><strong>연락처:</strong> <span th:text="${paymentRequest.bookerPhone}">010-1234-5678</span></p>
           <p style="margin-bottom: 8px;"><strong>수령 방법:</strong> <span th:text="${paymentRequest.receiveMethod.name() == 'MOBILE' ? '모바일 티켓' : '현장 수령'}">모바일 티켓</span></p>
-          <p><strong>결제 예정 금액:</strong> <span th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'" style="color: #f03e3e; font-weight: bold;">162,000원</span></p>
+          <p><strong>결제 예정 금액:</strong> <span th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA')} + '원'" style="color: #f03e3e; font-weight: bold;">0원</span></p>
+
+        </div>
+      </div>
+
+      <!-- 💡 결제 수단 선택 UI 추가 -->
+      <div class="card" style="margin-top:20px;">
+        <h2>결제 수단</h2>
+        <div style="margin-top:18px; border: 1px solid #e5e8eb; border-radius: 8px; background-color: #fff; overflow: hidden;">
+
+          <label style="display: flex; align-items: center; padding: 18px 16px; border-bottom: 1px solid #e5e8eb; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#fff'">
+            <input type="radio" name="payMethod" value="카드" checked style="width: 20px; height: 20px; margin-right: 14px; accent-color: #3182f6; cursor: pointer;">
+            <span style="font-weight: 500; font-size: 16px; color: #333d4b;">신용/체크카드</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 18px 16px; border-bottom: 1px solid #e5e8eb; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#fff'">
+            <!-- 토스 간편결제 테스트용 -->
+            <input type="radio" name="payMethod" value="토스페이" style="width: 20px; height: 20px; margin-right: 14px; accent-color: #3182f6; cursor: pointer;">
+            <span style="font-weight: 500; font-size: 16px; color: #333d4b;">토스페이</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 18px 16px; border-bottom: 1px solid #e5e8eb; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#fff'">
+            <input type="radio" name="payMethod" value="가상계좌" style="width: 20px; height: 20px; margin-right: 14px; accent-color: #3182f6; cursor: pointer;">
+            <span style="font-weight: 500; font-size: 16px; color: #333d4b;">가상계좌 (무통장입금)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 18px 16px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#fff'">
+            <input type="radio" name="payMethod" value="계좌이체" style="width: 20px; height: 20px; margin-right: 14px; accent-color: #3182f6; cursor: pointer;">
+            <span style="font-weight: 500; font-size: 16px; color: #333d4b;">실시간 계좌이체</span>
+          </label>
+
         </div>
       </div>
 
@@ -42,23 +71,14 @@
     </section>
 
     <aside class="stack">
+      <!-- 우측 서머리 조각 -->
       <div th:replace="~{fragments/booking/booking-summary :: summary}"></div>
 
-      <!-- 결제 성공 시 결과를 백엔드로 넘길 Hidden Form -->
-      <form id="completePaymentForm" th:action="@{/payment/complete}" method="post" style="display: none;">
-        <input type="hidden" name="impUid" id="inputImpUid"> <!-- V1에서는 imp_uid를 사용합니다 -->
-        <input type="hidden" name="merchantUid" id="inputMerchantUid">
-        <input type="hidden" name="seatHoldId" th:value="${paymentRequest.seatHoldId}">
-        <input type="hidden" name="holdTokenHash" th:value="${paymentRequest.holdTokenHash}">
-
-        <input type="hidden" name="bookerName" th:value="${paymentRequest.bookerName}">
-        <input type="hidden" name="bookerEmail" th:value="${paymentRequest.bookerEmail}">
-        <input type="hidden" name="bookerPhone" th:value="${paymentRequest.bookerPhone}">
-        <input type="hidden" name="receiveMethod" th:value="${paymentRequest.receiveMethod}">
-      </form>
+      <!-- 💡 핵심 해결책: 서버에서 전달받은 실제 결제 금액을 숨겨두는 input 추가 -->
+      <input type="hidden" id="hiddenTotalPrice" th:value="${totalPrice}">
 
       <button type="button" class="btn btn--primary btn--wide" onclick="requestPayment()">
-        <span th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA')} + '원'">162,000원</span> 결제하기
+        <span th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA')} + '원'">0원</span> 결제하기
       </button>
 
       <div style="margin-top: 15px; text-align: center;">
@@ -69,32 +89,62 @@
 </main>
 
 <script th:inline="javascript">
-  // 1. 토스페이먼츠 객체 초기화 (발급받은 테스트 클라이언트 키)
-  // 함수 밖에서 미리 초기화해두는 것이 좋습니다.
   const tossPayments = TossPayments("test_ck_ORzdMaqN3wnw4wQk6KJB85AkYXQG");
 
   function requestPayment() {
-    // 2. Thymeleaf를 통해 서버(Model)에서 넘어온 실제 데이터를 JS 변수에 할당합니다.
-    const amount = /*[[${totalAmount}]]*/ 162000;
-    const orderName = /*[[${performanceTitle ?: 'StageOn 티켓 예매'}]]*/ 'StageOn 티켓 예매';
-    const customerName = /*[[${paymentRequest.bookerName}]]*/ '테스터';
-    const customerEmail = /*[[${paymentRequest.bookerEmail}]]*/ 'tester@example.com';
+    try {
+      // 선택한 결제 수단 가져오기
+      const radioInput = document.querySelector('input[name="payMethod"]:checked');
+      if (!radioInput) {
+        alert("결제 수단을 선택해 주세요.");
+        return;
+      }
+      const selectedMethod = radioInput.value;
 
-    // 백엔드 컨트롤러(Model)에서 반드시 생성해서 넘겨주어야 하는 결제 고유 번호(멱등키)입니다.
-    const orderId = /*[[${orderId}]]*/ 'STAGEON-TEST-0001';
+      // 💡 숨겨진 input 태그에서 금액을 읽어옵니다. (totalAmount 에러 완벽 해결!)
+      const amountValue = document.getElementById('hiddenTotalPrice').value;
+      const amount = Number(amountValue);
 
-    const baseUrl = window.location.origin;
+      // 금액 검증 안전장치
+      if (!amount || isNaN(amount) || amount <= 0) {
+        alert("결제 금액 정보가 올바르지 않습니다. (금액: " + amountValue + ")");
+        return;
+      }
 
-    // 3. 토스 결제창 호출 (하드코딩 제거 및 변수 매핑)
-    tossPayments.requestPayment('카드', {
-      amount: amount,                 // 서버에서 계산된 실제 금액 적용
-      orderId: orderId,               // 서버에서 생성된 고유 주문번호
-      orderName: orderName,           // 예매하는 실제 공연명
-      customerName: customerName,     // 예매자 이름
-      customerEmail: customerEmail,   // 예매자 이메일
-      successUrl: `${baseUrl}/payment/success`,
-      failUrl: `${baseUrl}/payment/fail`
-    });
+      // Thymeleaf 변수 바인딩
+      const orderName = /*[[${performanceTitle ?: 'StageOn 티켓 예매'}]]*/ 'StageOn 티켓 예매';
+      const customerName = /*[[${paymentRequest.bookerName}]]*/ '테스터';
+      const customerEmail = /*[[${paymentRequest.bookerEmail}]]*/ 'tester@example.com';
+      const orderId = /*[[${orderId}]]*/ 'STAGEON-TEST-0001';
+      const baseUrl = window.location.origin;
+
+      console.log("🚀 토스 결제 요청:", { selectedMethod, amount, orderId });
+
+      tossPayments.requestPayment(selectedMethod, {
+        amount: amount,
+        orderId: orderId,
+        orderName: orderName,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        successUrl: `${baseUrl}/payment/success`,
+        failUrl: `${baseUrl}/payment/fail`
+      }).catch(function (error) {
+        if (error.code === 'USER_CANCEL') {
+          console.log("고객이 결제창을 닫았습니다.");
+        } else {
+          alert("결제창 호출 실패: " + error.message);
+        }
+      });
+
+    } catch (e) {
+      console.error("자바스크립트 실행 중 에러 발생:", e);
+      alert("결제 처리 중 화면에 오류가 발생했습니다.");
+    }
+  }
+
+  function cancelPayment() {
+    alert("결제를 취소하고 이전 화면으로 돌아갑니다.");
+    history.back();
   }
 </script>
 </body>

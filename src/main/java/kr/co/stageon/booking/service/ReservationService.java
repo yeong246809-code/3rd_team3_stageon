@@ -7,11 +7,14 @@ import kr.co.stageon.booking.repository.ReservationSeatRepository;
 import kr.co.stageon.booking.repository.SeatHoldItemRepository;
 import kr.co.stageon.booking.repository.SeatHoldRepository;
 import kr.co.stageon.booking.dto.PaymentRequest;
+import kr.co.stageon.payment.domain.Payment;
+import kr.co.stageon.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,12 +25,13 @@ public class ReservationService {
     private final SeatHoldItemRepository seatHoldItemRepository;
     private final ReservationRepository reservationRepository;
     private final ReservationSeatRepository reservationSeatRepository;
+    private final PaymentRepository paymentRepository;
 
     /**
      * 포트원 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
      */
     @Transactional
-    public Long confirmReservation(PaymentRequest request, String paymentKey, String orderId, BigDecimal expectedAmount) {
+    public Long confirmReservation(PaymentRequest request, String paymentKey, String orderId, BigDecimal expectedAmount, Payment.PayMethod payMethod) {
 
         // 1. 임시 선점(SeatHold) 내역 조회
         SeatHold seatHold = seatHoldRepository.findById(request.seatHoldId())
@@ -47,6 +51,19 @@ public class ReservationService {
                 expectedAmount
         );
         reservationRepository.save(reservation);
+
+        Payment payment = Payment.builder()
+                .reservation(reservation)
+                .paymentKey(paymentKey)
+                .orderId(orderId)
+                .provider(Payment.Provider.TOSSPAYMENTS)
+                .payMethod(payMethod)
+                .amount(expectedAmount)
+                .status(Payment.Status.SUCCESS)
+                .requestedAt(LocalDateTime.now())
+                .processedAt(LocalDateTime.now())
+                .build();
+        paymentRepository.save(payment);
 
         // 3. 선점했던 좌석들을 가져와서 ReservationSeat(예매 좌석)으로 변환 및 저장
         List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldId(seatHold.getId());

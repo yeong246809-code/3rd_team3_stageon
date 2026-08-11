@@ -2,9 +2,7 @@ package kr.co.stageon.payment.domain;
 
 import jakarta.persistence.*;
 import kr.co.stageon.booking.domain.Reservation;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,8 +22,8 @@ import java.time.LocalDateTime;
 public class Payment {
 
     public enum Status { READY, SUCCESS, FAILED, CANCELLED }
-    public enum Provider { MOCK }
-    public enum PayMethod { CARD, VBANK } //결제수단 - 카드, 가상계좌
+    public enum Provider { TOSSPAYMENTS }
+    public enum PayMethod { CARD, VBANK, BANK, MOBILE } //결제수단 - 카드, 가상계좌, 무통장입금, 모바일
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -79,4 +77,20 @@ public class Payment {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Builder
+    public Payment(Reservation reservation, String paymentKey, String orderId, Provider provider,
+                   PayMethod payMethod, BigDecimal amount, Status status,
+                   LocalDateTime requestedAt, LocalDateTime processedAt) {
+        this.reservation = reservation;
+        this.paymentKey = paymentKey;
+        this.orderId = orderId;
+        this.provider = provider;
+        this.payMethod = payMethod;
+        this.amount = amount;
+        this.status = status;
+        this.requestedAt = requestedAt;
+        this.processedAt = processedAt;
+        this.cancelAmount = BigDecimal.ZERO;
+    }
 }
