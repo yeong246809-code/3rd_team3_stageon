@@ -38,19 +38,26 @@
         </div>
       </div>
 
+      <!-- 탭: 공연장 구조 / 좌석 보기 -->
+      <div class="page-tabs">
+        <button type="button" class="page-tab is-active" data-tab-target="tab-structure">공연장 구조</button>
+        <button type="button" class="page-tab" data-tab-target="tab-seatview">좌석 보기</button>
+      </div>
+
       <div class="structure-layout">
-        <section class="structure-card">
+        <!-- 탭1: 공연장 구조 (기존 관리 테이블) -->
+        <section class="structure-card page-tab-panel is-active" id="tab-structure">
           <div class="structure-card__head">
             <h2>공연장 구조</h2>
           </div>
           <div class="table-wrap">
             <table class="structure-table">
               <colgroup>
+                <col style="width:24%">
+                <col style="width:20%">
                 <col style="width:22%">
                 <col style="width:18%">
-                <col style="width:20%">
                 <col style="width:16%">
-                <col style="width:24%">
               </colgroup>
               <thead>
               <tr>
@@ -92,6 +99,28 @@
           </div>
         </section>
 
+        <!-- 탭2: 좌석 보기 (공연장 목록 -> 클릭 시 좌석 모달) -->
+        <section class="structure-card page-tab-panel" id="tab-seatview">
+          <div class="structure-card__head">
+            <h2>좌석 보기</h2>
+          </div>
+          <p style="font-size:13px;color:var(--subtle);margin:-8px 0 16px;">공연장을 클릭하면 좌석 배치도를 볼 수 있습니다.</p>
+
+          <ul class="seatview-list">
+            <li th:each="row : ${dashboard.rows}" th:if="${row.hallId != null}"
+                class="seatview-list__item js-seat-view-item"
+                th:attr="data-hall-id=${row.hallId},data-hall-name=${row.venueName + ' · ' + row.hallName}">
+              <div class="seatview-list__info">
+                <span class="seatview-list__venue" th:text="${row.venueName}">공연장명</span>
+                <span class="seatview-list__hall" th:text="${row.hallName}">홀명</span>
+              </div>
+              <span th:class="'status-badge ' + (${row.configured} ? 'status-badge--complete' : 'status-badge--pending')"
+                    th:text="${row.configured} ? '설정완료' : '미설정'">상태</span>
+            </li>
+            <li th:if="${dashboard.rows.?[hallId != null].isEmpty()}" class="venue-empty">등록된 홀이 없습니다.</li>
+          </ul>
+        </section>
+
         <aside class="side-stack">
           <section class="side-card">
             <h3>공연장 설정 순서</h3>
@@ -110,5 +139,63 @@
     </div>
   </main>
 </div>
+
+<!-- 좌석 보기 모달 (조회 전용) -->
+<div id="seatViewModal" class="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+  <div class="modal-box" style="background:#fff;border-radius:12px;padding:28px;width:720px;max-width:92vw;max-height:86vh;overflow-y:auto;">
+    <h3 id="seatViewTitle" style="margin-bottom:16px">좌석 배치도</h3>
+
+    <div id="seatViewMapPreview" style="background:#fafafa;border-radius:10px;padding:18px;text-align:center;">
+      <p id="seatViewEmpty" style="display:none;color:var(--subtle);font-size:13px">등록된 좌석이 없습니다.</p>
+      <div class="seatview-stage">
+        <span class="seatview-stage__label">STAGE</span>
+        <svg class="seatview-pierrot seatview-pierrot--left" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M30 6 L20 18 L40 18 Z" fill="#F2A93B"/>
+          <circle cx="30" cy="24" r="9" fill="#FFE3D1"/>
+          <circle cx="27" cy="23" r="1.4" fill="#3A3A3A"/>
+          <circle cx="33" cy="23" r="1.4" fill="#3A3A3A"/>
+          <circle cx="24" cy="27" r="1.6" fill="#E24C4C"/>
+          <circle cx="36" cy="27" r="1.6" fill="#E24C4C"/>
+          <path d="M26 28 Q30 31 34 28" stroke="#B9791A" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M17 33 Q30 26 43 33 L40 34 Q30 30 20 34 Z" fill="#fff"/>
+          <rect x="22" y="33" width="16" height="22" rx="6" fill="#6C77BE"/>
+          <circle cx="26" cy="40" r="1.6" fill="#FFD54A"/>
+          <circle cx="30" cy="45" r="1.6" fill="#E24C4C"/>
+          <circle cx="34" cy="40" r="1.6" fill="#FFD54A"/>
+          <g class="seatview-pierrot__armL"><rect x="10" y="35" width="7" height="20" rx="3.5" fill="#6C77BE"/></g>
+          <g class="seatview-pierrot__armR"><rect x="43" y="35" width="7" height="20" rx="3.5" fill="#6C77BE"/></g>
+          <g class="seatview-pierrot__legL"><rect x="21" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+          <g class="seatview-pierrot__legR"><rect x="32" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+        </svg>
+        <svg class="seatview-pierrot seatview-pierrot--right" viewBox="0 0 60 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M30 6 L20 18 L40 18 Z" fill="#4CAF7D"/>
+          <circle cx="30" cy="24" r="9" fill="#FFE3D1"/>
+          <circle cx="27" cy="23" r="1.4" fill="#3A3A3A"/>
+          <circle cx="33" cy="23" r="1.4" fill="#3A3A3A"/>
+          <circle cx="24" cy="27" r="1.6" fill="#E24C4C"/>
+          <circle cx="36" cy="27" r="1.6" fill="#E24C4C"/>
+          <path d="M26 28 Q30 31 34 28" stroke="#B9791A" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M17 33 Q30 26 43 33 L40 34 Q30 30 20 34 Z" fill="#fff"/>
+          <rect x="22" y="33" width="16" height="22" rx="6" fill="#E24C4C"/>
+          <circle cx="26" cy="40" r="1.6" fill="#FFD54A"/>
+          <circle cx="30" cy="45" r="1.6" fill="#8B96DE"/>
+          <circle cx="34" cy="40" r="1.6" fill="#FFD54A"/>
+          <g class="seatview-pierrot__armL"><rect x="10" y="35" width="7" height="20" rx="3.5" fill="#E24C4C"/></g>
+          <g class="seatview-pierrot__armR"><rect x="43" y="35" width="7" height="20" rx="3.5" fill="#E24C4C"/></g>
+          <g class="seatview-pierrot__legL"><rect x="21" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+          <g class="seatview-pierrot__legR"><rect x="32" y="54" width="7" height="16" rx="3.5" fill="#3A3A3A"/></g>
+        </svg>
+      </div>
+      <div id="seatMapSectionsSpacer"></div>
+      <div id="seatViewSections"></div>
+    </div>
+
+    <div class="cluster" style="justify-content:flex-end;margin-top:22px;">
+      <button type="button" class="btn" onclick="closeSeatViewModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/pages/venue-seats.js}" src="/js/pages/venue-seats.js"></script>
 </body>
 </html>

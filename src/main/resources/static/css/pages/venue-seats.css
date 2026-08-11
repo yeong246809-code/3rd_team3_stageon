@@ -82,7 +82,7 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* 미니 액션 버튼 (홀 추가/등급 추가/삭제) */
+/* 미니 액션 버튼 (홀 추가/등급 추가/삭제/좌석 보기) */
 .action-cell { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .btn-mini {
     display: inline-flex; align-items: center; gap: 4px;
@@ -100,6 +100,115 @@
 .btn-mini:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
 .btn-mini--danger { color: var(--danger); }
 .btn-mini--danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+/* 상단 탭 (공연장 구조 / 좌석 보기) */
+.page-tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.page-tab {
+    appearance: none; background: none; border: none; cursor: pointer;
+    padding: 10px 18px; font-size: 14px; font-weight: 700; color: var(--muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-family: inherit; transition: all .15s ease;
+}
+.page-tab:hover { color: var(--ink); }
+.page-tab.is-active { color: var(--brand); border-bottom-color: var(--brand); }
+
+.page-tab-panel { display: none; }
+.page-tab-panel.is-active { display: block; }
+
+/* 좌석 보기 탭 - 공연장(홀) 목록 */
+.seatview-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.seatview-list__item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 14px; border-bottom: 1px solid var(--line);
+    cursor: pointer; transition: background .15s ease;
+}
+.seatview-list__item:last-child { border-bottom: none; }
+.seatview-list__item:hover { background: var(--surface); }
+.seatview-list__info { display: flex; flex-direction: column; gap: 4px; }
+.seatview-list__venue { font-size: 14px; font-weight: 700; color: var(--ink); }
+.seatview-list__hall { font-size: 13px; color: var(--muted); }
+
+/* 좌석 보기 모달 */
+.modal-overlay .modal-box h3 { font-size: 17px; font-weight: 800; color: var(--ink); margin: 0 0 16px; }
+
+/* STAGE + 춤추는 삐에로 2명 */
+.seatview-stage {
+    position: relative;
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 10px 6px 6px;
+    margin-bottom: 14px;
+    height: 88px;
+    overflow: hidden;
+}
+.seatview-stage__label {
+    color: #fff; font-size: 12px; letter-spacing: 2px; font-weight: 700;
+    position: relative; z-index: 1;
+}
+.seatview-pierrot {
+    position: absolute;
+    bottom: 2px;
+    width: 46px;
+    height: auto;
+    transform-origin: bottom center;
+    animation: pierrot-sway 900ms ease-in-out infinite;
+}
+.seatview-pierrot--left { left: 47%; margin-left: -23px; animation-delay: 0ms; }
+.seatview-pierrot--right { left: 53%; margin-left: -23px; animation-delay: 450ms; }
+
+/* 삐에로 머리 위 은은한 스포트라이트 */
+.seatview-stage::before,
+.seatview-stage::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 70px;
+    height: 100%;
+    background: radial-gradient(ellipse at top, rgba(255,255,255,.4), rgba(255,255,255,0) 72%);
+    animation: seatview-spotlight-pulse 2400ms ease-in-out infinite;
+    pointer-events: none;
+}
+.seatview-stage::before { left: calc(47% - 35px); animation-delay: 0ms; }
+.seatview-stage::after { left: calc(53% - 35px); animation-delay: 300ms; }
+
+@keyframes seatview-spotlight-pulse {
+    0%, 100% { opacity: .35; }
+    50% { opacity: .75; }
+}
+
+.seatview-pierrot__armL,
+.seatview-pierrot__armR,
+.seatview-pierrot__legL,
+.seatview-pierrot__legR { transform-origin: 30px 35px; animation-duration: 900ms; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+.seatview-pierrot__armL { animation-name: pierrot-arm-l; transform-origin: 13px 37px; }
+.seatview-pierrot__armR { animation-name: pierrot-arm-r; transform-origin: 46px 37px; }
+.seatview-pierrot__legL { animation-name: pierrot-leg-l; transform-origin: 24px 56px; }
+.seatview-pierrot__legR { animation-name: pierrot-leg-r; transform-origin: 35px 56px; }
+.seatview-pierrot--right .seatview-pierrot__armL,
+.seatview-pierrot--right .seatview-pierrot__armR,
+.seatview-pierrot--right .seatview-pierrot__legL,
+.seatview-pierrot--right .seatview-pierrot__legR { animation-delay: 450ms; }
+
+@keyframes pierrot-sway {
+    0%, 100% { transform: rotate(-8deg) translateY(0); }
+    50% { transform: rotate(8deg) translateY(-4px); }
+}
+@keyframes pierrot-arm-l {
+    0%, 100% { transform: rotate(-25deg); }
+    50% { transform: rotate(35deg); }
+}
+@keyframes pierrot-arm-r {
+    0%, 100% { transform: rotate(25deg); }
+    50% { transform: rotate(-35deg); }
+}
+@keyframes pierrot-leg-l {
+    0%, 100% { transform: rotate(12deg); }
+    50% { transform: rotate(-12deg); }
+}
+@keyframes pierrot-leg-r {
+    0%, 100% { transform: rotate(-12deg); }
+    50% { transform: rotate(12deg); }
+}
 
 .grade-preview { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
 .grade-preview h4 { margin: 0 0 12px; font-size: 13px; font-weight: 700; color: var(--muted); }

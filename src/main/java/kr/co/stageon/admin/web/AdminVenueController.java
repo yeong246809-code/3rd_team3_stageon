@@ -2,6 +2,7 @@ package kr.co.stageon.admin.web;
 
 import kr.co.stageon.admin.dto.SeatBulkFormDto;
 import kr.co.stageon.admin.dto.SeatGradeFormDto;
+import kr.co.stageon.admin.dto.SeatMapItemDto;
 import kr.co.stageon.admin.dto.VenueFormDto;
 import kr.co.stageon.admin.dto.VenueHallFormDto;
 import kr.co.stageon.admin.service.AdminVenueService;
@@ -13,6 +14,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 /**
  * "/admin/venues" 공연장·좌석 관리 화면 전용 컨트롤러입니다.
@@ -68,6 +72,13 @@ public class AdminVenueController {
         model.addAttribute("hall", adminVenueService.getHallOrThrow(hallId));
         model.addAttribute("grades", adminVenueService.getHallGrades(hallId));
         return "admin/venue-hall-detail";
+    }
+
+    /** "좌석 보기" 모달용 좌석 목록 JSON API입니다. 좌석도가 없으면 빈 배열을 반환합니다. */
+    @GetMapping("/halls/{hallId}/seats/map")
+    @ResponseBody
+    public List<SeatMapItemDto> hallSeatMap(@PathVariable Long hallId) {
+        return adminVenueService.getHallSeatMap(hallId);
     }
 
     @PostMapping("/halls/{hallId}/delete")

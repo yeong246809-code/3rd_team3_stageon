@@ -7,6 +7,10 @@
   <title>StageOn Admin | 대시보드</title>
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+  <script>
+    var __t = localStorage.getItem('stageon-admin-theme');
+    if (__t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  </script>
 </head>
 <body>
 <div class="admin-page">

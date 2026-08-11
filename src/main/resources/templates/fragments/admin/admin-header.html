@@ -4,10 +4,14 @@
     <header th:fragment="header" class="admin-header">
       <strong>StageOn 운영 관리</strong>
       <div class="cluster">
+        <button id="themeToggleBtn" type="button" onclick="toggleTheme()"
+                title="다크모드 전환" style="background:none;border:none;cursor:pointer;font-size:18px;">🌙</button>
         <span class="badge badge--success">시스템 정상</span>
         <span>관리자</span>
         <a th:href="@{/}" href="/">사용자 홈</a>
+
       </div>
+      <script th:src="@{/js/admin-theme.js}" src="/js/admin-theme.js"></script>
     </header>
   </body>
 </html>
