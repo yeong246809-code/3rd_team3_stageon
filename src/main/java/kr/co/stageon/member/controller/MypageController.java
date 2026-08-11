@@ -1,8 +1,10 @@
 package kr.co.stageon.member.controller;
 
+import kr.co.stageon.booking.dto.MyTicketResponse;
 import kr.co.stageon.booking.dto.ReservationDetailResponse;
 import kr.co.stageon.booking.dto.ReservationResponse;
 import kr.co.stageon.booking.service.BookingQueryService;
+import kr.co.stageon.booking.service.MyTicketQueryService;
 import kr.co.stageon.booking.service.ReservationDetailQueryService;
 import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
@@ -13,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +31,7 @@ public class MypageController {
     private final MemberRepository memberRepository;
     private final BookingQueryService bookingQueryService;
     private final ReservationDetailQueryService reservationDetailQueryService;
+    private final MyTicketQueryService myTicketQueryService;
 
     @GetMapping
     public String home(
@@ -103,13 +107,25 @@ public class MypageController {
     }
 
     @GetMapping("/tickets")
-    public String tickets(Model model) {
-        return placeholder(
-                model,
-                "tickets",
-                "보유 티켓",
-                "사용 가능한 모바일 티켓을 확인합니다."
-        );
+    public String tickets(
+            Authentication authentication,
+            Model model
+    ) {
+        // 1. 현재 로그인한 회원 정보를 조회
+        Member member = findLoginMember(authentication);
+
+        // 2. 로그인 회원이 보유한 모바일 티켓 목록 조회
+        List<MyTicketResponse> tickets =
+                myTicketQueryService.findMemberTickets(member.getId());
+
+        // 3. 티켓 목록을 HTML에서 사용할 수 있도록 전달
+        model.addAttribute("tickets", tickets);
+
+        // 사이드바에서 '보유 티켓' 메뉴 활성화
+        model.addAttribute("activeMenu", "tickets");
+
+        // 4. 보유 티켓 전용 화면으로 이동
+        return "user/mypage-tickets";
     }
 
     @GetMapping("/reviews")
