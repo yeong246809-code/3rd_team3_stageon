@@ -26,7 +26,7 @@ public record MyTicketResponse(
         String seatNumber,
         BigDecimal unitPrice,
 
-        // AVAILABLE / ENDED / TRANSFERRED
+        // UPCOMING / AVAILABLE / ENDED
         String ticketStatus,
 
         // QR 코드 이미지

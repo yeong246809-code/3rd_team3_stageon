@@ -1,7 +1,6 @@
 /* =========================================================
    마이페이지 > 보유 티켓 전용 CSS
-   공통 레이아웃은 mypage.css를 사용하고
-   이 파일에서는 모바일 티켓 UI만 담당합니다.
+   공통 레이아웃은 mypage.css 사용
 ========================================================= */
 
 /* 페이지 상단 */
@@ -10,24 +9,16 @@
 .ticket-content { display: grid; gap: 14px; }
 
 /* =========================================================
-   모바일 티켓 전체 구조
-   포스터 / 공연정보 / 절취선 / QR / 버튼 순서
+   모바일 티켓
+   포스터 / 공연정보 / 절취선 / QR / 기능버튼
 ========================================================= */
 .mobile-ticket { position: relative; display: grid; grid-template-columns: 170px minmax(0, 1fr) 1px 210px 132px; min-height: 250px; overflow: hidden; border-radius: 15px; color: #fff; box-shadow: 0 10px 28px rgba(15, 23, 42, .13); }
-
-/* 공연별 테마 예시 - 추후 포스터 색상 기반으로 자동 적용 가능 */
 .mobile-ticket--purple { background: linear-gradient(115deg, #090b21 0%, #171044 58%, #4221a0 100%); }
 .mobile-ticket--red { background: linear-gradient(115deg, #170707 0%, #561015 58%, #c51b28 100%); }
 
-/* =========================================================
-   포스터 영역
-========================================================= */
+/* 포스터 */
 .ticket-poster { padding: 16px 0 16px 16px; }
-
-/* 실제 공연 포스터 */
 .ticket-poster__image { display: block; width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
-
-/* 포스터가 없을 때 기본 표시 */
 .ticket-poster__empty { display: flex; width: 100%; height: 100%; flex-direction: column; justify-content: flex-end; padding: 18px; box-sizing: border-box; border-radius: 10px; background: linear-gradient(145deg, #e60012, #7e0009); color: #fff; }
 .ticket-poster__empty small { margin-bottom: 7px; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
 .ticket-poster__empty strong { font-size: 20px; line-height: 1; }
@@ -52,22 +43,37 @@
 /* =========================================================
    티켓 상태
 ========================================================= */
-.ticket-status { flex-shrink: 0; padding: 5px 10px; border-radius: 999px; background: #35b95a; color: #fff; font-size: 10px; font-weight: 800; }
+.ticket-status { flex-shrink: 0; padding: 5px 10px; border-radius: 999px; color: #fff; font-size: 10px; font-weight: 800; }
+.ticket-status--available { background: #35b95a; }
+.ticket-status--upcoming { background: #475467; }
+.ticket-status--disabled { background: #667085; }
 
-/* =========================================================
-   절취선
-========================================================= */
+/* 절취선 */
 .ticket-cut { border-left: 1px dashed rgba(255,255,255,.55); }
 
 /* =========================================================
    QR 영역
-   현재는 mock 표시, 다음 단계에서 실제 QR img로 교체 예정
 ========================================================= */
 .ticket-qr { display: flex; align-items: center; flex-direction: column; justify-content: center; padding: 18px; text-align: center; }
 .ticket-qr > small { color: rgba(255,255,255,.7); font-size: 9px; letter-spacing: .12em; }
 .ticket-qr > strong { margin-top: 3px; font-size: 16px; letter-spacing: .02em; }
-.ticket-qr__mock { display: grid; width: 108px; height: 108px; margin-top: 13px; place-items: center; border: 8px solid #fff; border-radius: 5px; box-sizing: border-box; background: repeating-linear-gradient(45deg, #111 0 4px, #fff 4px 8px); color: transparent; }
-.ticket-qr p { margin: 10px 0 0; color: rgba(255,255,255,.65); font-size: 9px; }
+.ticket-qr p { margin: 10px 0 0; color: rgba(255,255,255,.65); font-size: 9px; line-height: 1.5; }
+
+/* QR 전체 클릭 영역 */
+.ticket-qr__button { position: relative; display: block; width: 108px; height: 108px; margin-top: 13px; padding: 0; overflow: hidden; border: 0; border-radius: 6px; background: #fff; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.ticket-qr__button:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(0,0,0,.18); }
+
+/* 실제 QR */
+.ticket-qr__image { display: block; width: 100%; height: 100%; padding: 7px; box-sizing: border-box; background: #fff; object-fit: contain; }
+
+/* UPCOMING / ENDED 기본 화면 */
+.ticket-qr__placeholder { display: flex; width: 100%; height: 100%; align-items: center; flex-direction: column; justify-content: center; box-sizing: border-box; background: #f2f4f7; color: #667085; }
+.ticket-qr__placeholder strong { font-size: 23px; line-height: 1; }
+.ticket-qr__placeholder small { margin-top: 5px; color: #98a2b3; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+
+/* QR 비활성 공통 오버레이 */
+.ticket-qr__button.is-disabled { cursor: pointer; }
+.ticket-qr__disabled { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(15,23,42,.48); color: #fff; font-size: 10px; font-weight: 800; }
 
 /* =========================================================
    티켓 기능 버튼
@@ -75,19 +81,63 @@
 .ticket-actions { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 20px; border-left: 1px solid rgba(255,255,255,.13); }
 .ticket-send, .ticket-detail { display: flex; min-height: 40px; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 7px; font-size: 11px; font-weight: 800; text-decoration: none; }
 .ticket-send { border: 0; background: #e60012; color: #fff; cursor: pointer; }
-.ticket-send:hover { background: #c90010; }
+.ticket-send:hover:not(:disabled) { background: #c90010; }
+.ticket-send:disabled { background: #98a2b3; color: #eaecf0; cursor: not-allowed; opacity: .7; }
 .ticket-detail { border: 1px solid rgba(255,255,255,.38); background: rgba(255,255,255,.05); color: #fff; }
 .ticket-detail:hover { background: rgba(255,255,255,.12); }
 
-/* =========================================================
-   실제 종이 티켓 느낌의 절취 홈
-========================================================= */
+/* 종이 티켓 절취 홈 */
 .mobile-ticket::before, .mobile-ticket::after { content: ""; position: absolute; top: 50%; width: 22px; height: 22px; border-radius: 50%; background: #fff; transform: translateY(-50%); }
 .mobile-ticket::before { left: -11px; }
 .mobile-ticket::after { right: -11px; }
 
 /* =========================================================
-   티켓이 없을 때
+   QR 확대 / 티켓 보내기 공통 모달
+   JS가 .is-open을 붙이면 화면에 표시
+========================================================= */
+.ticket-modal { position: fixed; z-index: 1200; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+.ticket-modal.is-open { display: flex; }
+.ticket-modal__overlay { position: absolute; inset: 0; background: rgba(15,23,42,.62); backdrop-filter: blur(3px); }
+.ticket-modal__panel { position: relative; z-index: 1; width: min(100%, 420px); padding: 28px; box-sizing: border-box; border-radius: 17px; background: #fff; box-shadow: 0 25px 70px rgba(15,23,42,.25); }
+
+/* 모달 닫기 */
+.ticket-modal__close { position: absolute; top: 15px; right: 15px; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #f2f4f7; color: #667085; font-size: 23px; line-height: 1; cursor: pointer; }
+.ticket-modal__close:hover { background: #e4e7ec; color: #101828; }
+
+/* 모달 상단 */
+.ticket-modal__header small { color: #e60012; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+.ticket-modal__header h2 { margin: 5px 0 0; color: #101828; font-size: 23px; }
+
+/* 선택한 티켓 정보 */
+.ticket-modal__summary { display: grid; gap: 4px; margin-top: 20px; padding: 14px 16px; border-left: 3px solid #e60012; border-radius: 0 8px 8px 0; background: #f8fafc; }
+.ticket-modal__summary strong { color: #1d2939; font-size: 14px; }
+.ticket-modal__summary span { color: #667085; font-size: 11px; }
+
+/* 확대 QR */
+.ticket-modal__qr-view { display: grid; justify-items: center; margin-top: 22px; text-align: center; }
+.ticket-modal__qr-view img { width: 230px; height: 230px; padding: 14px; box-sizing: border-box; border: 1px solid #eaecf0; border-radius: 12px; background: #fff; object-fit: contain; }
+.ticket-modal__qr-view strong { margin-top: 15px; color: #101828; font-size: 13px; }
+.ticket-modal__qr-view p { margin: 6px 0 0; color: #667085; font-size: 11px; }
+
+/* QR 이용 불가 / 오픈 전 안내 */
+.ticket-modal__unavailable { display: grid; justify-items: center; margin-top: 24px; padding: 30px 20px; text-align: center; }
+.ticket-modal__unavailable-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; background: #f2f4f7; color: #667085; font-size: 22px; font-weight: 800; }
+.ticket-modal__unavailable strong { margin-top: 14px; color: #344054; font-size: 15px; }
+.ticket-modal__unavailable p { margin: 7px 0 0; color: #98a2b3; font-size: 11px; line-height: 1.6; }
+
+/* =========================================================
+   티켓 보내기 모달
+========================================================= */
+.ticket-share-description { margin: 18px 0 12px; color: #667085; font-size: 12px; }
+.ticket-share-options { display: grid; gap: 8px; }
+.ticket-share-option { display: grid; gap: 3px; width: 100%; padding: 14px 16px; border: 1px solid #e4e7ec; border-radius: 10px; background: #fff; text-align: left; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.ticket-share-option:hover { border-color: #e60012; background: #fff7f8; }
+.ticket-share-option strong { color: #344054; font-size: 13px; }
+.ticket-share-option span { color: #98a2b3; font-size: 10px; }
+.ticket-share-notice { margin-top: 16px; padding-top: 14px; border-top: 1px solid #eaecf0; color: #98a2b3; font-size: 10px; line-height: 1.6; }
+
+/* =========================================================
+   티켓 없음
 ========================================================= */
 .ticket-empty { display: grid; justify-items: center; padding: 70px 24px; border: 1px dashed #d8dee8; border-radius: 14px; background: #fafbfc; text-align: center; }
 .ticket-empty__icon { margin-bottom: 12px; font-size: 32px; }
@@ -95,11 +145,9 @@
 .ticket-empty p { margin: 8px 0 18px; color: #98a2b3; font-size: 12px; }
 .ticket-empty a { display: inline-flex; padding: 10px 18px; border-radius: 8px; background: #e60012; color: #fff; font-size: 12px; font-weight: 800; text-decoration: none; }
 
-/* =========================================================
-   하단 이용 안내
-========================================================= */
+/* 하단 이용 안내 */
 .ticket-guide { padding: 17px 20px; border: 1px solid #e7eaf0; border-radius: 11px; background: #fafbfc; }
-.ticket-guide strong { color: #e60012; font-size: 13px; }
+.ticket-guide > strong { color: #e60012; font-size: 13px; }
 .ticket-guide ul { display: grid; gap: 5px; margin: 8px 0 0; padding-left: 17px; color: #667085; font-size: 11px; }
 
 /* =========================================================
@@ -121,5 +169,8 @@
     .ticket-info h2 { font-size: 20px; }
 }
 
-/* 실제 QR 이미지 */
-.ticket-qr__image { display: block; width: 108px; height: 108px; margin-top: 13px; padding: 7px; box-sizing: border-box; border-radius: 5px; background: #fff; object-fit: contain; }
+@media (max-width: 520px) {
+    .ticket-modal { padding: 14px; }
+    .ticket-modal__panel { padding: 22px; }
+    .ticket-modal__qr-view img { width: 200px; height: 200px; }
+}
