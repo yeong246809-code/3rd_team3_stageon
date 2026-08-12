@@ -124,7 +124,6 @@
         });
 
         if (!response.ok) {
-          // 에러 처리 로직... (그대로 유지)
           const errorText = await response.text();
           alert(errorText);
           return;
