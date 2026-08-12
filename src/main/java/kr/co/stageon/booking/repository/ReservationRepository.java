@@ -66,4 +66,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule s JOIN FETCH s.performance p WHERE r.id = :reservationId")
     Optional<Reservation> findByIdWithDetails(@Param("reservationId") Long reservationId);
+
+    @Query("SELECT COALESCE(SUM(r.ticketCount), 0) FROM Reservation r WHERE r.member.id = :memberId AND r.schedule.id = :scheduleId AND r.status = :status")
+    Integer sumTicketCountByMemberIdAndScheduleId(
+            @Param("memberId") Long memberId,
+            @Param("scheduleId") Long scheduleId,
+            @Param("status") Reservation.Status status
+    );
 }
