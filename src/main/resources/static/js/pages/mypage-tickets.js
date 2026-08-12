@@ -1,39 +1,35 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // =========================================================
-    // QR 확대 모달 관련 요소
-    // =========================================================
+    /* =========================================================
+       QR 확대 모달
+    ========================================================== */
+
     const qrModal = document.getElementById("ticketQrModal");
 
     if (!qrModal) {
         return;
     }
 
-    const modalTitle =
-        qrModal.querySelector("[data-modal-title]");
+    const modalTitle = qrModal.querySelector("[data-modal-title]");
+    const modalSeat = qrModal.querySelector("[data-modal-seat]");
 
-    const modalSeat =
-        qrModal.querySelector("[data-modal-seat]");
+    const modalQrView = qrModal.querySelector("[data-modal-qr-view]");
+    const modalQrImage = qrModal.querySelector("[data-modal-qr-image]");
 
-    const modalQrView =
-        qrModal.querySelector("[data-modal-qr-view]");
-
-    const modalQrImage =
-        qrModal.querySelector("[data-modal-qr-image]");
-
-    const modalUnavailable =
-        qrModal.querySelector("[data-modal-unavailable]");
-
+    const modalUnavailable = qrModal.querySelector("[data-modal-unavailable]");
     const modalUnavailableTitle =
         qrModal.querySelector("[data-modal-unavailable-title]");
+    const modalUnavailableText =
+        qrModal.querySelector("[data-modal-unavailable-text]");
 
-    const modalUnavailableMessage =
-        qrModal.querySelector("[data-modal-unavailable-message]");
+    const closeButton = qrModal.querySelector(".ticket-modal__close");
+    const overlay = qrModal.querySelector(".ticket-modal__overlay");
 
 
-    // =========================================================
-    // QR 모달 열기
-    // =========================================================
+    /* =========================================================
+       QR 모달 열기
+    ========================================================== */
+
     function openQrModal(button) {
 
         const status = button.dataset.ticketStatus;
@@ -41,66 +37,70 @@ document.addEventListener("DOMContentLoaded", () => {
         const seat = button.dataset.ticketSeat;
         const qrImage = button.dataset.qrImage;
 
-        // 선택한 티켓 정보 표시
-        modalTitle.textContent = title || "공연명";
+        modalTitle.textContent = title || "공연 정보";
         modalSeat.textContent = seat || "좌석 정보";
 
-        // -----------------------------------------------------
-        // AVAILABLE
-        // 실제 QR 확대 표시
-        // -----------------------------------------------------
+        /*
+         * 먼저 모든 상태 영역을 숨긴 뒤
+         * 티켓 상태에 따라 필요한 영역만 표시합니다.
+         */
+        modalQrView.hidden = true;
+        modalUnavailable.hidden = true;
+
         if (status === "AVAILABLE") {
 
+            /* QR 사용 가능 */
             modalQrView.hidden = false;
-            modalUnavailable.hidden = true;
 
-            modalQrImage.src = qrImage || "";
-        }
+            if (qrImage) {
+                modalQrImage.src = qrImage;
+            }
 
-            // -----------------------------------------------------
-            // UPCOMING
-            // QR 오픈 전
-        // -----------------------------------------------------
-        else if (status === "UPCOMING") {
+        } else if (status === "UPCOMING") {
 
-            modalQrView.hidden = true;
+            /* 공연 시작 24시간 전 */
             modalUnavailable.hidden = false;
 
             modalUnavailableTitle.textContent =
-                "아직 QR 코드가 활성화되지 않았습니다.";
+                "아직 QR 코드를 사용할 수 없습니다.";
 
-            modalUnavailableMessage.textContent =
-                "공연 시작 24시간 전부터 입장용 QR 코드가 활성화됩니다.";
-        }
+            modalUnavailableText.textContent =
+                "입장용 QR 코드는 공연 시작 24시간 전부터 활성화됩니다.";
 
-            // -----------------------------------------------------
-            // ENDED
-            // 공연 종료
-        // -----------------------------------------------------
-        else if (status === "ENDED") {
+        } else if (status === "ENDED") {
 
-            modalQrView.hidden = true;
+            /* 공연 종료 */
             modalUnavailable.hidden = false;
 
             modalUnavailableTitle.textContent =
-                "사용할 수 없는 티켓입니다.";
+                "종료된 공연입니다.";
 
-            modalUnavailableMessage.textContent =
-                "공연이 종료되어 입장용 QR 코드를 사용할 수 없습니다.";
+            modalUnavailableText.textContent =
+                "공연 종료 후에는 입장용 QR 코드를 사용할 수 없습니다.";
+
+        } else {
+
+            /* 예외 상태 */
+            modalUnavailable.hidden = false;
+
+            modalUnavailableTitle.textContent =
+                "현재 QR 코드를 사용할 수 없습니다.";
+
+            modalUnavailableText.textContent =
+                "티켓 상태를 확인해 주세요.";
         }
 
-        // 모달 표시
         qrModal.classList.add("is-open");
         qrModal.setAttribute("aria-hidden", "false");
 
-        // 모달이 열린 동안 배경 스크롤 방지
         document.body.style.overflow = "hidden";
     }
 
 
-    // =========================================================
-    // QR 모달 닫기
-    // =========================================================
+    /* =========================================================
+       QR 모달 닫기
+    ========================================================== */
+
     function closeQrModal() {
 
         qrModal.classList.remove("is-open");
@@ -108,60 +108,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.body.style.overflow = "";
 
-        // 이전 QR 이미지 제거
+        /*
+         * 이전 티켓 QR 이미지가 다음 모달에 남지 않도록 초기화합니다.
+         */
         modalQrImage.src = "";
     }
 
 
-    // =========================================================
-    // 각 티켓의 QR 버튼 클릭
-    // =========================================================
-    const qrButtons =
-        document.querySelectorAll(".ticket-qr__button");
+    /* =========================================================
+       티켓 QR 버튼 이벤트
+    ========================================================== */
 
-    qrButtons.forEach((button) => {
+    document.querySelectorAll(".ticket-qr__button")
+        .forEach(button => {
 
-        button.addEventListener("click", () => {
-            openQrModal(button);
+            button.addEventListener("click", () => {
+                openQrModal(button);
+            });
+
         });
 
-    });
 
-
-    // =========================================================
-    // X 버튼으로 닫기
-    // =========================================================
-    const closeButton =
-        qrModal.querySelector(".ticket-modal__close");
+    /* =========================================================
+       닫기 버튼
+    ========================================================== */
 
     if (closeButton) {
-
-        closeButton.addEventListener("click", () => {
-            closeQrModal();
-        });
-
+        closeButton.addEventListener("click", closeQrModal);
     }
 
 
-    // =========================================================
-    // 어두운 배경 클릭 시 닫기
-    // =========================================================
-    const overlay =
-        qrModal.querySelector(".ticket-modal__overlay");
+    /* =========================================================
+       바깥 영역 클릭 시 닫기
+    ========================================================== */
 
     if (overlay) {
-
-        overlay.addEventListener("click", () => {
-            closeQrModal();
-        });
-
+        overlay.addEventListener("click", closeQrModal);
     }
 
 
-    // =========================================================
-    // ESC 키로 닫기
-    // =========================================================
-    document.addEventListener("keydown", (event) => {
+    /* =========================================================
+       ESC 키로 닫기
+    ========================================================== */
+
+    document.addEventListener("keydown", event => {
 
         if (
             event.key === "Escape"

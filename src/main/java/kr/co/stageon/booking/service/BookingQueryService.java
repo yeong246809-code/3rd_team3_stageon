@@ -188,6 +188,7 @@ public class BookingQueryService {
                 reservationSeatRepository.findByReservationIdOrderByIdAsc(reservationId)
                         .stream()
                         .map(seat -> new ReservationDetailResponse.ReservedSeatItem(
+                                seat.getId(),                  // 추가
                                 seat.getCapturedGradeName(),
                                 seat.getCapturedSectionName(),
                                 seat.getCapturedRowLabel(),
