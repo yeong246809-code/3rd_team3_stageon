@@ -36,6 +36,7 @@ public class ReservationDetailQueryService {
                 reservationSeatRepository.findByReservationIdOrderByIdAsc(reservationId)
                         .stream()
                         .map(seat -> new ReservationDetailResponse.ReservedSeatItem(
+                                seat.getId(),                  // reservation_seats.id
                                 seat.getCapturedGradeName(),
                                 seat.getCapturedSectionName(),
                                 seat.getCapturedRowLabel(),

@@ -38,8 +38,12 @@ public record ReservationDetailResponse(
         List<ReservedSeatItem> seats
 ) {
 
-    /** 예매 당시 저장된 좌석 스냅샷입니다. */
+        /**
+     * 예매 당시 저장된 좌석 스냅샷입니다.
+     * reservationSeatId는 좌석별 취소/환불 기능 연결에 사용합니다.
+     */
     public record ReservedSeatItem(
+            Long reservationSeatId,   // reservation_seats.id
             String gradeName,
             String sectionName,
             String rowLabel,
