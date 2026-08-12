@@ -1,0 +1,412 @@
+/* ==========================================================================
+   AD09 예매·주문 조회 - 디자인 개선판
+   컨셉: 티켓 스텁(ticket stub) 모티브. 기존 app.css의 navy 브랜드 컬러를
+   기본으로 쓰되, 예매 도메인다운 절취선/펀치홀 디테일을 시그니처로 사용.
+   ========================================================================== */
+
+:root {
+    --order-navy-1: #1f2440;
+    --order-navy-2: #333a63;
+    --order-amber: #e8a33d;
+    --order-amber-bg: #fdf3e2;
+    --order-ink: #1a1a1a;
+    --order-muted: #8a8fa3;
+    --order-line: #ececf3;
+    --order-surface: #ffffff;
+    --order-success: #1a8a4a;
+    --order-success-bg: #e4f7ec;
+    --order-warning: #92700e;
+    --order-warning-bg: #fff3cd;
+    --order-danger: #c0392b;
+    --order-danger-bg: #fde8e8;
+}
+
+/* ---------- 상단 통계 카드 ---------- */
+.order-stats { align-items: stretch; gap: 16px; }
+.order-stat-card {
+    position: relative;
+    flex: 1; min-width: 200px;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 22px 24px;
+    border-radius: 16px;
+    border: 1px solid var(--order-line);
+    box-shadow: 0 6px 20px rgba(20, 20, 45, .05);
+    overflow: hidden;
+}
+.order-stat-card::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 4px;
+    background: linear-gradient(90deg, var(--order-navy-1), var(--order-navy-2));
+}
+.order-stat-card--accent::before { background: linear-gradient(90deg, var(--order-amber), #f2c778); }
+.order-stat-label {
+    font-size: 12px; font-weight: 700; letter-spacing: .04em;
+    color: var(--order-muted); text-transform: uppercase;
+}
+.order-stat-value { font-size: 28px; font-weight: 800; color: var(--order-ink); letter-spacing: -.01em; }
+.order-stat-value--accent { color: #c47f1c; }
+
+/* ---------- 검색 필터 ---------- */
+.order-toolbar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 4px 4px 20px;
+    border-bottom: 1px solid var(--order-line);
+    margin-bottom: 20px;
+}
+.order-toolbar .input,
+.order-toolbar .select {
+    border-radius: 10px !important;
+    border: 1px solid var(--order-line) !important;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.order-toolbar .input:focus,
+.order-toolbar .select:focus {
+    outline: none;
+    border-color: var(--order-navy-2) !important;
+    box-shadow: 0 0 0 3px rgba(51, 58, 99, .12);
+}
+.order-toolbar .btn--dark {
+    background: linear-gradient(90deg, var(--order-navy-1), var(--order-navy-2));
+    border-radius: 10px;
+}
+.order-toolbar .btn--ghost {
+    background: transparent; border: 1px solid var(--order-line); border-radius: 10px; color: var(--order-muted);
+}
+.order-toolbar .btn--ghost:hover { border-color: var(--order-navy-2); color: var(--order-navy-2); }
+.order-toolbar .btn--csv {
+    margin-left: auto;
+    background: var(--order-amber-bg); color: #a5691a; border: 1px solid #f0d9ab; border-radius: 10px;
+    font-weight: 700;
+}
+.order-toolbar .btn--csv:hover { background: var(--order-amber); color: #fff; }
+
+/* ---------- 테이블 ---------- */
+.table-wrap { border-radius: 16px; overflow: hidden; border: 1px solid var(--order-line); }
+.table-wrap .table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table-wrap .table thead th {
+    background: linear-gradient(90deg, var(--order-navy-1), var(--order-navy-2));
+    color: #fff; font-weight: 700; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase;
+    padding: 14px 16px; text-align: left; white-space: nowrap;
+}
+.table-wrap .table thead th:first-child { border-top-left-radius: 0; }
+.table-wrap .table tbody td {
+    padding: 15px 16px; color: var(--order-ink); border-bottom: 1px solid var(--order-line);
+    vertical-align: middle;
+}
+.table-wrap .table tbody tr { transition: background-color .12s ease; }
+.table-wrap .table tbody tr:last-child td { border-bottom: none; }
+.table-wrap .table tbody tr:hover { background: #f7f8fd; }
+.table-wrap .table tbody td:first-child {
+    font-weight: 700; font-variant-numeric: tabular-nums; color: var(--order-navy-2);
+    letter-spacing: .01em;
+}
+.table-wrap .table tbody td:last-child { text-align: right; white-space: nowrap; }
+
+/* 뱃지를 필/캡슐 형태로 통일 */
+.table-wrap .badge, .order-modal .badge {
+    display: inline-flex; align-items: center; padding: 5px 11px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: .02em; background: #f1f2f6; color: #777;
+}
+.table-wrap .badge--success, .order-modal .badge--success { background: var(--order-success-bg); color: var(--order-success); }
+.table-wrap .badge--warning, .order-modal .badge--warning { background: var(--order-warning-bg); color: var(--order-warning); }
+.table-wrap .badge--danger, .order-modal .badge--danger { background: var(--order-danger-bg); color: var(--order-danger); }
+
+.order-row-actions { display: inline-flex; gap: 6px; }
+.order-row-actions button {
+    padding: 7px 14px; font-size: 12px; font-weight: 700; border-radius: 8px; border: 1px solid var(--order-line);
+    background: #fff; color: var(--order-ink); cursor: pointer; transition: all .15s ease;
+}
+.order-row-actions .js-detail-btn:hover { border-color: var(--order-navy-2); color: var(--order-navy-2); background: #f3f5ff; }
+.order-row-actions .js-cancel-open { color: var(--order-danger); border-color: #f6d2ce; background: #fff8f7; }
+.order-row-actions .js-cancel-open:hover { background: var(--order-danger); color: #fff; border-color: var(--order-danger); }
+
+.order-empty-row td { padding: 56px 20px !important; text-align: center; color: var(--order-muted); font-size: 13.5px; }
+
+/* ---------- 페이지네이션 ---------- */
+.order-pagination { display: flex; justify-content: center; gap: 6px; padding: 20px 0 4px; }
+.order-page-link {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 34px; padding: 0 8px; border-radius: 8px;
+    border: 1px solid var(--order-line); color: var(--order-ink); font-size: 13px; font-weight: 700;
+    text-decoration: none; transition: all .15s ease;
+}
+.order-page-link:hover { background: #f3f5ff; }
+.order-page-link.is-active { background: linear-gradient(90deg, var(--order-navy-1), var(--order-navy-2)); border-color: transparent; color: #fff; }
+
+/* ==========================================================================
+   예매 상세 모달 - 티켓 스텁(ticket stub) 모티브
+   ========================================================================== */
+.order-modal {
+    position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
+    padding: 24px; backdrop-filter: blur(1px);
+}
+.order-modal.is-open { display: flex; animation: order-modal-fade .18s ease; }
+@keyframes order-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+.order-modal__backdrop { position: absolute; inset: 0; background: rgba(15, 17, 26, .68); }
+
+.order-modal__content {
+    position: relative; z-index: 1; width: min(600px, 94vw); max-height: 90vh;
+    overflow-y: auto; background: var(--order-surface); border-radius: 22px; padding: 0;
+    box-shadow: 0 28px 70px rgba(15, 17, 26, .4);
+    animation: order-modal-pop .2s cubic-bezier(.2, .8, .3, 1);
+}
+@keyframes order-modal-pop { from { transform: translateY(10px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.order-modal__close {
+    position: absolute; top: 16px; right: 18px; width: 32px; height: 32px; z-index: 2;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; border-radius: 50%; background: rgba(255, 255, 255, .18);
+    font-size: 18px; line-height: 1; cursor: pointer; color: #fff; transition: all .15s ease;
+}
+.order-modal__close:hover { background: rgba(255, 255, 255, .3); transform: rotate(90deg); }
+
+/* 티켓 상단 - 헤더 스텁 */
+.ticket-head {
+    background: linear-gradient(120deg, var(--order-navy-1), var(--order-navy-2));
+    color: #fff; padding: 26px 28px 22px;
+}
+.ticket-head__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255, 255, 255, .55); }
+.ticket-head__title { margin: 6px 0 0; font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+.ticket-head__meta { margin-top: 14px; display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: rgba(255, 255, 255, .8); }
+.ticket-head__meta strong { color: #fff; font-weight: 700; }
+
+/* 절취선 (펀치홀 포함) */
+.ticket-perforation {
+    position: relative; height: 0; border-top: 2px dashed rgba(20, 20, 45, .16);
+    margin: 0 28px;
+}
+.ticket-perforation::before, .ticket-perforation::after {
+    content: ""; position: absolute; top: -10px; width: 20px; height: 20px; border-radius: 50%;
+    background: #f4f5f9;
+}
+.ticket-perforation::before { left: -38px; }
+.ticket-perforation::after { right: -38px; }
+
+.order-modal__body { padding: 22px 28px 28px; }
+.order-modal__section { margin-bottom: 22px; }
+.order-modal__section:last-child { margin-bottom: 0; }
+.order-modal__section h4 {
+    margin: 0 0 12px; font-size: 11.5px; color: var(--order-muted); font-weight: 800;
+    letter-spacing: .06em; text-transform: uppercase;
+}
+.order-modal__list { margin: 0; display: grid; gap: 9px; }
+.order-modal__list > div { display: flex; gap: 12px; font-size: 13.5px; align-items: baseline; }
+.order-modal__list dt { flex: 0 0 82px; color: var(--order-muted); font-weight: 600; }
+.order-modal__list dd { margin: 0; color: var(--order-ink); font-weight: 500; }
+.order-modal__list dd.is-amount { font-weight: 800; font-size: 15px; color: var(--order-navy-2); }
+
+.seat-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.seat-chip {
+    padding: 7px 13px; border-radius: 999px; background: var(--order-amber-bg); color: #a5691a;
+    font-size: 12px; font-weight: 700; border: 1px solid #f0d9ab;
+}
+
+.pay-history-item {
+    border: 1px solid var(--order-line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
+    background: #fafbfd;
+}
+.pay-history-item:last-child { margin-bottom: 0; }
+.pay-history-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
+.pay-history-head strong { font-size: 13.5px; font-weight: 700; color: var(--order-ink); }
+.pay-history-sub { font-size: 11.5px; color: var(--order-muted); }
+.refund-row {
+    font-size: 12px; color: var(--order-danger); margin-top: 8px; padding: 8px 10px;
+    background: var(--order-danger-bg); border-radius: 8px;
+}
+
+.order-cancel-form {
+    margin: 22px 28px 26px; padding: 16px; border-radius: 14px;
+    background: var(--order-danger-bg); border: 1px dashed #f0b3ac;
+    display: flex; gap: 8px; align-items: center;
+}
+.order-cancel-form input {
+    flex: 1; padding: 10px 12px; border: 1px solid #f0b3ac; border-radius: 9px; font-size: 13px; background: #fff;
+}
+.order-cancel-form input:focus { outline: none; border-color: var(--order-danger); }
+.order-cancel-form button {
+    padding: 10px 18px; border-radius: 9px; border: none; background: var(--order-danger); color: #fff;
+    font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; transition: filter .15s ease;
+}
+.order-cancel-form button:hover { filter: brightness(1.08); }
+
+.order-modal__empty-note { font-size: 13px; color: var(--order-muted); padding: 6px 2px; }
+
+@media (max-width: 640px) {
+    .order-modal__content { border-radius: 18px; }
+    .ticket-perforation { margin: 0 16px; }
+    .ticket-head, .order-modal__body { padding-left: 20px; padding-right: 20px; }
+    .order-cancel-form { margin-left: 16px; margin-right: 16px; flex-direction: column; align-items: stretch; }
+}
+
+
+/* 상세 모달 하단 - 강제취소 트리거 버튼 */
+.order-cancel-trigger {
+    padding: 18px 28px 26px;
+}
+.order-cancel-trigger .btn--danger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+.order-cancel-trigger .btn--danger:hover {
+    background: #b91c1c;
+}
+.order-cancel-trigger .btn--danger:active {
+    transform: scale(0.98);
+}
+.order-cancel-trigger .btn--danger::before {
+    content: '⚠';
+    font-size: 13px;
+}
+
+/* 상세 모달 하단 - 강제취소 트리거 버튼 */
+.order-cancel-trigger {
+    padding: 18px 28px 26px;
+}
+.order-cancel-trigger .btn--danger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+.order-cancel-trigger .btn--danger:hover {
+    background: #b91c1c;
+}
+.order-cancel-trigger .btn--danger:active {
+    transform: scale(0.98);
+}
+.order-cancel-trigger .btn--danger::before {
+    content: '⚠';
+    font-size: 13px;
+}
+
+/* 취소 사유 입력 모달 */
+.order-modal--small {
+    z-index: 1100;
+}
+.order-modal--small .order-modal__backdrop {
+    background: rgba(15, 15, 30, 0.55);
+    backdrop-filter: blur(2px);
+}
+.order-modal__content--small {
+    max-width: 480px;
+    width: 92%;
+    background: #fff;
+    border-radius: 20px;
+    padding: 36px 36px 30px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+.order-cancel-prompt__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+}
+.order-cancel-prompt h4 {
+    margin: 0 0 8px;
+    font-size: 19px;
+    font-weight: 800;
+    color: #1a1a2e;
+}
+.order-cancel-prompt__desc {
+    margin: 0 0 24px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #6b7280;
+}
+/* 새 클래스: 기존 orders.css의 .order-cancel-form(점선 테두리) 스타일과 충돌 방지 */
+.cancel-reason-form {
+    display: block;
+}
+.cancel-reason-form label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+}
+#cancelReasonInput {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 88px;
+    padding: 13px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+#cancelReasonInput:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+.order-cancel-prompt__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+}
+.order-cancel-prompt__actions button {
+    flex: 0 0 auto;
+    min-width: 96px;
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+.order-cancel-prompt__actions .btn--ghost {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    color: #374151;
+}
+.order-cancel-prompt__actions .btn--ghost:hover {
+    background: #f9fafb;
+}
+.order-cancel-prompt__actions .btn--danger {
+    background: #dc2626;
+    border: none;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+.order-cancel-prompt__actions .btn--danger:hover {
+    background: #b91c1c;
+}
+.order-cancel-prompt__actions .btn--danger:active {
+    transform: scale(0.98);
+}

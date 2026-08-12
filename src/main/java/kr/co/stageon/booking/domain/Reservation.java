@@ -98,4 +98,14 @@ public class Reservation {
         reservation.reservedAt = LocalDateTime.now();
         return reservation;
     }
+
+    /** AD09 관리자 화면에서 확정된 예매를 강제로 취소 처리할 때 사용합니다. */
+    public void cancel(String reason) {
+        if (this.status == Status.CANCELLED) {
+            throw new IllegalStateException("이미 취소된 예매입니다.");
+        }
+        this.status = Status.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.cancelReason = reason;
+    }
 }

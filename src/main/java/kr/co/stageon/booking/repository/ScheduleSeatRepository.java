@@ -36,4 +36,7 @@ public interface ScheduleSeatRepository extends JpaRepository<ScheduleSeat, Long
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update ScheduleSeat s set s.status = 'AVAILABLE' where s.id in :seatIds")
     void bulkReleaseSeats(@Param("seatIds") List<Long> seatIds);
+
+    /** AD08 좌석 완전 삭제 판단용 - 이 물리 좌석(seat_id)이 다른 회차에도 등록되어 있는지 확인합니다. */
+    boolean existsBySeatId(Long seatId);
 }

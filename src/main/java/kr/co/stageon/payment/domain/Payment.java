@@ -93,4 +93,14 @@ public class Payment {
         this.processedAt = processedAt;
         this.cancelAmount = BigDecimal.ZERO;
     }
+
+    /** AD09 관리자 강제취소 시 결제를 취소 상태로 전환하고 환불 누적액을 기록합니다. */
+    public void markCancelled(BigDecimal refundAmount) {
+        if (this.status != Status.SUCCESS) {
+            throw new IllegalStateException("성공한 결제만 취소할 수 있습니다.");
+        }
+        this.status = Status.CANCELLED;
+        this.cancelAmount = this.cancelAmount.add(refundAmount);
+        this.processedAt = LocalDateTime.now();
+    }
 }
