@@ -22,11 +22,8 @@ import kr.co.stageon.venue.domain.Seat;
 import kr.co.stageon.venue.domain.SeatGrade;
 import kr.co.stageon.venue.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
@@ -42,6 +39,10 @@ import java.util.stream.Collectors;
  * AD08 "좌석 재고·선점 현황" 화면의 통계/등급별 잔여석/좌석 배치도/활성 선점 조회와
  * 회차 좌석 구성(개별·일괄 생성, 신규 물리 좌석 생성, 개별·일괄 삭제), 관리자 좌석 상태 일괄 변경을 담당합니다.
  * Redis 대기열·TTL 기능은 이번 세션 범위에서 제외하고, schedule_seats·seat_holds DB 상태만 기준으로 조회합니다.
+ *
+ * 삭제 로직은 DB 예외를 캐치하는 대신 삭제 전에 선점 이력을 미리 조회해서 판단합니다.
+ * 별도의 트랜잭션 매니저나 REQUIRES_NEW 같은 수동 트랜잭션 제어는 쓰지 않고,
+ * 일반적인 @Transactional 메서드 하나로 처리합니다.
  */
 @Service
 @RequiredArgsConstructor
@@ -55,7 +56,6 @@ public class AdminSeatInventoryService {
     private final SeatHoldRepository seatHoldRepository;
     private final SeatHoldItemRepository seatHoldItemRepository;
     private final SeatRepository seatRepository;
-    private final PlatformTransactionManager transactionManager;
 
     /** 공연 선택 시 "회차 선택" 드롭다운에 채울 옵션입니다. */
     @Transactional(readOnly = true)
@@ -93,11 +93,13 @@ public class AdminSeatInventoryService {
         List<ScheduleSeat> seats = scheduleSeatRepository.findWithSeatInfoByScheduleId(scheduleId);
 
         Map<Long, SeatGrade> gradeById = new LinkedHashMap<>();
+        Map<Long, BigDecimal> priceByGrade = new LinkedHashMap<>();
         Map<Long, long[]> countsByGrade = new LinkedHashMap<>(); // [available, held, reserved, blocked]
 
         for (ScheduleSeat ss : seats) {
             SeatGrade grade = ss.getSeat().getSeatGrade();
             gradeById.putIfAbsent(grade.getId(), grade);
+            priceByGrade.putIfAbsent(grade.getId(), ss.getPrice());
             long[] counts = countsByGrade.computeIfAbsent(grade.getId(), k -> new long[4]);
             counts[statusIndex(ss.getStatus())]++;
         }
@@ -112,7 +114,7 @@ public class AdminSeatInventoryService {
                     long[] c = countsByGrade.get(grade.getId());
                     long total = c[0] + c[1] + c[2] + c[3];
                     return new SeatInventoryGradeDto(grade.getId(), grade.getName(), grade.getDisplayColor(),
-                            total, c[0], c[1], c[2], c[3]);
+                            priceByGrade.get(grade.getId()), total, c[0], c[1], c[2], c[3]);
                 })
                 .collect(Collectors.toList());
     }
@@ -306,8 +308,11 @@ public class AdminSeatInventoryService {
     }
 
     /**
-     * AD08 "좌석 구성 관리" - 회차 좌석 하나를 삭제합니다. 판매가능(AVAILABLE) 상태인 좌석만 삭제할 수 있으며,
-     * 과거에 한 번이라도 선점 이력(seat_hold_items)이 있는 좌석은 외래키 제약으로 삭제할 수 없습니다.
+     * AD08 "좌석 구성 관리" - 회차 좌석 하나를 삭제합니다.
+     * - 판매가능(AVAILABLE) 상태가 아니면 삭제할 수 없습니다.
+     * - 과거에 한 번이라도 선점 이력(seat_hold_items)이 있으면 삭제할 수 없습니다(사전 조회로 미리 확인, DB 예외에 의존하지 않음).
+     * - 삭제 후 이 물리 좌석을 다른 회차에서는 쓰지 않는다면, 좌석도(seats)에서도 완전히 삭제되어
+     *   "미등록 좌석" 목록에도 다시 나타나지 않습니다.
      */
     @Transactional
     public void deleteScheduleSeat(Long scheduleSeatId) {
@@ -316,32 +321,37 @@ public class AdminSeatInventoryService {
         if (seat.getStatus() != ScheduleSeat.Status.AVAILABLE) {
             throw new IllegalStateException("판매가능 상태의 좌석만 삭제할 수 있습니다.");
         }
-        try {
-            scheduleSeatRepository.delete(seat);
-            scheduleSeatRepository.flush();
-        } catch (DataIntegrityViolationException e) {
-            throw new IllegalStateException("이 좌석은 과거 선점 이력이 남아 있어 삭제할 수 없습니다. 상태를 '차단'으로 변경해주세요.");
+        if (seatHoldItemRepository.countByScheduleSeatId(scheduleSeatId) > 0) {
+            throw new IllegalStateException("이 좌석은 과거 선점 이력이 남아 있어 삭제할 수 없습니다.");
+        }
+
+        Long physicalSeatId = seat.getSeat().getId();
+        scheduleSeatRepository.delete(seat);
+        scheduleSeatRepository.flush();
+
+        boolean usedInOtherSchedule = scheduleSeatRepository.existsBySeatId(physicalSeatId);
+        if (!usedInOtherSchedule) {
+            seatRepository.deleteById(physicalSeatId);
         }
     }
 
     /**
      * AD08 "좌석 구성 관리" - 여러 좌석을 한 번에 삭제합니다.
-     * 좌석마다 독립된 트랜잭션으로 처리하므로, 선점 이력 때문에 일부가 실패해도 나머지 삭제는 그대로 진행됩니다.
+     * 좌석마다 사전 검증(상태·선점 이력)을 먼저 통과한 것만 삭제하므로, 하나가 조건에 안 맞아도
+     * 나머지 삭제는 같은 트랜잭션 안에서 정상적으로 계속 진행됩니다.
      */
+    @Transactional
     public SeatInventoryDeleteResultDto bulkDeleteScheduleSeats(List<Long> scheduleSeatIds) {
         if (scheduleSeatIds == null || scheduleSeatIds.isEmpty()) {
             return new SeatInventoryDeleteResultDto(0, 0);
         }
-        TransactionTemplate tt = new TransactionTemplate(transactionManager);
-        tt.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-
         int deleted = 0;
         int skipped = 0;
         for (Long id : scheduleSeatIds) {
             try {
-                tt.executeWithoutResult(status -> deleteScheduleSeat(id));
+                deleteScheduleSeat(id);
                 deleted++;
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | IllegalStateException e) {
                 skipped++;
             }
         }

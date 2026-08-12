@@ -1,90 +1,585 @@
+
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StageOn Admin | 예매·주문 조회</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
-  </head>
-  <body>
-    <div class="admin-page">
-      <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
-      <main class="admin-main">
-        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
-        <div class="admin-content">
-          <header class="admin-title">
-            <div>
-              <h1>예매·주문 조회</h1>
-              <p>예약과 모의 결제 상태를 통합 조회합니다.</p>
-            </div>
-            <button class="btn" type="button">CSV 내보내기</button>
-          </header>
-          <div class="card">
-            <div class="cluster" style="margin-bottom:18px">
-              <input class="input" placeholder="예매번호, 회원 이메일 검색" style="max-width:360px">
-              <select class="select" style="max-width:160px">
-                <option>전체 상태</option>
-                <option>RESERVED</option>
-                <option>PENDING</option>
-              </select>
-              <button class="btn btn--dark" type="button">검색</button>
-            </div>
-            <div class="table-wrap">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>예매번호</th>
-                    <th>회원</th>
-                    <th>공연·회차</th>
-                    <th>예약</th>
-                    <th>결제</th>
-                    <th>금액</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>STG-260815-0012</td>
-                    <td>stage***</td>
-                    <td>오페라의 유령 · 19:00</td>
-                    <td>
-                      <span class="badge badge--success">RESERVED</span>
-                    </td>
-                    <td>
-                      <span class="badge badge--success">SUCCESS</span>
-                    </td>
-                    <td>162,000원</td>
-                  </tr>
-                  <tr>
-                    <td>STG-260815-0011</td>
-                    <td>member***</td>
-                    <td>오페라의 유령 · 19:00</td>
-                    <td>
-                      <span class="badge badge--warning">PENDING</span>
-                    </td>
-                    <td>
-                      <span class="badge">READY</span>
-                    </td>
-                    <td>132,000원</td>
-                  </tr>
-                  <tr>
-                    <td>STG-260815-0010</td>
-                    <td>user***</td>
-                    <td>시카고 · 14:00</td>
-                    <td>
-                      <span class="badge badge--danger">CANCELLED</span>
-                    </td>
-                    <td>
-                      <span class="badge badge--danger">FAILED</span>
-                    </td>
-                    <td>0원</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StageOn Admin | 예매·주문 조회</title>
+  <meta name="_csrf" th:content="${_csrf.token}" content="">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" content="">
+  <meta name="_csrf_parameter" th:content="${_csrf.parameterName}" content="">
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+  <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+  <link rel="stylesheet" th:href="@{/css/pages/orders.css}" href="/css/pages/orders.css">
+  <style>
+    /* 상세 모달 하단 - 강제취소 트리거 버튼 */
+    .order-cancel-trigger {
+      padding: 18px 28px 26px;
+    }
+    .order-cancel-trigger .btn--danger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: #dc2626;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .order-cancel-trigger .btn--danger:hover {
+      background: #b91c1c;
+    }
+    .order-cancel-trigger .btn--danger:active {
+      transform: scale(0.98);
+    }
+    .order-cancel-trigger .btn--danger::before {
+      content: '⚠';
+      font-size: 13px;
+    }
+
+    /* 관리 컬럼: 버튼이 상세 하나뿐이면(취소 버튼 없음) 중앙 정렬 */
+    .order-row-actions:has(> button:only-child) {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* 상태 필터 탭 (전체 / 예약중 / 취소됨) */
+    .order-status-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 16px 20px 0;
+    }
+    .order-status-tab {
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #6b7280;
+      background: #f3f4f6;
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .order-status-tab:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .order-status-tab.is-active {
+      background: #1a1a3e;
+      color: #fff;
+    }
+
+    /* 전체 탭에서도 취소건은 한눈에 구분되도록 옅게 처리 */
+    tr.order-row--cancelled {
+      opacity: 0.55;
+      transition: opacity 0.15s ease;
+    }
+    tr.order-row--cancelled:hover {
+      opacity: 0.9;
+    }
+
+    /* 재예매 트리거 버튼 (취소된 예매 상세에서 노출) */
+    .order-rebook-trigger .btn--rebook {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .order-rebook-trigger .btn--rebook:hover {
+      background: #1d4ed8;
+    }
+    .order-rebook-trigger .btn--rebook:active {
+      transform: scale(0.98);
+    }
+    .order-rebook-trigger .btn--rebook::before {
+      content: '↻';
+      font-size: 14px;
+    }
+
+    /* 취소 사유 입력 모달 */
+    .order-modal--small {
+      z-index: 1100;
+    }
+    .order-modal--small .order-modal__backdrop {
+      background: rgba(15, 15, 30, 0.55);
+      backdrop-filter: blur(2px);
+    }
+    .order-modal__content--small {
+      max-width: 480px;
+      width: 92%;
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 36px 30px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+    .order-cancel-prompt__icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .order-cancel-prompt h4 {
+      margin: 0 0 8px;
+      font-size: 19px;
+      font-weight: 800;
+      color: #1a1a2e;
+    }
+    .order-cancel-prompt__desc {
+      margin: 0 0 24px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #6b7280;
+    }
+    /* 새 클래스: 기존 orders.css의 .order-cancel-form(점선 테두리) 스타일과 충돌 방지 */
+    .cancel-reason-form {
+      display: block;
+    }
+    .cancel-reason-form label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    #cancelReasonInput {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 88px;
+      padding: 13px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    #cancelReasonInput:focus {
+      outline: none;
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    }
+    .order-cancel-prompt__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .order-cancel-prompt__actions button {
+      flex: 0 0 auto;
+      min-width: 96px;
+      padding: 11px 20px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .order-cancel-prompt__actions .btn--ghost {
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      color: #374151;
+    }
+    .order-cancel-prompt__actions .btn--ghost:hover {
+      background: #f9fafb;
+    }
+    .order-cancel-prompt__actions .btn--danger {
+      background: #dc2626;
+      border: none;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+    }
+    .order-cancel-prompt__actions .btn--danger:hover {
+      background: #b91c1c;
+    }
+    .order-cancel-prompt__actions .btn--danger:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+<div class="admin-page">
+  <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+  <main class="admin-main">
+    <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+    <div class="admin-content">
+      <header class="admin-title">
+        <div>
+          <h1>예매·주문 조회</h1>
+          <p>예약과 모의 결제 상태를 통합 조회합니다.</p>
         </div>
-      </main>
+      </header>
+
+      <div th:if="${message}" class="alert alert--success" th:text="${message}"></div>
+      <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
+
+      <!-- 통계 카드 -->
+      <div class="cluster order-stats" style="margin-bottom:18px">
+        <div class="card order-stat-card">
+          <span class="order-stat-label">오늘 예매 건수</span>
+          <strong class="order-stat-value" th:text="${stats.todayReservationCount()} + '건'">0건</strong>
+        </div>
+        <div class="card order-stat-card order-stat-card--accent">
+          <span class="order-stat-label">총 매출</span>
+          <strong class="order-stat-value order-stat-value--accent" th:text="${#numbers.formatInteger(stats.totalRevenue(), 0, 'COMMA')} + '원'">0원</strong>
+        </div>
+        <div class="card order-stat-card">
+          <span class="order-stat-label">취소/환불 건수</span>
+          <strong class="order-stat-value" th:text="${stats.cancelledCount()} + '건'">0건</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="order-status-tabs">
+          <a class="order-status-tab" th:classappend="${selectedStatus == null} ? 'is-active'"
+             th:href="@{/admin/orders(keyword=${keyword})}">전체</a>
+          <a class="order-status-tab" th:classappend="${selectedStatus != null and selectedStatus.name() == 'RESERVED'} ? 'is-active'"
+             th:href="@{/admin/orders(status='RESERVED', keyword=${keyword})}">예약중</a>
+          <a class="order-status-tab" th:classappend="${selectedStatus != null and selectedStatus.name() == 'CANCELLED'} ? 'is-active'"
+             th:href="@{/admin/orders(status='CANCELLED', keyword=${keyword})}">취소됨</a>
+        </div>
+
+        <form class="order-toolbar" method="get" th:action="@{/admin/orders}">
+          <input class="input" type="text" name="keyword" th:value="${keyword}"
+                 placeholder="예매번호, 회원명 검색" style="max-width:320px">
+          <select class="select" name="status" style="max-width:150px">
+            <option value="">전체 상태</option>
+            <option th:each="s : ${reservationStatuses}" th:value="${s}" th:text="${s}"
+                    th:selected="${selectedStatus != null and selectedStatus == s}"></option>
+          </select>
+          <button class="btn btn--dark" type="submit">검색</button>
+          <a class="btn btn--ghost" th:href="@{/admin/orders}">초기화</a>
+          <button class="btn btn--csv" type="button" id="csvExportBtn">⇩ CSV 내보내기</button>
+        </form>
+
+        <div class="table-wrap">
+          <table class="table" id="ordersTable">
+            <thead>
+            <tr>
+              <th>예매번호</th>
+              <th>회원</th>
+              <th>공연·회차</th>
+              <th>예약</th>
+              <th>결제</th>
+              <th>금액</th>
+              <th>관리</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr class="order-empty-row" th:if="${orders.empty}">
+              <td colspan="7">조회된 예매가 없습니다.</td>
+            </tr>
+            <tr th:each="o : ${orders.content}"
+                th:classappend="${o.reservationStatus().name() == 'CANCELLED'} ? 'order-row--cancelled'">
+              <td th:text="${o.bookingNumber()}">STG-260815-0012</td>
+              <td th:text="${o.maskedMemberName()}">stage***</td>
+              <td th:text="${o.performanceTitle()} + ' · ' + ${#temporals.format(o.scheduleStartsAt(), 'HH:mm')}">오페라의 유령 · 19:00</td>
+              <td>
+                <span class="badge badge--success" th:if="${o.reservationStatus().name() == 'RESERVED'}">RESERVED</span>
+                <span class="badge badge--warning" th:if="${o.reservationStatus().name() == 'PENDING'}">PENDING</span>
+                <span class="badge badge--danger" th:if="${o.reservationStatus().name() == 'CANCELLED'}">CANCELLED</span>
+                <span class="badge badge--danger" th:if="${o.reservationStatus().name() == 'EXPIRED'}">EXPIRED</span>
+              </td>
+              <td>
+                <span class="badge" th:if="${o.paymentStatus() == null}">-</span>
+                <span class="badge" th:if="${o.paymentStatus() != null and o.paymentStatus().name() == 'READY'}">READY</span>
+                <span class="badge badge--success" th:if="${o.paymentStatus() != null and o.paymentStatus().name() == 'SUCCESS'}">SUCCESS</span>
+                <span class="badge badge--danger" th:if="${o.paymentStatus() != null and o.paymentStatus().name() == 'FAILED'}">FAILED</span>
+                <span class="badge" th:if="${o.paymentStatus() != null and o.paymentStatus().name() == 'CANCELLED'}">CANCELLED</span>
+              </td>
+              <td th:text="${#numbers.formatInteger(o.totalAmount(), 0, 'COMMA')} + '원'">162,000원</td>
+              <td>
+                <div class="order-row-actions">
+                  <button type="button" class="js-detail-btn" th:attr="data-id=${o.reservationId()}">상세</button>
+                  <button type="button" class="js-cancel-open"
+                          th:if="${o.reservationStatus().name() == 'RESERVED'}"
+                          th:attr="data-id=${o.reservationId()}">취소</button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="order-pagination" th:if="${orders.totalPages > 1}">
+          <a th:each="i : ${#numbers.sequence(1, orders.totalPages)}"
+             class="order-page-link" th:classappend="${i == currentPage} ? 'is-active'"
+             th:href="@{/admin/orders(page=${i}, keyword=${keyword}, status=${selectedStatus})}"
+             th:text="${i}">1</a>
+        </div>
+      </div>
     </div>
-  </body>
+  </main>
+</div>
+
+<!-- 예매 상세 모달 (티켓 스텁 모티브) -->
+<div class="order-modal" id="orderModal">
+  <div class="order-modal__backdrop" onclick="closeOrderModal()"></div>
+  <div class="order-modal__content" id="orderModalContent">
+    <button type="button" class="order-modal__close" onclick="closeOrderModal()">&times;</button>
+    <div id="orderModalBody">
+      <div class="ticket-head">
+        <div class="ticket-head__eyebrow">불러오는 중…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 강제취소 사유 입력 모달 -->
+<div class="order-modal order-modal--small" id="cancelReasonModal">
+  <div class="order-modal__backdrop" onclick="closeCancelPrompt()"></div>
+  <div class="order-modal__content order-modal__content--small">
+    <button type="button" class="order-modal__close" onclick="closeCancelPrompt()">&times;</button>
+    <div class="order-cancel-prompt">
+      <div class="order-cancel-prompt__icon">⚠</div>
+      <h4>예매를 강제취소하시겠습니까?</h4>
+      <p class="order-cancel-prompt__desc">취소 사유를 입력해 주세요. 확정 후에는 되돌릴 수 없습니다.</p>
+      <form class="cancel-reason-form" id="cancelReasonForm" onsubmit="submitCancel(event)">
+        <label for="cancelReasonInput">취소 사유</label>
+        <textarea id="cancelReasonInput" name="reason" placeholder="예: 고객 요청, 중복 예매 등" required></textarea>
+        <div class="order-cancel-prompt__actions">
+          <button type="button" class="btn btn--ghost" onclick="closeCancelPrompt()">닫기</button>
+          <button type="submit" class="btn btn--danger">강제취소 확정</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script th:inline="javascript">
+  /* Thymeleaf 서버 URL 변수 주입 전용 스크립트입니다. [[...]] 인라인 표현식과
+     충돌하는 순수 JS 배열/객체 리터럴은 이 블록에 두지 말고 아래 일반 <script>에 작성하세요. */
+  window.__ORDER_DETAIL_URL_BASE__ = /*[[@{/admin/orders}]]*/ '/admin/orders';
+  window.__ORDER_CANCEL_URL_BASE__ = /*[[@{/admin/orders}]]*/ '/admin/orders';
+</script>
+<script th:inline="none">
+  const detailUrlBase = window.__ORDER_DETAIL_URL_BASE__;
+  const cancelUrlBase = window.__ORDER_CANCEL_URL_BASE__;
+  const redirectQuery = window.location.search.replace(/^\?/, '');
+
+  let pendingCancelId = null;
+
+  document.querySelectorAll('.js-detail-btn').forEach(btn => {
+    btn.addEventListener('click', () => openOrderDetail(btn.dataset.id));
+  });
+  document.querySelectorAll('.js-cancel-open').forEach(btn => {
+    btn.addEventListener('click', () => openOrderDetail(btn.dataset.id));
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeCancelPrompt();
+      closeOrderModal();
+    }
+  });
+
+  function closeOrderModal() {
+    document.getElementById('orderModal').classList.remove('is-open');
+  }
+
+  function openCancelPrompt(id) {
+    pendingCancelId = id;
+    document.getElementById('cancelReasonInput').value = '';
+    document.getElementById('cancelReasonModal').classList.add('is-open');
+    setTimeout(() => document.getElementById('cancelReasonInput').focus(), 50);
+  }
+
+  function closeCancelPrompt() {
+    document.getElementById('cancelReasonModal').classList.remove('is-open');
+    pendingCancelId = null;
+  }
+
+  function payStatusLabel(s) {
+    return {READY: '결제대기', SUCCESS: '결제완료', FAILED: '결제실패', CANCELLED: '결제취소'}[s] || '-';
+  }
+  function payBadgeClass(s) {
+    return {SUCCESS: 'badge--success', FAILED: 'badge--danger', READY: '', CANCELLED: ''}[s] || '';
+  }
+  function resStatusLabel(s) {
+    return {PENDING: '대기중', RESERVED: '예매확정', CANCELLED: '취소됨', EXPIRED: '만료됨'}[s] || s;
+  }
+  /* 결제수단 코드를 한글 라벨로 변환합니다. (kr.co.stageon.payment.domain.Payment.PayMethod 기준) */
+  function payMethodLabel(m) {
+    return {
+      CARD: '카드',
+      VBANK: '가상계좌',
+      BANK: '무통장입금',
+      MOBILE: '모바일'
+    }[m] || (m || '-');
+  }
+  function fmtMoney(n) {
+    return Number(n).toLocaleString('ko-KR') + '원';
+  }
+  function fmtDate(s) {
+    if (!s) return '-';
+    return s.replace('T', ' ').substring(0, 16);
+  }
+
+  function openOrderDetail(id) {
+    document.getElementById('orderModalBody').innerHTML = `
+          <div class="ticket-head"><div class="ticket-head__eyebrow">불러오는 중…</div></div>`;
+    document.getElementById('orderModal').classList.add('is-open');
+
+    fetch(detailUrlBase + '/' + id + '/detail')
+            .then(res => res.json())
+            .then(d => {
+              const seatChips = d.seats.map(s =>
+                      `<span class="seat-chip">${s.sectionName} ${s.rowLabel}${s.seatNumber} · ${s.gradeName}</span>`
+              ).join('');
+
+              const payHistory = d.payments.map(p => {
+                const refunds = p.refunds.map(r =>
+                        `<div class="refund-row">환불 ${fmtMoney(r.amount)} · ${r.status} · ${r.reason || '사유 없음'}</div>`
+                ).join('');
+                return `<div class="pay-history-item">
+                <div class="pay-history-head">
+                  <strong>${payMethodLabel(p.payMethod)} · ${fmtMoney(p.amount)}</strong>
+                  <span class="badge ${payBadgeClass(p.status)}">${payStatusLabel(p.status)}</span>
+                </div>
+                <div class="pay-history-sub">요청 ${fmtDate(p.requestedAt)} · 처리 ${fmtDate(p.processedAt)}</div>
+                ${p.cancelAmount > 0 ? `<div class="refund-row">누적환불 ${fmtMoney(p.cancelAmount)}</div>` : ''}
+                ${refunds}
+              </div>`;
+              }).join('') || '<div class="order-modal__empty-note">결제 이력이 없습니다.</div>';
+
+              const cancelForm = (d.status === 'RESERVED') ? `
+              <div class="order-cancel-trigger">
+                <button type="button" class="btn btn--danger" onclick="openCancelPrompt(${d.reservationId})">강제취소하기</button>
+              </div>` : '';
+
+              const rebookTrigger = (d.status === 'CANCELLED') ? `
+              <div class="order-cancel-trigger order-rebook-trigger">
+                <button type="button" class="btn btn--rebook" onclick="submitRebook(${d.reservationId})">재예매 처리</button>
+              </div>` : '';
+
+              document.getElementById('orderModalBody').innerHTML = `
+              <div class="ticket-head">
+                <div class="ticket-head__eyebrow">예매 상세</div>
+                <h3 class="ticket-head__title">${d.bookingNumber}</h3>
+                <div class="ticket-head__meta">
+                  <span><strong>${d.performanceTitle}</strong></span>
+                  <span>${fmtDate(d.scheduleStartsAt)}</span>
+                  <span class="badge">${resStatusLabel(d.status)}</span>
+                </div>
+              </div>
+              <div class="ticket-perforation"></div>
+              <div class="order-modal__body">
+                <div class="order-modal__section">
+                  <h4>예매 정보</h4>
+                  <dl class="order-modal__list">
+                    <div><dt>회원</dt><dd>${d.maskedMemberName} (${d.maskedMemberPhone || '-'})</dd></div>
+                    <div><dt>수령방법</dt><dd>${d.receiveMethod}</dd></div>
+                    <div><dt>결제금액</dt><dd class="is-amount">${fmtMoney(d.totalAmount)}</dd></div>
+                    <div><dt>예매일시</dt><dd>${fmtDate(d.reservedAt)}</dd></div>
+                    ${d.status === 'CANCELLED' ? `<div><dt>취소일시</dt><dd>${fmtDate(d.cancelledAt)} · ${d.cancelReason || ''}</dd></div>` : ''}
+                  </dl>
+                </div>
+                <div class="order-modal__section">
+                  <h4>좌석 (${d.seats.length}석)</h4>
+                  <div class="seat-chip-list">${seatChips}</div>
+                </div>
+                <div class="order-modal__section">
+                  <h4>결제 · 취소/환불 이력</h4>
+                  ${payHistory}
+                </div>
+              </div>
+              ${cancelForm}
+              ${rebookTrigger}
+            `;
+            });
+  }
+
+  function submitRebook(id) {
+    if (!confirm('이 예매를 동일한 좌석으로 재예매 처리하시겠습니까?\n좌석이 이미 다른 예매로 판매된 경우 실패할 수 있습니다.')) return;
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfParam = document.querySelector('meta[name="_csrf_parameter"]')?.content || '_csrf';
+
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = cancelUrlBase + '/' + id + '/rebook';
+    form.innerHTML = `
+          <input type="hidden" name="redirectQuery" value="${redirectQuery.replace(/"/g, '&quot;')}">
+          ${csrfToken ? `<input type="hidden" name="${csrfParam}" value="${csrfToken}">` : ''}
+        `;
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function submitCancel(e) {
+    e.preventDefault();
+    if (!pendingCancelId) return;
+    const reason = document.getElementById('cancelReasonInput').value.trim();
+    if (!reason) return;
+    if (!confirm('이 예매를 강제취소 처리하시겠습니까?')) return;
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfParam = document.querySelector('meta[name="_csrf_parameter"]')?.content || '_csrf';
+
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = cancelUrlBase + '/' + pendingCancelId + '/cancel';
+    form.innerHTML = `
+          <input type="hidden" name="reason" value="${reason.replace(/"/g, '&quot;')}">
+          <input type="hidden" name="redirectQuery" value="${redirectQuery.replace(/"/g, '&quot;')}">
+          ${csrfToken ? `<input type="hidden" name="${csrfParam}" value="${csrfToken}">` : ''}
+        `;
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  /* CSV 내보내기: 현재 화면(페이지)에 표시된 목록을 CSV로 저장합니다. */
+  document.getElementById('csvExportBtn').addEventListener('click', () => {
+    const rows = [['예매번호', '회원', '공연·회차', '예약상태', '결제상태', '금액']];
+    document.querySelectorAll('#ordersTable tbody tr').forEach(tr => {
+      if (tr.classList.contains('order-empty-row')) return;
+      const cells = tr.querySelectorAll('td');
+      rows.push([
+        cells[0].innerText.trim(),
+        cells[1].innerText.trim(),
+        cells[2].innerText.trim(),
+        cells[3].innerText.trim(),
+        cells[4].innerText.trim(),
+        cells[5].innerText.trim()
+      ]);
+    });
+    const csv = rows.map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `stageon-orders-${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+</script>
+</body>
 </html>

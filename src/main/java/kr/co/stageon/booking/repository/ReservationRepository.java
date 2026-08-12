@@ -1,7 +1,9 @@
 package kr.co.stageon.booking.repository;
 
 import kr.co.stageon.booking.domain.Reservation;
+import kr.co.stageon.payment.domain.Payment;
 import kr.co.stageon.performance.domain.Performance;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,6 +30,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     /** 대시보드 - 특정 상태 & 기간(예: 오늘) 기준 예매 건수 */
     long countByStatusAndReservedAtBetween(Reservation.Status status, LocalDateTime start, LocalDateTime end);
+
+    /** AD09 통계 - 상태 무관 기간(예: 오늘) 기준 예매 건수 */
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    /** AD09 통계 - 특정 상태(예: CANCELLED) 전체 건수 */
+    long countByStatus(Reservation.Status status);
 
     /** 대시보드 - 최근 예매 N건 (공연명 표시를 위해 schedule/performance까지 함께 조회) */
     @Query("""
@@ -66,4 +74,30 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule s JOIN FETCH s.performance p WHERE r.id = :reservationId")
     Optional<Reservation> findByIdWithDetails(@Param("reservationId") Long reservationId);
+
+    /** AD09 "예매·주문 조회" 목록 검색입니다. 파라미터가 null이면 해당 조건은 무시됩니다. */
+    @Query("""
+            SELECT r FROM Reservation r
+            JOIN FETCH r.member m
+            JOIN FETCH r.schedule s
+            JOIN FETCH s.performance p
+            WHERE (:performanceId IS NULL OR p.id = :performanceId)
+              AND (:scheduleId IS NULL OR s.id = :scheduleId)
+              AND (:status IS NULL OR r.status = :status)
+              AND (:keyword IS NULL OR m.name LIKE CONCAT('%', :keyword, '%') OR r.bookingNumber LIKE CONCAT('%', :keyword, '%'))
+              AND (:fromDate IS NULL OR r.createdAt >= :fromDate)
+              AND (:toDate IS NULL OR r.createdAt <= :toDate)
+              AND (:paymentStatus IS NULL OR EXISTS (
+                    SELECT 1 FROM Payment pay WHERE pay.reservation = r AND pay.status = :paymentStatus
+              ))
+            ORDER BY r.createdAt DESC
+            """)
+    Page<Reservation> search(@Param("performanceId") Long performanceId,
+                             @Param("scheduleId") Long scheduleId,
+                             @Param("status") Reservation.Status status,
+                             @Param("paymentStatus") Payment.Status paymentStatus,
+                             @Param("keyword") String keyword,
+                             @Param("fromDate") LocalDateTime fromDate,
+                             @Param("toDate") LocalDateTime toDate,
+                             Pageable pageable);
 }

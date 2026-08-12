@@ -137,7 +137,7 @@
                     <th:block th:each="row : ${section.rows}">
                           <span class="inv-stage-block" th:each="seat : ${row.seats}"
                                 th:style="'background:' + ${seat.displayColor}"
-                                th:title="${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번'"></span>
+                                th:title="${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.price} + '원'"></span>
                     </th:block>
                   </div>
                 </div>
@@ -147,11 +147,12 @@
                 <p class="inv-section-title">등급별 잔여석</p>
                 <table class="inv-grade-table">
                   <thead>
-                  <tr><th>등급</th><th>전체</th><th>판매가능</th><th>선점중</th><th>판매완료</th><th>차단</th></tr>
+                  <tr><th>등급</th><th>가격</th><th>전체</th><th>판매가능</th><th>선점중</th><th>판매완료</th><th>차단</th></tr>
                   </thead>
                   <tbody>
                   <tr th:each="g : ${grades}">
                     <td><span class="inv-grade-swatch" th:style="'background:' + ${g.displayColor}"></span><span th:text="${g.gradeName}">VIP</span></td>
+                    <td th:text="${#numbers.formatInteger(g.price, 0)} + '원'">0원</td>
                     <td th:text="${g.total}">120</td>
                     <td th:text="${g.available}">80</td>
                     <td th:text="${g.held}">5</td>
@@ -239,10 +240,10 @@
           </p>
           <div class="inv-stage-blocks">
             <th:block th:each="row : ${section.rows}">
-              <button type="button" class="inv-edit-block"
+              <button type="button" class="inv-select-block"
                       th:each="seat : ${row.seats}"
-                      th:classappend="'inv-edit-block--' + ${#strings.toLowerCase(seat.status)}"
-                      th:title="${seat.gradeName} + ' ' + ${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.statusText}"
+                      th:classappend="'inv-select-block--' + ${#strings.toLowerCase(seat.status)}"
+                      th:title="${seat.gradeName} + ' ' + ${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.statusText} + ' · ' + ${seat.price} + '원'"
                       th:onclick="'toggleSeatSelect(this,' + ${seat.scheduleSeatId} + ')'"></button>
             </th:block>
           </div>
@@ -273,7 +274,7 @@
       <p class="inv-modal__desc">생성된 좌석은 클릭해 선택한 뒤 하단에서 삭제하고, 미등록 좌석은 클릭하면 바로 추가됩니다.</p>
     </div>
 
-    <!-- 선택된 좌석 삭제 툴바: 좌석을 하나 이상 선택하면 나타납니다 -->
+    <!-- 선택된 좌석 삭제 안내 바: 좌석을 하나 이상 선택하면 나타납니다 -->
     <div class="inv-manage-toolbar" id="manageDeleteToolbar">
       <span class="inv-manage-toolbar__count" id="manageSelectedCount">0석 선택됨</span>
       <div style="display:flex;gap:8px;align-items:center">
@@ -283,27 +284,34 @@
     </div>
 
     <div class="inv-modal__body">
-      <div class="inv-manage-section" th:if="${not #lists.isEmpty(sections)}">
-        <div class="inv-manage-section__head">
+      <!-- 생성된 좌석: 좌석 맵과 동일한 STAGE 조감도 레이아웃 -->
+      <div th:if="${not #lists.isEmpty(sections)}">
+        <div class="inv-manage-section__head" style="margin-bottom:0">
           <h4>생성된 좌석</h4>
           <span class="inv-manage-section__hint">판매가능 상태만 선택·삭제할 수 있습니다</span>
         </div>
-        <div th:each="section : ${sections}" style="margin-bottom:14px">
-          <p class="inv-section-title" th:text="${section.sectionName}">R구역</p>
-          <div class="inv-manage-blocks">
-            <th:block th:each="row : ${section.rows}">
-              <button type="button" class="inv-manage-block"
-                      th:each="seat : ${row.seats}"
-                      th:classappend="${seat.status != 'AVAILABLE'} ? 'inv-manage-block--locked'"
-                      th:style="'background:' + ${seat.displayColor}"
-                      th:title="${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.gradeName} + (${seat.status != 'AVAILABLE'} ? ' · 판매가능 상태만 삭제 가능' : ' · 클릭해서 삭제 선택')"
-                      th:onclick="${seat.status == 'AVAILABLE'} ? ('toggleManageSelect(this,' + ${seat.scheduleSeatId} + ')') : ''"></button>
-            </th:block>
+        <div class="inv-stage-board">
+          <div class="inv-stage-bar">STAGE</div>
+          <div class="inv-stage-section" th:each="section : ${sections}">
+            <p class="inv-stage-section__title">
+              <span th:text="${section.sectionName}">R구역</span> ·
+              <span th:text="${section.rows[0].seats[0].gradeName}">R</span>
+            </p>
+            <div class="inv-stage-blocks">
+              <th:block th:each="row : ${section.rows}">
+                <button type="button" class="inv-select-block"
+                        th:each="seat : ${row.seats}"
+                        th:classappend="${seat.status != 'AVAILABLE'} ? 'inv-select-block--locked'"
+                        th:style="'background:' + ${seat.displayColor}"
+                        th:title="${row.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.gradeName} + ' · ' + ${seat.price} + '원' + (${seat.status != 'AVAILABLE'} ? ' · 판매가능 상태만 삭제 가능' : ' · 클릭해서 삭제 선택')"
+                        th:onclick="${seat.status == 'AVAILABLE'} ? ('toggleManageSelect(this,' + ${seat.scheduleSeatId} + ')') : ''"></button>
+              </th:block>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="inv-manage-section">
+      <div class="inv-manage-section" style="margin-top:28px">
         <div class="inv-manage-section__head">
           <h4>미등록 좌석</h4>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -347,7 +355,7 @@
         <div th:each="section : ${unassignedSeats}" style="margin-top:14px">
           <p class="inv-section-title" th:text="${section.sectionName}">R구역</p>
           <div class="inv-manage-blocks">
-            <button type="button" class="inv-manage-block inv-manage-block--empty"
+            <button type="button" class="inv-manage-block--empty"
                     th:each="seat : ${section.seats}"
                     th:title="${seat.rowLabel} + '열 ' + ${seat.seatNumber} + '번 · ' + ${seat.gradeName} + ' · 클릭 시 추가'"
                     th:onclick="'addSeat(' + ${seat.seatId} + ')'"></button>
@@ -382,14 +390,14 @@
 
   function clearSelection() {
     selectedSeats.clear();
-    document.querySelectorAll('.inv-edit-block.is-selected').forEach(function (b) { b.classList.remove('is-selected'); });
+    document.querySelectorAll('#seatEditModal .inv-select-block.is-selected').forEach(function (b) { b.classList.remove('is-selected'); });
     updateToolbar();
   }
 
   function updateToolbar() {
     var count = selectedSeats.size;
     document.getElementById('selectedCount').textContent = count + '석 선택됨';
-    document.querySelectorAll('.inv-status-btn:not(.inv-status-btn--danger)').forEach(function (b) { b.disabled = count === 0; });
+    document.querySelectorAll('#seatEditModal .inv-status-btn').forEach(function (b) { b.disabled = count === 0; });
   }
 
   function applyStatus(status) {
@@ -428,7 +436,7 @@
 
   function clearManageSelection() {
     manageSelectedSeats.clear();
-    document.querySelectorAll('.inv-manage-block.is-selected').forEach(function (b) { b.classList.remove('is-selected'); });
+    document.querySelectorAll('#seatManageModal .inv-select-block.is-selected').forEach(function (b) { b.classList.remove('is-selected'); });
     updateManageToolbar();
   }
 
@@ -440,6 +448,7 @@
 
   function submitBulkDelete() {
     if (manageSelectedSeats.size === 0) return;
+    if (!confirm(manageSelectedSeats.size + '개 좌석을 정말 삭제하시겠습니까?\n삭제된 좌석은 다른 회차에서 쓰이지 않으면 완전히 사라집니다.')) return;
     document.getElementById('bulkDeleteIds').value = Array.from(manageSelectedSeats).join(',');
     document.getElementById('bulkDeleteForm').submit();
   }
