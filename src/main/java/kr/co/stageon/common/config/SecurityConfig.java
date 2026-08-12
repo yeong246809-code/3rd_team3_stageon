@@ -38,7 +38,8 @@ public class SecurityConfig {
                                 "/api/members/email-verification/**",
                                 "/api/members/find-id",
                                 "/api/members/password-reset/**",
-                                "/api/seats/**"
+                                "/api/seats/**",
+                                "/api/payments/webhook"
                         )
                 )
 
@@ -59,7 +60,8 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**",
                                 "/favicon.ico",
-                                "/error"
+                                "/error",
+                                "/api/payments/webhook"
                         ).permitAll()
 
                         .requestMatchers("/mypage/**")

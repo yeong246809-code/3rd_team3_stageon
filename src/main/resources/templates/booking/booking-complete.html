@@ -40,7 +40,7 @@
           <dd>
             <!-- 여러 좌석일 경우 반복문으로 출력 -->
             <th:block th:each="seat, iterStat : ${reservation.seats}">
-              <span th:text="${seat.gradeName} + ' ' + ${seat.sectionName} + '구역 ' + ${seat.rowLabel} + '열 ' + ${seat.seatNumber} + '번'">VIP A구역 8열 12번</span>
+              <span th:text="${seat.gradeName} + ' ' + ${seat.sectionName} + ' ' + ${seat.rowLabel} + ' ' + ${seat.seatNumber} + ''">VIP A구역 8열 12번</span>
               <br th:if="${!iterStat.last}"/>
             </th:block>
           </dd>

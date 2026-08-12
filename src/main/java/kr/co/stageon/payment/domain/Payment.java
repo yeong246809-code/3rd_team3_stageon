@@ -47,6 +47,14 @@ public class Payment {
     @Column(name = "vbank_num", length = 50)
     private String vbankNum;
 
+    // 은행명 추가 (예: 국민은행, 신한은행)
+    @Column(name = "vbank_name", length = 50)
+    private String vbankName;
+
+    // 입금 기한 추가 (예: 2026-08-15 23:59:59)
+    @Column(name = "vbank_due_date")
+    private LocalDateTime vbankDueDate;
+
     //결제수단
     @Enumerated(EnumType.STRING)
     @Column(name = "pay_method", nullable = false, length = 30)
@@ -81,7 +89,8 @@ public class Payment {
     @Builder
     public Payment(Reservation reservation, String paymentKey, String orderId, Provider provider,
                    PayMethod payMethod, BigDecimal amount, Status status,
-                   LocalDateTime requestedAt, LocalDateTime processedAt) {
+                   LocalDateTime requestedAt, LocalDateTime processedAt,
+                   String vbankNum, String vbankName, LocalDateTime vbankDueDate) {
         this.reservation = reservation;
         this.paymentKey = paymentKey;
         this.orderId = orderId;
@@ -92,5 +101,13 @@ public class Payment {
         this.requestedAt = requestedAt;
         this.processedAt = processedAt;
         this.cancelAmount = BigDecimal.ZERO;
+        this.vbankNum = vbankNum;
+        this.vbankName = vbankName;
+        this.vbankDueDate = vbankDueDate;
+    }
+
+    public void complete() {
+        this.status = Status.SUCCESS;
+        this.processedAt = LocalDateTime.now();
     }
 }
