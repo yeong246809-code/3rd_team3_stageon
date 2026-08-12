@@ -28,7 +28,7 @@ public class ReservationService {
     private final PaymentRepository paymentRepository;
 
     /**
-     * 포트원 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
+     * 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
      */
     @Transactional
     public Long confirmReservation(PaymentRequest request, String paymentKey, String orderId, BigDecimal expectedAmount, Payment.PayMethod payMethod) {
@@ -41,10 +41,14 @@ public class ReservationService {
             throw new IllegalArgumentException("비정상적인 예매 요청입니다.");
         }
 
+        List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldId(seatHold.getId());
+        int ticketCount = holdItems.size();
+
         Reservation reservation = Reservation.create(
                 orderId,
                 seatHold.getMember(),
                 seatHold.getSchedule(),
+                ticketCount,
                 seatHold,
                 request.receiveMethod(),
                 expectedAmount,
@@ -64,9 +68,6 @@ public class ReservationService {
                 .processedAt(LocalDateTime.now())
                 .build();
         paymentRepository.save(payment);
-
-        // 3. 선점했던 좌석들을 가져와서 ReservationSeat(예매 좌석)으로 변환 및 저장
-        List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldId(seatHold.getId());
 
         for (SeatHoldItem item : holdItems) {
             ScheduleSeat scheduleSeat = item.getScheduleSeat();

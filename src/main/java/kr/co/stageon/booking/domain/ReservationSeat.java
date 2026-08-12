@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReservationSeat {
 
+    public enum Status { RESERVED, CANCELLED }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,6 +34,10 @@ public class ReservationSeat {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "schedule_seat_id", nullable = false)
     private ScheduleSeat scheduleSeat;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private Status status;
 
     @Column(name = "captured_section_name", nullable = false, length = 50)
     private String capturedSectionName;
@@ -56,6 +62,9 @@ public class ReservationSeat {
         rs.reservation = reservation;
         rs.scheduleSeat = scheduleSeat;
 
+        // 생성 시 기본 상태를 RESERVED로 설정
+        rs.status = Status.RESERVED;
+
         rs.capturedSectionName = scheduleSeat.getSeat().getSectionName();
         rs.capturedRowLabel = scheduleSeat.getSeat().getRowLabel();
         rs.capturedSeatNumber = scheduleSeat.getSeat().getSeatNumber();
@@ -65,5 +74,9 @@ public class ReservationSeat {
         rs.capturedUnitPrice = scheduleSeat.getPrice();
 
         return rs;
+    }
+
+    public void cancel() {
+        this.status = Status.CANCELLED;
     }
 }

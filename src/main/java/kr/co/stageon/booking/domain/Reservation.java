@@ -43,6 +43,9 @@ public class Reservation {
     @Column(nullable = false, length = 20)
     private Status status;
 
+    @Column(name = "ticket_count", nullable = false)
+    private Integer ticketCount;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "receive_method", nullable = false, length = 20)
     private ReceiveMethod receiveMethod;
@@ -77,12 +80,13 @@ public class Reservation {
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public static Reservation create(String bookingNumber, Member member, PerformanceSchedule schedule,
+    public static Reservation create(String bookingNumber, Member member, PerformanceSchedule schedule, Integer ticketCount,
                                      SeatHold seatHold, ReceiveMethod receiveMethod, BigDecimal seatAmount, BigDecimal totalAmount) {
         Reservation reservation = new Reservation();
         reservation.bookingNumber = bookingNumber;
         reservation.member = member;
         reservation.schedule = schedule;
+        reservation.ticketCount = ticketCount;
         reservation.seatHold = seatHold;
         reservation.status = Status.RESERVED;
         reservation.receiveMethod = receiveMethod;
