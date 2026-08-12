@@ -101,7 +101,10 @@ public class MemberService {
                 email,
                 encodedPassword,
                 request.name().trim(),
-                phone
+                phone,
+                request.gender(),   //성별 추가
+                request.birthDate() //생년월일 추가
+
         );
 
         return memberRepository.save(member).getId();

@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * 회원가입 요청 정보를 전달합니다.
@@ -30,6 +32,14 @@ public record MemberSignupRequest(
                 message = "휴대전화 번호 형식이 올바르지 않습니다."
         )
         String phone,
+
+        // 성별
+        @NotBlank(message = "성별을 선택해 주세요.")
+        String gender,
+
+        // 생년월일
+        @NotNull(message = "생년월일을 입력해 주세요.")
+        LocalDate birthDate,
 
         @NotBlank(message = "비밀번호를 입력해 주세요.")
         @Size(
