@@ -48,7 +48,7 @@ public class SeatHoldService {
 
         // (1) 현재 선점 중인(결제 대기 중인) 좌석 수
         int currentHoldCount = seatHoldRepository.countByMemberIdAndScheduleIdAndStatusIn(
-                memberId, scheduleId, List.of(SeatHold.Status.ACTIVE, SeatHold.Status.BOOKED)
+                memberId, scheduleId, List.of(SeatHold.Status.ACTIVE)
         );
 
         // (2) 이미 결제 완료되어 보유 중인 예약 티켓 수 (없으면 0 반환됨)
