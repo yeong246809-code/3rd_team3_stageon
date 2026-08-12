@@ -1,9 +1,11 @@
 package kr.co.stageon.booking.service;
 
 import io.lettuce.core.AbstractRedisAsyncCommands;
+import kr.co.stageon.booking.domain.Reservation;
 import kr.co.stageon.booking.domain.SeatHold;
 import kr.co.stageon.booking.domain.SeatHoldItem;
 import kr.co.stageon.booking.dto.SeatHoldRequest;
+import kr.co.stageon.booking.repository.ReservationRepository;
 import kr.co.stageon.booking.repository.SeatHoldItemRepository;
 import kr.co.stageon.booking.repository.SeatHoldRepository;
 import kr.co.stageon.booking.domain.ScheduleSeat;
@@ -27,6 +29,7 @@ public class SeatHoldService {
     private final MemberRepository memberRepository;
     private final SeatHoldItemRepository seatHoldItemRepository;
     private final SeatRealtimeService seatRealtimeService;
+    private final ReservationRepository reservationRepository;
 
     @Transactional
     public void processSeatHolds(SeatHoldRequest request) {
@@ -42,11 +45,21 @@ public class SeatHoldService {
 
         // 2. 최대 예매 가능 매수 검증 (기존 보유 좌석 + 이번에 선택한 좌석)
         int maxTickets = seats.get(0).getSchedule().getMaxTicketsPerMember();
+
+        // (1) 현재 선점 중인(결제 대기 중인) 좌석 수
         int currentHoldCount = seatHoldRepository.countByMemberIdAndScheduleIdAndStatusIn(
-                memberId, scheduleId, List.of(SeatHold.Status.ACTIVE, SeatHold.Status.BOOKED)
+                memberId, scheduleId, List.of(SeatHold.Status.ACTIVE)
         );
 
-        if (currentHoldCount + seats.size() > maxTickets) {
+        // (2) 이미 결제 완료되어 보유 중인 예약 티켓 수 (없으면 0 반환됨)
+        int reservedTicketCount = reservationRepository.sumTicketCountByMemberIdAndScheduleId(
+                memberId,
+                scheduleId,
+                Reservation.Status.RESERVED
+        );
+
+        // (3) 총합 검증: 선점 중 + 이미 예매함 + 이번에 시도하는 좌석 수
+        if (currentHoldCount + reservedTicketCount + seats.size() > maxTickets) {
             throw new IllegalStateException("해당 공연의 1인 최대 예매 가능 매수(" + maxTickets + "매)를 초과합니다.");
         }
 

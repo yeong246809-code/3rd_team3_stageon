@@ -27,15 +27,149 @@
 .detail-key-info dt, .payment-info dt, .detail-cancel dt { color: #98a2b3; font-size: 12px; }
 .detail-key-info dd, .payment-info dd, .detail-cancel dd { margin: 0; color: #344054; font-size: 13px; font-weight: 600; }
 
-/* 좌석 카드 */
-.seat-detail-list { display: grid; gap: 10px; }
-.seat-detail-item { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 18px; padding: 17px 18px; border: 1px solid #e7eaf0; border-radius: 11px; background: #fafbfc; }
-.seat-detail-item > strong { color: #e60012; font-size: 13px; }
-.seat-detail-item dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0; }
-.seat-detail-item dl div { min-width: 0; }
-.seat-detail-item dt { margin-bottom: 5px; color: #98a2b3; font-size: 11px; }
-.seat-detail-item dd { margin: 0; color: #344054; font-size: 13px; font-weight: 700; }
-.detail-empty { padding: 26px; border: 1px dashed #d8dee8; border-radius: 11px; background: #fafbfc; color: #98a2b3; text-align: center; font-size: 13px; }
+/* =========================================================
+   좌석 카드
+   체크박스 / 좌석 정보 / 취소·환불 버튼
+========================================================= */
+.seat-detail-list {
+    display: grid;
+    gap: 10px;
+}
+
+.seat-detail-item {
+    display: grid;
+    grid-template-columns: 105px minmax(0, 1fr) 92px;
+    gap: 18px;
+    align-items: center;
+    padding: 17px 18px;
+    border: 1px solid #e7eaf0;
+    border-radius: 11px;
+    background: #fafbfc;
+}
+
+/* 좌석 선택 */
+.seat-detail-check {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.seat-detail-check input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.seat-detail-check__box {
+    position: relative;
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    border: 1.5px solid #cfd4dc;
+    border-radius: 4px;
+    background: #fff;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.seat-detail-check input:checked + .seat-detail-check__box {
+    border-color: #e60012;
+    background: #e60012;
+}
+
+.seat-detail-check input:checked + .seat-detail-check__box::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.seat-detail-check input:disabled + .seat-detail-check__box {
+    border-color: #d0d5dd;
+    background: #f2f4f7;
+}
+
+.seat-detail-check:has(input:disabled) {
+    cursor: default;
+}
+
+.seat-detail-check strong {
+    color: #e60012;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* 좌석 상세 정보 */
+.seat-detail-item dl {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0;
+}
+
+.seat-detail-item dl div {
+    min-width: 0;
+}
+
+.seat-detail-item dt {
+    margin-bottom: 5px;
+    color: #98a2b3;
+    font-size: 11px;
+}
+
+.seat-detail-item dd {
+    margin: 0;
+    color: #344054;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* 좌석별 취소 / 환불 버튼 */
+.seat-cancel-button {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid #e60012;
+    border-radius: 7px;
+    background: #fff;
+    color: #e60012;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+
+.seat-cancel-button:hover:not(:disabled) {
+    background: #e60012;
+    color: #fff;
+}
+
+.seat-cancel-button:disabled {
+    border-color: #d0d5dd;
+    background: #f2f4f7;
+    color: #98a2b3;
+    cursor: not-allowed;
+}
+
+.detail-empty {
+    padding: 26px;
+    border: 1px dashed #d8dee8;
+    border-radius: 11px;
+    background: #fafbfc;
+    color: #98a2b3;
+    text-align: center;
+    font-size: 13px;
+}
 
 /* 결제 카드 */
 .payment-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px; }
@@ -64,4 +198,106 @@
     .detail-poster { width: 100%; max-width: 180px; }
     .seat-detail-item { grid-template-columns: 1fr; }
     .seat-detail-item dl { grid-template-columns: 1fr; }
+}
+
+
+/* =========================================================
+   좌석 일괄 선택 / 취소 툴바
+========================================================= */
+.seat-detail-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    margin-bottom: 12px;
+    padding: 10px 12px;
+
+    border-radius: 9px;
+    background: #fafbfc;
+}
+
+/* 전체 선택 */
+.seat-select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #475467;
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.seat-select-all input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.seat-select-all__box {
+    position: relative;
+
+    width: 17px;
+    height: 17px;
+
+    box-sizing: border-box;
+
+    border: 1.5px solid #cfd4dc;
+    border-radius: 4px;
+
+    background: #fff;
+}
+
+.seat-select-all input:checked
++ .seat-select-all__box {
+    border-color: #e60012;
+    background: #e60012;
+}
+
+.seat-select-all input:checked
++ .seat-select-all__box::after {
+    content: "";
+
+    position: absolute;
+
+    left: 5px;
+    top: 2px;
+
+    width: 4px;
+    height: 8px;
+
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+
+    transform: rotate(45deg);
+}
+
+/* 선택 좌석 일괄 취소 버튼 */
+.seat-selected-cancel-button {
+    min-height: 38px;
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 7px;
+
+    background: #e60012;
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.seat-selected-cancel-button:hover:not(:disabled) {
+    background: #c90010;
+}
+
+.seat-selected-cancel-button:disabled {
+    background: #d0d5dd;
+    cursor: not-allowed;
 }

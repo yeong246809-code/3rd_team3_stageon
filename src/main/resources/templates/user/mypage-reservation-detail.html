@@ -91,7 +91,12 @@
                     </div>
                 </section>
 
-                <!-- 예약 좌석 정보 -->
+                <!-- =========================================================
+                     예약 좌석 정보
+                     좌석 1장 = 1행으로 표시합니다.
+                     체크박스와 취소/환불 버튼에는 reservationSeatId를 담아
+                     추후 부분 취소/환불 API에 연결할 수 있도록 준비합니다.
+                ========================================================== -->
                 <section class="detail-card">
                     <div class="detail-card__heading">
                         <div>
@@ -101,19 +106,96 @@
                         <span th:text="|총 ${#lists.size(reservation.seats)}석|">총 0석</span>
                     </div>
 
-                    <div class="seat-detail-list" th:if="${!#lists.isEmpty(reservation.seats)}">
-                        <article class="seat-detail-item" th:each="seat, stat : ${reservation.seats}">
-                            <strong th:text="|좌석 ${stat.count}|">좌석 1</strong>
+                    <!-- 좌석 일괄 선택 / 취소 영역 -->
+                    <div class="seat-detail-toolbar"
+                         th:if="${!#lists.isEmpty(reservation.seats)}">
+
+                        <label class="seat-select-all">
+                            <input type="checkbox"
+                                   id="seatSelectAll"
+                                   th:disabled="${reservation.reservationStatus != 'RESERVED'}">
+
+                            <span class="seat-select-all__box"
+                                  aria-hidden="true"></span>
+
+                            <span>전체 선택</span>
+                        </label>
+
+                        <!-- 추후 부분 취소/환불 API 연결 -->
+                        <button type="button"
+                                class="seat-selected-cancel-button"
+                                id="selectedSeatCancelButton"
+                                th:disabled="${reservation.reservationStatus != 'RESERVED'}">
+                            선택 취소/환불
+                        </button>
+
+                    </div>
+
+                    <div class="seat-detail-list"
+                         th:if="${!#lists.isEmpty(reservation.seats)}">
+
+                        <!-- 예매된 좌석 수만큼 반복 출력합니다. -->
+                        <article class="seat-detail-item"
+                                 th:each="seat, stat : ${reservation.seats}"
+                                 th:attr="data-reservation-seat-id=${seat.reservationSeatId}">
+
+                            <!-- 좌석 선택 -->
+                            <label class="seat-detail-check">
+                                <input type="checkbox"
+                                       class="seat-cancel-checkbox"
+                                       name="reservationSeatIds"
+                                       th:value="${seat.reservationSeatId}"
+                                       th:disabled="${reservation.reservationStatus != 'RESERVED'}">
+
+                                <span class="seat-detail-check__box"
+                                      aria-hidden="true"></span>
+
+                                <strong th:text="|좌석 ${stat.count}|">
+                                    좌석 1
+                                </strong>
+                            </label>
+
+                            <!-- 좌석 상세 정보 -->
                             <dl>
-                                <div><dt>등급</dt><dd th:text="${seat.gradeName}">R석</dd></div>
-                                <div><dt>위치</dt><dd th:text="|${seat.sectionName} ${seat.rowLabel}열 ${seat.seatNumber}번|">A구역 1열 1번</dd></div>
-                                <div><dt>가격</dt><dd th:text="|${#numbers.formatInteger(seat.unitPrice, 0, 'COMMA')}원|">0원</dd></div>
+                                <div>
+                                    <dt>등급</dt>
+                                    <dd th:text="${seat.gradeName}">일반석</dd>
+                                </div>
+
+                                <div>
+                                    <dt>위치</dt>
+                                    <dd th:text="|${seat.sectionName} ${seat.rowLabel}열 ${seat.seatNumber}번|">
+                                        R구역 B열 10번
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt>가격</dt>
+                                    <dd th:text="|${#numbers.formatInteger(seat.unitPrice, 0, 'COMMA')}원|">
+                                        50,000원
+                                    </dd>
+                                </div>
                             </dl>
+
+                            <!--
+                                실제 취소/환불 API는 팀원 기능과 연결할 예정입니다.
+                                reservationId와 reservationSeatId를 data 속성으로 전달합니다.
+                            -->
+                            <button type="button"
+                                    class="seat-cancel-button"
+                                    th:disabled="${reservation.reservationStatus != 'RESERVED'}"
+                                    th:attr="
+                                        data-reservation-id=${reservation.reservationId},
+                                        data-reservation-seat-id=${seat.reservationSeatId}">
+                                취소/환불
+                            </button>
+
                         </article>
                     </div>
 
-                    <!-- 좌석 담당 기능과 아직 연결되지 않은 데이터도 화면 오류 없이 처리합니다. -->
-                    <div class="detail-empty" th:if="${#lists.isEmpty(reservation.seats)}">
+                    <!-- 좌석 데이터가 없는 경우 -->
+                    <div class="detail-empty"
+                         th:if="${#lists.isEmpty(reservation.seats)}">
                         연결된 좌석 정보가 없습니다.
                     </div>
                 </section>
@@ -191,6 +273,9 @@
 <!-- 공통 푸터와 플로팅 버튼 -->
 <div th:replace="~{fragments/common/site-footer :: footer}"></div>
 <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+<script th:src="@{/js/pages/mypage-reservation-detail.js}"
+        src="/js/pages/mypage-reservation-detail.js"></script>
 
 </body>
 </html>

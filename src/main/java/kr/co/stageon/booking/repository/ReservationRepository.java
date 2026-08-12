@@ -100,4 +100,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                              @Param("fromDate") LocalDateTime fromDate,
                              @Param("toDate") LocalDateTime toDate,
                              Pageable pageable);
+           
+    @Query("SELECT COALESCE(SUM(r.ticketCount), 0) FROM Reservation r WHERE r.member.id = :memberId AND r.schedule.id = :scheduleId AND r.status = :status")
+    Integer sumTicketCountByMemberIdAndScheduleId(
+            @Param("memberId") Long memberId,
+            @Param("scheduleId") Long scheduleId,
+            @Param("status") Reservation.Status status
+    );
 }

@@ -1,9 +1,18 @@
 package kr.co.stageon.booking.web;
 
+import kr.co.stageon.booking.domain.Reservation;
+import kr.co.stageon.booking.domain.SeatHold;
 import kr.co.stageon.booking.dto.ReservationDetailResponse;
+import kr.co.stageon.booking.repository.ReservationRepository;
 import kr.co.stageon.booking.repository.ScheduleSeatRepository;
+import kr.co.stageon.booking.repository.SeatHoldRepository;
 import kr.co.stageon.booking.service.BookingQueryService;
+import kr.co.stageon.member.domain.Member;
+import kr.co.stageon.member.repository.MemberRepository;
+import kr.co.stageon.performance.repository.PerformanceScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +31,11 @@ public class BookingViewController {
     private final BookingQueryService bookingQueryService;
     private final ScheduleSeatRepository scheduleSeatRepository;
 
+    private final ReservationRepository reservationRepository;
+    private final SeatHoldRepository seatHoldRepository;
+    private final PerformanceScheduleRepository performanceScheduleRepository;
+    private final MemberRepository memberRepository;
+
     /*@GetMapping({"/booking/queue", "/queue"})
     public String queue(@RequestParam(required = false) Long scheduleId, Model model) {
         model.addAttribute("scheduleId", scheduleId);
@@ -29,8 +43,12 @@ public class BookingViewController {
     }*/
 
     @GetMapping({"/booking/seats", "/seat-select"})
-    public String seats(@RequestParam(required = false) Long scheduleId, Model model) {
+    public String seats(@RequestParam(required = false) Long scheduleId,
+                        @AuthenticationPrincipal UserDetails userDetails, // 💡 Security 컨텍스트에서 로그인 유저 정보 주입
+                        Model model) {
+
         model.addAttribute("scheduleId", scheduleId);
+
         if (scheduleId == null) {
             model.addAttribute("groupedSeats", Collections.emptyMap());
         } else {
@@ -43,6 +61,40 @@ public class BookingViewController {
                 model.addAttribute("performanceTitle", summary.performanceTitle());
                 model.addAttribute("scheduleTime", summary.scheduleTime());
             }
+
+            // ==============================================================
+            // 🚨 로그인한 실제 회원의 남은 예매 가능 수량 계산
+            // ==============================================================
+
+            // 1. 로그인 정보에서 회원 조회 후 실제 ID 추출
+            Member member = memberRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new IllegalArgumentException("로그인 정보가 유효하지 않습니다."));
+            Long memberId = member.getId();
+
+            // 2. 해당 회차의 최대 예매 가능 매수 조회 (기본값 4)
+            int maxTickets = performanceScheduleRepository.findById(scheduleId)
+                    .map(s -> s.getMaxTicketsPerMember())
+                    .orElse(4);
+
+            // 3. 이미 결제 완료된 수량
+            int reservedCount = reservationRepository.sumTicketCountByMemberIdAndScheduleId(
+                    memberId, scheduleId, Reservation.Status.RESERVED
+            );
+
+            // 4. 선점(결제 대기) 중인 수량
+            int heldCount = seatHoldRepository.countByMemberIdAndScheduleIdAndStatusIn(
+                    memberId, scheduleId, List.of(SeatHold.Status.ACTIVE)
+            );
+
+            // 5. 남은 수량 계산 (0보다 작아지지 않도록 처리)
+            int remainingTickets = maxTickets - reservedCount - heldCount;
+            if (remainingTickets < 0) {
+                remainingTickets = 0;
+            }
+
+            // 6. 화면(HTML의 Javascript)으로 값 전달
+            model.addAttribute("maxTickets", maxTickets);
+            model.addAttribute("remainingTickets", remainingTickets);
         }
 
         return "booking/seat-select";

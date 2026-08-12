@@ -87,6 +87,7 @@
 <script th:inline="javascript">
   // 1. 서버에서 설정된 최대 예매 매수 가져오기
   const MAX_TICKETS = /*[[${maxTickets ?: 4}]]*/ 4;
+  const REMAINING_TICKETS = /*[[${remainingTickets ?: 4}]]*/ 4;
 
   // 선택한 좌석 데이터를 담아둘 Map
   let selectedSeats = new Map();
@@ -111,7 +112,7 @@
       navigator.sendBeacon(`/api/seats/${seatId}/uncheck`);
     } else {
       // 새로운 좌석 클릭 -> 최대 매수 검증
-      if (selectedSeats.size >= MAX_TICKETS) {
+      if (selectedSeats.size >= REMAINING_TICKETS) {
         alert(`해당 공연의 1인 최대 예매 가능 매수(${MAX_TICKETS}매)를 초과했습니다.`);
         return;
       }
@@ -123,7 +124,6 @@
         });
 
         if (!response.ok) {
-          // 에러 처리 로직... (그대로 유지)
           const errorText = await response.text();
           alert(errorText);
           return;
@@ -206,6 +206,12 @@
       alert('좌석을 먼저 선택해주세요.');
       return;
     }
+
+    if (selectedSeats.size > REMAINING_TICKETS) {
+      alert(`해당 공연의 1인 최대 예매 가능 매수(${MAX_TICKETS}매)를 초과합니다.\n(현재 예매 가능 잔여 수량: ${REMAINING_TICKETS}매)`);
+      return;
+    }
+
     isSubmitting = true; // 폼 제출 시에는 이탈 감지 스크립트가 돌지 않도록 설정
     document.getElementById('holdForm').submit();
   }
