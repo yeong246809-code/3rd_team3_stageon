@@ -22,6 +22,11 @@
     font-size: 12px;
 }
 
+/* 성별/생년월일과 이메일 인증 영역 사이 간격 */
+.signup-field-grid--spaced {
+    margin-bottom: 50px;
+}
+
 /* 회원가입 단계 */
 
 .signup-server-error {

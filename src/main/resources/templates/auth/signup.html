@@ -164,6 +164,36 @@
 
           </div>
 
+          <!-- 성별 / 생년월일 -->
+          <div class="signup-field-grid signup-field-grid--spaced">
+
+            <!-- 성별 -->
+            <div class="signup-field">
+              <label for="signup-gender">성별</label>
+
+              <select id="signup-gender"
+                      class="signup-input"
+                      name="gender"
+                      required>
+                <option value="" selected disabled>성별 선택</option>
+                <option value="MALE">남성</option>
+                <option value="FEMALE">여성</option>
+              </select>
+            </div>
+
+            <!-- 생년월일 -->
+            <div class="signup-field">
+              <label for="signup-birth-date">생년월일</label>
+
+              <input id="signup-birth-date"
+                     class="signup-input"
+                     type="date"
+                     name="birthDate"
+                     required>
+            </div>
+
+          </div>
+
           <!-- 이메일 인증 -->
           <div class="signup-field">
             <label for="verification-email">이메일 인증</label>

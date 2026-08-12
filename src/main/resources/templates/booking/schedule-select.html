@@ -785,17 +785,23 @@
               }
 
               /*
-               * 현재 단계에서는 화면을 이동하지 않습니다.
-               * INSERT 성공 여부와 이후 Redis 연동용 queueToken만 확인합니다.
+               * waiting_queue_history 등록이 성공하면
+               * API가 반환한 queueToken을 가지고 대기열 화면으로 이동합니다.
                */
               console.log(
                       "waiting_queue_history INSERT 성공",
                       responseBody
               );
 
-              alert(
-                      "대기열 이력 데이터가 정상적으로 등록되었습니다."
-              );
+              const queueUrl =
+                      `/booking/queue`
+                      + `?performanceId=${encodeURIComponent(performanceId)}`
+                      + `&scheduleId=${encodeURIComponent(responseBody.scheduleId)}`
+                      + `&token=${encodeURIComponent(responseBody.queueToken)}`;
+
+              window.location.href = queueUrl;
+              return;
+
             } catch (error) {
               console.error(error);
               alert(error.message);

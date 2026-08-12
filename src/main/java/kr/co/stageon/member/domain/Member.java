@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import java.time.LocalDateTime;
 
@@ -44,6 +46,14 @@ public class Member {
     @Column(length = 30)
     private String phone;
 
+    // 성별
+    @Column(length = 10)
+    private String gender;
+
+    // 생년월일
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
@@ -73,7 +83,9 @@ public class Member {
             String email,
             String passwordHash,
             String name,
-            String phone
+            String phone,
+            String gender,
+            LocalDate birthDate
     ) {
         Member member = new Member();
 
@@ -81,6 +93,8 @@ public class Member {
         member.passwordHash = passwordHash;
         member.name = name;
         member.phone = phone;
+        member.gender = gender;
+        member.birthDate = birthDate;
         member.role = Role.USER;
         member.status = Status.ACTIVE;
 
