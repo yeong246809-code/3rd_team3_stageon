@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import java.time.LocalDateTime;
-
 /**
  * 로그인 사용자와 관리자 계정을 나타냅니다.
  * 비밀번호 원문은 저장하지 않고 암호화된 값만 저장합니다.
@@ -62,6 +60,10 @@ public class Member {
     @Column(nullable = false, length = 20)
     private Status status;
 
+    // 관리자 메모 (AD10에서 추가)
+    @Column(name = "admin_memo", columnDefinition = "TEXT")
+    private String adminMemo;
+
     @Column(
             name = "created_at",
             nullable = false,
@@ -104,5 +106,15 @@ public class Member {
     // 암호화된 새 비밀번호로 변경
     public void changePassword(String encodedPassword) {
         this.passwordHash = encodedPassword;
+    }
+
+    // 관리자 권한 변경 (AD10: 관리자 회원 관리 화면)
+    public void changeRole(Role newRole) {
+        this.role = newRole;
+    }
+
+    // 관리자 메모 수정 (AD10: 관리자 회원 관리 화면)
+    public void updateAdminMemo(String memo) {
+        this.adminMemo = memo;
     }
 }
