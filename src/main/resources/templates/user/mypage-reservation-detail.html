@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn | 예매 상세</title>
+
+    <!-- CSRF 토큰 설정 -->
     <meta name="_csrf" th:content="${_csrf?.token}">
     <meta name="_csrf_header" th:content="${_csrf?.headerName}">
-    <title>StageOn | 예매 상세</title>
 
     <!-- 사이트·마이페이지 공통 스타일 -->
     <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
@@ -93,12 +95,7 @@
                     </div>
                 </section>
 
-                <!-- =========================================================
-                     예약 좌석 정보
-                     좌석 1장 = 1행으로 표시합니다.
-                     체크박스와 취소/환불 버튼에는 reservationSeatId를 담아
-                     추후 부분 취소/환불 API에 연결할 수 있도록 준비합니다.
-                ========================================================== -->
+                <!-- 예약 좌석 정보 -->
                 <section class="detail-card">
                     <div class="detail-card__heading">
                         <div>
@@ -123,11 +120,14 @@
                             <span>전체 선택</span>
                         </label>
 
-                        <!-- 추후 부분 취소/환불 API 연결 -->
+                        <!-- 선택 취소/환불 버튼 (결제 수단/상태 속성 추가) -->
                         <button type="button"
                                 class="seat-selected-cancel-button"
                                 id="selectedSeatCancelButton"
-                                th:disabled="${reservation.reservationStatus != 'RESERVED'}">
+                                th:disabled="${reservation.reservationStatus != 'RESERVED'}"
+                                th:attr="
+                                    data-payment-method=${reservation.paymentProvider},
+                                    data-payment-status=${reservation.paymentStatus}">
                             선택 취소/환불
                         </button>
 
@@ -136,7 +136,7 @@
                     <div class="seat-detail-list"
                          th:if="${!#lists.isEmpty(reservation.seats)}">
 
-                        <!-- 예매된 좌석 수만큼 반복 출력합니다. -->
+                        <!-- 예매된 좌석 수만큼 반복 출력 -->
                         <article class="seat-detail-item"
                                  th:each="seat, stat : ${reservation.seats}"
                                  th:attr="data-reservation-seat-id=${seat.reservationSeatId}">
@@ -179,16 +179,15 @@
                                 </div>
                             </dl>
 
-                            <!--
-                                실제 취소/환불 API는 팀원 기능과 연결할 예정입니다.
-                                reservationId와 reservationSeatId를 data 속성으로 전달합니다.
-                            -->
+                            <!-- 개별 취소/환불 버튼 (결제 수단/상태 속성 추가) -->
                             <button type="button"
                                     class="seat-cancel-button"
                                     th:disabled="${reservation.reservationStatus != 'RESERVED'}"
                                     th:attr="
                                         data-reservation-id=${reservation.reservationId},
-                                        data-reservation-seat-id=${seat.reservationSeatId}">
+                                        data-reservation-seat-id=${seat.reservationSeatId},
+                                        data-payment-method=${reservation.paymentProvider},
+                                        data-payment-status=${reservation.paymentStatus}">
                                 취소/환불
                             </button>
 
@@ -271,6 +270,45 @@
         </div>
     </div>
 </main>
+
+<!-- 가상계좌 입금 완료 환불 계좌 입력 모달 -->
+<dialog id="refundModal" style="padding: 20px; border-radius: 8px; border: 1px solid #ccc; max-width: 400px; margin: auto;">
+    <form method="dialog" id="refundForm">
+        <h3 style="margin-top: 0;">환불 계좌 정보 입력</h3>
+        <p style="font-size: 14px; color: #666;">입금 완료된 가상계좌 건은 환불받으실 계좌 정보를 입력해 주셔야 취소가 진행됩니다.</p>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 14px; margin-bottom: 4px;">은행 선택</label>
+            <select id="refundBank" style="width: 100%; padding: 8px;" required>
+                <option value="">은행을 선택해 주세요</option>
+                <option value="04">KB국민은행</option>
+                <option value="88">신한은행</option>
+                <option value="20">우리은행</option>
+                <option value="81">하나은행</option>
+                <option value="11">NH농협은행</option>
+                <option value="03">IBK기업은행</option>
+                <option value="90">카카오뱅크</option>
+                <option value="89">케이뱅크</option>
+                <option value="92">토스뱅크</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 14px; margin-bottom: 4px;">계좌번호 (- 제외)</label>
+            <input type="text" id="refundAccount" style="width: 100%; padding: 8px;" placeholder="숫자만 입력" required>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 14px; margin-bottom: 4px;">예금주명</label>
+            <input type="text" id="refundHolder" style="width: 100%; padding: 8px;" required>
+        </div>
+
+        <div style="text-align: right;">
+            <button type="button" id="closeRefundModalBtn" style="padding: 8px 16px; margin-right: 8px;">닫기</button>
+            <button type="submit" style="padding: 8px 16px; background-color: #5a28ff; color: white; border: none; border-radius: 4px;">환불 요청</button>
+        </div>
+    </form>
+</dialog>
 
 <!-- 공통 푸터와 플로팅 버튼 -->
 <div th:replace="~{fragments/common/site-footer :: footer}"></div>

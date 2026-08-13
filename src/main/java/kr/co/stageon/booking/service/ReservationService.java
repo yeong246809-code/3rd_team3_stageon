@@ -93,7 +93,8 @@ public class ReservationService {
      * 선택된 좌석에 대한 부분/전체 취소 로직을 수행합니다.
      */
     @Transactional
-    public void cancelSeats(Long reservationId, List<Long> seatIdsToCancel, String cancelReason) {
+    public void cancelSeats(Long reservationId, List<Long> seatIdsToCancel, String cancelReason,
+                            String refundBank, String refundAccountNumber, String refundHolderName) {
 
         // 1. 예약 정보 조회
         Reservation reservation = reservationRepository.findById(reservationId)
@@ -117,9 +118,13 @@ public class ReservationService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 5. 토스페이먼츠 취소 API 호출 (실제 환불 처리)
-        if (payment.getPaymentKey() != null) {
-            // 💡 payment.getPaymentKey() 대신 payment 객체 자체를 넘겨줍니다.
-            paymentService.cancelTossPayment(payment, totalCancelAmount, cancelReason);
+        boolean isTossPayment = payment.getProvider() == Payment.Provider.TOSSPAYMENTS;
+        boolean isSuccess = payment.getStatus() == Payment.Status.SUCCESS;
+        boolean isVbankReady = payment.getPayMethod() == Payment.PayMethod.VBANK && payment.getStatus() == Payment.Status.READY;
+
+        if (isTossPayment && (isSuccess || isVbankReady) && payment.getPaymentKey() != null) {
+            paymentService.cancelTossPayment(payment, totalCancelAmount, cancelReason,
+                    refundBank, refundAccountNumber, refundHolderName);
         }
 
         // 6. DB 데이터 업데이트 (좌석 해제 및 삭제)
@@ -139,6 +144,7 @@ public class ReservationService {
             // 남은 좌석이 있으면 부분 취소
             reservation.deductAmount(totalCancelAmount);
             payment.addCancelAmount(totalCancelAmount);
+            reservation.decreaseTicketCount(targetSeats.size());
         }
     }
 }

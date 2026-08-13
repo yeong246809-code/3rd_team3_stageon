@@ -77,7 +77,7 @@ public class ReservationDetailQueryService {
                 reservation.getReservedAt(),
                 reservation.getCancelledAt(),
                 reservation.getCancelReason(),
-                latestPayment == null ? null : latestPayment.getProvider().name(),
+                latestPayment == null ? null : latestPayment.getPayMethod().name(),
                 latestPayment == null ? null : latestPayment.getStatus().name(),
                 latestPayment == null ? null : latestPayment.getRequestedAt(),
                 latestPayment == null ? null : latestPayment.getProcessedAt(),
