@@ -130,6 +130,7 @@ public class SeatCheckApiController {
         // 🚨 2. 락의 주인이 현재 요청을 보낸 유저(본인)와 일치할 때만 해제합니다.
         if (lockOwner != null && lockOwner.equals(currentUserId)) {
             tempLockBucket.delete();
+            seatRealtimeService.notifySeatStatus(scheduleSeatId, "AVAILABLE");
             return ResponseEntity.ok("선택 해제 완료");
         } else if (lockOwner == null) {
             // 이미 10분이 지나서 만료되었거나 풀린 경우

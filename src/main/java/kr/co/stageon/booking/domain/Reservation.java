@@ -120,4 +120,14 @@ public class Reservation {
             this.totalAmount = this.totalAmount.subtract(cancelAmount);
         }
     }
+
+    /**
+     * 부분 취소 시, 취소된 좌석 수만큼 총 티켓 수량을 차감합니다.
+     */
+    public void decreaseTicketCount(int cancelCount) {
+        // 기존 수량이 취소 수량보다 크거나 같을 때만 차감하여 마이너스(-) 방지
+        if (this.ticketCount != null && this.ticketCount >= cancelCount) {
+            this.ticketCount -= cancelCount;
+        }
+    }
 }

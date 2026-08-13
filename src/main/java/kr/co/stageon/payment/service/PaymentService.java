@@ -136,7 +136,8 @@ public class PaymentService {
     /**
      * 토스페이먼츠 결제 취소 API 호출 (부분/전체 취소 공통)
      */
-    public void cancelTossPayment(Payment payment, BigDecimal cancelAmount, String cancelReason) {
+    public void cancelTossPayment(Payment payment, BigDecimal cancelAmount, String cancelReason,
+                                  String refundBank, String refundAccountNumber, String refundHolderName) {
         RestTemplate restTemplate = new RestTemplate();
         String secretKey = "test_sk_nRQoOaPz8LxZAbvJq0Wz8y47BMw6";
         String authBasic = Base64.getEncoder().encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
@@ -149,12 +150,17 @@ public class PaymentService {
         payload.put("cancelReason", cancelReason);
         payload.put("cancelAmount", cancelAmount);
 
-        // 🚨 [핵심 추가] 가상계좌(VBANK) 결제 건이라면 환불 계좌 정보를 반드시 추가해야 합니다.
-        if (payment.getPayMethod() == Payment.PayMethod.VBANK) {
+        // [핵심 수정] 가상계좌(VBANK) 결제 건이라면 사용자가 입력한 진짜 계좌 정보를 넣습니다.
+        if (payment.getPayMethod() == Payment.PayMethod.VBANK && payment.getStatus() == Payment.Status.SUCCESS) {
+
+            if (refundBank == null || refundBank.isEmpty() || refundAccountNumber == null || refundAccountNumber.isEmpty()) {
+                throw new IllegalArgumentException("입금 완료된 가상계좌 취소 시 환불 계좌 정보는 필수입니다.");
+            }
+
             Map<String, String> refundAccount = new HashMap<>();
-            refundAccount.put("bank", "20"); // 은행 코드 (20: 우리은행 등 토스 공식 코드 참고)
-            refundAccount.put("accountNumber", "1234567890123"); // 💡 테스트용 가짜 계좌번호
-            refundAccount.put("holderName", "테스트환불"); // 예금주명
+            refundAccount.put("bank", refundBank);
+            refundAccount.put("accountNumber", refundAccountNumber);
+            refundAccount.put("holderName", refundHolderName);
 
             payload.put("refundReceiveAccount", refundAccount);
         }
@@ -167,7 +173,7 @@ public class PaymentService {
                     requestEntity,
                     String.class
             );
-            log.info("✅ 토스페이먼츠 결제 취소 성공: {}", response.getBody());
+            log.info("✅ 토스페이먼츠 환불 계좌 반영 결제 취소 성공: {}", response.getBody());
         } catch (Exception e) {
             log.error("토스 결제 취소 API 호출 실패", e);
             throw new RuntimeException("결제망 취소 요청 중 오류가 발생했습니다.");
