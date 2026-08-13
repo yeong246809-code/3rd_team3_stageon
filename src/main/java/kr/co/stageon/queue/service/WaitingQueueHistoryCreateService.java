@@ -68,7 +68,10 @@ public class WaitingQueueHistoryCreateService {
                         )
                 );
 
-        validateSalesWindow(schedule);
+        LocalDateTime now = LocalDateTime.now();
+        if (!ScheduleSalesPolicy.isBookable(schedule, now)) {
+            throw new IllegalStateException("현재 예매 가능한 회차가 아닙니다.");
+        }
 
         if (redisWaitingQueueService.isActiveToken(scheduleId, member.getId(), currentQueueToken)) {
             String currentTokenHash = queueTokenService.hash(currentQueueToken);
@@ -117,20 +120,6 @@ public class WaitingQueueHistoryCreateService {
                 savedHistory.getStatus().name(),
                 joinedAt
         );
-
-    private void validateSalesWindow(PerformanceSchedule schedule) {
-        LocalDateTime now = LocalDateTime.now();
-        if (schedule.getStatus() == PerformanceSchedule.Status.CANCELLED
-                || schedule.getStatus() == PerformanceSchedule.Status.CLOSED) {
-            throw new IllegalArgumentException("예매할 수 없는 회차입니다.");
-        }
-        if (now.isBefore(schedule.getSalesOpenAt())) {
-            throw new IllegalArgumentException("아직 예매가 시작되지 않은 회차입니다.");
-        }
-        if (!now.isBefore(schedule.getSalesCloseAt())) {
-            throw new IllegalArgumentException("예매가 종료된 회차입니다.");
-        }
-    }
 
     public record QueueEntryResult(
             Long historyId,
