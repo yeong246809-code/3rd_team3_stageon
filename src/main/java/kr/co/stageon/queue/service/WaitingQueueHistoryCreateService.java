@@ -117,7 +117,6 @@ public class WaitingQueueHistoryCreateService {
                 savedHistory.getStatus().name(),
                 joinedAt
         );
-    }
 
     private void validateSalesWindow(PerformanceSchedule schedule) {
         LocalDateTime now = LocalDateTime.now();
