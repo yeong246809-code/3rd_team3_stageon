@@ -22,10 +22,128 @@
 .info-list dt { color: var(--muted); }
 .info-list dd { min-width: 0; line-height: 1.65; overflow-wrap: anywhere; }
 .detail-pre-line { white-space: pre-line; }
-.detail-booking { position: sticky; top: 24px; }
-.detail-booking__status { display: inline-flex; margin-bottom: 14px; padding: 5px 9px; border-radius: 999px; color: #8a5a00; background: #fff3d6; font-size: 11px; font-weight: 800; }
-.detail-booking__status.is-on-sale { color: #b42318; background: #fee4e2; }
-.detail-booking p { margin: 12px 0 22px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+/* 공연 상세 - 예매 상태 카드 */
+.detail-booking { position: sticky; top: 24px; padding: 28px 24px; border-radius: 16px; }
+
+/* 상태 배지 공통 */
+.detail-booking__status { display: inline-flex; align-items: center; margin-bottom: 16px; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+
+/* 오픈 예정 배지 */
+.detail-booking--upcoming .detail-booking__status { color: #9a6700; background: #fff3d6; }
+
+/* 예매 가능 배지 */
+.detail-booking--available .detail-booking__status { color: #c62828; background: #fee4e2; }
+
+/* 예매 마감 배지 */
+.detail-booking--closed .detail-booking__status { color: #616161; background: #eeeeee; }
+
+/* 공연 종료 배지 */
+.detail-booking--ended .detail-booking__status { color: #ffffff; background: #4b4b4b; }
+
+/* 공연 취소 배지 */
+.detail-booking--cancelled .detail-booking__status { color: #ffffff; background: #8f1d1d; }
+
+/* 카드 제목 */
+.detail-booking h2 { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.35; letter-spacing: -0.03em; color: #111827; }
+
+/* 가운데 상태 정보 패널 */
+.detail-booking__panel { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: 22px; padding: 20px 18px; border: 1px solid #eeeeee; border-radius: 14px; text-align: center; background: #fafafa; }
+
+/* 상태 패널 안쪽 가로선 */
+.detail-booking__panel::before { content: ""; position: absolute; top: 31px; left: 24px; right: 24px; height: 1px; background: #e8e8e8; }
+
+/* 오픈 예정 패널 */
+.detail-booking--upcoming .detail-booking__panel { border-color: #f0dfb7; background: #fffdf8; }
+
+/* 예매 가능 패널 */
+.detail-booking--available .detail-booking__panel { border-color: #facaca; background: #fffafa; }
+
+/* 예매 마감, 공연 종료 패널 */
+.detail-booking--closed .detail-booking__panel, .detail-booking--ended .detail-booking__panel { border-color: #dddddd; background: #fafafa; }
+
+/* 패널 아이콘 영역 */
+.detail-booking__panel-icon { position: relative; z-index: 1; display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 10px; border-radius: 50%; background: #ffffff; }
+
+/* 패널 아이콘 공통 */
+.booking-icon { display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid currentColor; border-radius: 50%; font-size: 16px; font-weight: 700; color: #777777; }
+
+/* 시계 아이콘 */
+.booking-icon--clock { position: relative; color: #e4a11b; }
+
+/* 시계 아이콘 시침 */
+.booking-icon--clock::before { content: ""; position: absolute; width: 2px; height: 7px; top: 5px; left: 11px; border-radius: 2px; background: currentColor; }
+
+/* 시계 아이콘 분침 */
+.booking-icon--clock::after { content: ""; position: absolute; width: 6px; height: 2px; top: 11px; left: 11px; border-radius: 2px; background: currentColor; transform: rotate(30deg); transform-origin: left center; }
+
+/* 오픈 예정 아이콘 색상 */
+.detail-booking--upcoming .booking-icon { color: #e4a11b; }
+
+/* 예매 가능 아이콘 색상 */
+.detail-booking--available .booking-icon { color: #e53935; }
+
+/* 예매 마감, 공연 종료 아이콘 색상 */
+.detail-booking--closed .booking-icon, .detail-booking--ended .booking-icon { color: #7b8490; }
+
+/* 패널 상태 문구 */
+.detail-booking__panel-label { position: relative; z-index: 1; margin-top: 2px; font-size: 15px; font-weight: 700; color: #555555; }
+
+/* 오픈 예정 상태 문구 색상 */
+.detail-booking--upcoming .detail-booking__panel-label { color: #a66d00; }
+
+/* 예매 가능 상태 문구 색상 */
+.detail-booking--available .detail-booking__panel-label { color: #e33131; }
+
+/* 오픈 날짜 */
+.detail-booking__date { display: block; margin-top: 7px; font-size: 15px; font-weight: 700; color: #1f2937; }
+
+/* 오픈 시간 */
+.detail-booking__time { display: block; margin-top: 2px; font-size: 44px; font-weight: 800; line-height: 1.05; letter-spacing: -0.04em; color: #101828; }
+
+/* 패널 안쪽 설명 */
+.detail-booking__panel-message { display: block; margin-top: 10px; font-size: 13px; line-height: 1.6; color: #333333; }
+
+/* 하단 안내 영역 */
+.detail-booking__notice { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 9px; margin: 18px 0 20px; }
+
+/* 안내 아이콘 */
+.detail-booking__notice-icon { display: grid; place-items: center; width: 22px; height: 22px; margin-top: 1px; border: 1px solid #c8cdd4; border-radius: 50%; font-size: 12px; font-weight: 800; color: #68707c; }
+
+/* 오픈 예정 안내 아이콘 */
+.detail-booking--upcoming .detail-booking__notice-icon { color: #c98b10; border-color: #efd89e; background: #fff8e7; }
+
+/* 예매 가능 안내 아이콘 */
+.detail-booking--available .detail-booking__notice-icon { color: #e33131; border-color: #f2b9b9; }
+
+/* 안내 메인 문구 */
+.detail-booking__notice p { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.55; color: #323842; }
+
+/* 안내 보조 문구 */
+.detail-booking__notice small { display: block; margin-top: 3px; font-size: 11px; line-height: 1.5; color: #9097a1; }
+
+/* 하단 버튼 공통 */
+.detail-booking__button { min-height: 46px; border-radius: 9px; font-size: 14px; font-weight: 700; }
+
+/* 예매 가능 버튼 */
+.detail-booking--available .detail-booking__button { background: var(--brand); }
+
+/* 비활성 버튼 */
+.detail-booking__button--disabled, .detail-booking__button--disabled:disabled { opacity: 1; cursor: default; border: 1px solid #eceef1; color: #a7adb6; background: #f3f4f6; }
+
+/* 상단 공연 상태 배지 - 오픈 예정 */
+.performance-status--upcoming { color: #9a6700; background: #fff3d6; }
+
+/* 상단 공연 상태 배지 - 예매 가능 */
+.performance-status--available { color: #b42318; background: #fee4e2; }
+
+/* 상단 공연 상태 배지 - 예매 마감 */
+.performance-status--closed { color: #616161; background: #eeeeee; }
+
+/* 상단 공연 상태 배지 - 공연 종료 */
+.performance-status--ended { color: #ffffff; background: #4b4b4b; }
+
+/* 상단 공연 상태 배지 - 공연 취소 */
+.performance-status--cancelled { color: #ffffff; background: #8f1d1d; }
 .performance-detail-section { padding-top: 70px; }
 .performance-detail-section .section-copy { max-width: 900px; line-height: 1.8; }
 .performance-venue { margin-top: 52px; padding: 28px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }

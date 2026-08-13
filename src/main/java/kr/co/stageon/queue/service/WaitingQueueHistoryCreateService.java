@@ -4,6 +4,7 @@ import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
 import kr.co.stageon.performance.domain.PerformanceSchedule;
 import kr.co.stageon.performance.repository.PerformanceScheduleRepository;
+import kr.co.stageon.performance.support.ScheduleSalesPolicy;
 import kr.co.stageon.queue.domain.WaitingQueueHistory;
 import kr.co.stageon.queue.repository.WaitingQueueHistoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -70,6 +71,16 @@ public class WaitingQueueHistoryCreateService {
                                 "선택한 공연 회차를 찾을 수 없습니다."
                         )
                 );
+
+        // 현재 서버 시간 기준으로 예매 가능 여부를 한 번 더 확인합니다.
+        // 프론트 화면에서 버튼을 막더라도 사용자가 직접 요청을 보낼 수 있기 때문에
+        // 실제 대기열 등록 직전에 서버에서 검증하는 것이 안전합니다.
+                LocalDateTime now = LocalDateTime.now();
+
+        // 예매 시작 전이거나 예매 종료 시간이 지난 경우에는 대기열 등록을 막습니다.
+        if (!ScheduleSalesPolicy.isBookable(schedule, now)) {
+            throw new IllegalStateException("현재 예매 가능한 회차가 아닙니다.");
+        }
 
         // Redis에서 사용할 수 있는 예측 불가능한 원본 토큰을 생성합니다.
         String queueToken = UUID.randomUUID().toString();
