@@ -33,12 +33,22 @@ public class PerformanceViewController {
 
     @GetMapping("/performances/{performanceId}")
     public String detail(@PathVariable Long performanceId, Model model) {
+        // 공연 기본 정보 조회
         var performance = performanceQueryService.findPerformance(performanceId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "공연을 찾을 수 없습니다."
                 ));
+
+        // 공연 상세 정보 전달
         model.addAttribute("performance", performance);
+
+        // 현재 시간 기준 예매 상태 전달
+        model.addAttribute(
+                "bookingStatus",
+                performanceQueryService.findBookingStatus(performanceId)
+        );
+
         return "user/performance-detail";
     }
 
