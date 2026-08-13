@@ -1,5 +1,6 @@
 
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
@@ -19,6 +20,8 @@
        th:classappend="${currentUri != null and currentUri.startsWith('/admin/seat-inventory')} ? 'is-active'">▥<span>좌석 재고·선점 현황</span></a>
     <a th:href="@{/admin/orders}" href="/admin/orders"
        th:classappend="${currentUri != null and currentUri.startsWith('/admin/orders')} ? 'is-active'">◎<span>예매·주문 조회</span></a>
+    <a th:href="@{/admin/members}" href="/admin/members"
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/members')} ? 'is-active'">☺<span>회원 관리</span></a>
   </nav>
 
   <div class="admin-profile">

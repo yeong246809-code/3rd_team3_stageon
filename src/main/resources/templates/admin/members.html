@@ -1,0 +1,203 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 회원 관리</title>
+    <meta name="_csrf" th:content="${_csrf.token}" content="">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" content="">
+    <meta name="_csrf_parameter" th:content="${_csrf.parameterName}" content="">
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/members.css}" href="/css/pages/members.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>회원 관리</h1>
+                    <p>전체 회원 목록을 조회합니다.</p>
+                </div>
+            </header>
+
+            <div th:if="${message}" class="alert alert--success" th:text="${message}"></div>
+            <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
+
+            <div class="card">
+                <form class="member-toolbar" method="get" th:action="@{/admin/members}">
+                    <input class="input" type="text" name="keyword" th:value="${keyword}"
+                           placeholder="이름, 이메일 검색" style="max-width:320px">
+                    <select class="select" name="role" style="max-width:150px">
+                        <option value="">전체 권한</option>
+                        <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"
+                                th:selected="${selectedRole != null and selectedRole == r}"></option>
+                    </select>
+                    <select class="select" name="status" style="max-width:150px">
+                        <option value="">전체 상태</option>
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+                                th:selected="${selectedStatus != null and selectedStatus == s}"></option>
+                    </select>
+                    <button class="btn btn--dark" type="submit">검색</button>
+                    <a class="btn btn--ghost" th:href="@{/admin/members}">초기화</a>
+                </form>
+
+                <div class="table-wrap">
+                    <table class="table" id="membersTable">
+                        <thead>
+                        <tr>
+                            <th>회원ID</th>
+                            <th>이메일</th>
+                            <th>이름</th>
+                            <th>전화번호</th>
+                            <th>권한</th>
+                            <th>상태</th>
+                            <th>가입일</th>
+                            <th>관리</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr class="member-empty-row" th:if="${members.empty}">
+                            <td colspan="8">조회된 회원이 없습니다.</td>
+                        </tr>
+                        <tr th:each="m : ${members.content}">
+                            <td th:text="${m.id()}">1</td>
+                            <td th:text="${m.email()}">user@stageon.co.kr</td>
+                            <td th:text="${m.name()}">홍길동</td>
+                            <td th:text="${m.maskedPhone()} ?: '-'">010-1234-****</td>
+                            <td>
+                                <span class="badge badge--admin" th:if="${m.role().name() == 'ADMIN'}">ADMIN</span>
+                                <span class="badge badge--user" th:if="${m.role().name() == 'USER'}">USER</span>
+                            </td>
+                            <td>
+                                <span class="badge badge--active" th:if="${m.status().name() == 'ACTIVE'}">ACTIVE</span>
+                                <span class="badge badge--inactive" th:if="${m.status().name() == 'INACTIVE'}">INACTIVE</span>
+                                <span class="badge badge--withdrawn" th:if="${m.status().name() == 'WITHDRAWN'}">WITHDRAWN</span>
+                            </td>
+                            <td th:text="${#temporals.format(m.createdAt(), 'yyyy-MM-dd')}">2026-01-01</td>
+                            <td>
+                                <button type="button" class="js-member-detail-btn" th:attr="data-id=${m.id()}">상세</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="member-pagination" th:if="${members.totalPages > 1}">
+                    <a th:each="i : ${#numbers.sequence(1, members.totalPages)}"
+                       class="member-page-link" th:classappend="${i == currentPage} ? 'is-active'"
+                       th:href="@{/admin/members(page=${i}, keyword=${keyword}, role=${selectedRole}, status=${selectedStatus})}"
+                       th:text="${i}">1</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- 회원 상세 모달 -->
+<div class="member-modal" id="memberModal">
+    <div class="member-modal__backdrop" onclick="closeMemberModal()"></div>
+    <div class="member-modal__content" id="memberModalContent">
+        <button type="button" class="member-modal__close" onclick="closeMemberModal()">&times;</button>
+        <div id="memberModalBody">
+            <div class="member-modal__loading">불러오는 중…</div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    window.__MEMBER_URL_BASE__ = /*[[@{/admin/members}]]*/ '/admin/members';
+    window.__CURRENT_ADMIN_ID__ = /*[[${currentAdminId}]]*/ null;
+</script>
+<script th:inline="none">
+    const memberUrlBase = window.__MEMBER_URL_BASE__;
+    const currentAdminId = window.__CURRENT_ADMIN_ID__;
+    const redirectQuery = window.location.search.replace(/^\?/, '');
+
+    document.querySelectorAll('.js-member-detail-btn').forEach(btn => {
+        btn.addEventListener('click', () => openMemberDetail(btn.dataset.id));
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMemberModal();
+    });
+
+    function closeMemberModal() {
+        document.getElementById('memberModal').classList.remove('is-open');
+    }
+
+    function roleLabel(r) { return {USER: '일반회원', ADMIN: '관리자'}[r] || r; }
+    function statusLabel(s) { return {ACTIVE: '활성', INACTIVE: '비활성', WITHDRAWN: '탈퇴'}[s] || s; }
+    function genderLabel(g) { return {MALE: '남성', FEMALE: '여성'}[g] || (g || '-'); }
+    function fmtDate(s) { return s ? s.replace('T', ' ').substring(0, 16) : '-'; }
+    function esc(v) { return (v || '').toString().replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    function openMemberDetail(id) {
+        document.getElementById('memberModalBody').innerHTML = '<div class="member-modal__loading">불러오는 중…</div>';
+        document.getElementById('memberModal').classList.add('is-open');
+
+        fetch(memberUrlBase + '/' + id + '/detail')
+            .then(res => res.json())
+            .then(d => {
+                const isSelf = currentAdminId != null && String(currentAdminId) === String(d.id);
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                const csrfHeaderInput = csrfToken
+                    ? `<input type="hidden" name="${document.querySelector('meta[name="_csrf_parameter"]')?.content || '_csrf'}" value="${csrfToken}">`
+                    : '';
+                const redirectInput = `<input type="hidden" name="redirectQuery" value="${redirectQuery.replace(/"/g, '&quot;')}">`;
+
+                document.getElementById('memberModalBody').innerHTML = `
+              <div class="member-detail-head">
+                <div class="member-detail-head__eyebrow">회원 상세</div>
+                <h3 class="member-detail-head__title">${esc(d.name)}</h3>
+                <div class="member-detail-head__meta">
+                  <span>${esc(d.email)}</span>
+                  <span class="badge ${d.role === 'ADMIN' ? 'badge--admin' : 'badge--user'}">${roleLabel(d.role)}</span>
+                  <span class="badge ${d.status === 'ACTIVE' ? 'badge--active' : (d.status === 'INACTIVE' ? 'badge--inactive' : 'badge--withdrawn')}">${statusLabel(d.status)}</span>
+                </div>
+              </div>
+
+              <div class="member-detail-section">
+                <h4>기본 정보</h4>
+                <dl class="member-detail-list">
+                  <div><dt>회원ID</dt><dd>${d.id}</dd></div>
+                  <div><dt>이메일</dt><dd>${esc(d.email)}</dd></div>
+                  <div><dt>이름</dt><dd>${esc(d.name)}</dd></div>
+                  <div><dt>전화번호</dt><dd>${esc(d.phone) || '-'}</dd></div>
+                  <div><dt>성별</dt><dd>${genderLabel(d.gender)}</dd></div>
+                  <div><dt>생년월일</dt><dd>${d.birthDate || '-'}</dd></div>
+                  <div><dt>가입일시</dt><dd>${fmtDate(d.createdAt)}</dd></div>
+                  <div><dt>수정일시</dt><dd>${fmtDate(d.updatedAt)}</dd></div>
+                </dl>
+              </div>
+
+              <div class="member-detail-section">
+                <h4>권한 변경</h4>
+                ${isSelf ? `<p class="member-detail-note">본인 계정의 권한은 변경할 수 없습니다.</p>` : `
+                <form method="post" action="${memberUrlBase}/${d.id}/role" class="member-role-form">
+                  ${csrfHeaderInput}${redirectInput}
+                  <select name="role">
+                    <option value="USER" ${d.role === 'USER' ? 'selected' : ''}>USER</option>
+                    <option value="ADMIN" ${d.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+                  </select>
+                  <button type="submit" class="btn btn--dark">변경</button>
+                </form>`}
+              </div>
+
+              <div class="member-detail-section">
+                <h4>관리자 메모</h4>
+                <form method="post" action="${memberUrlBase}/${d.id}/memo" class="member-memo-form">
+                  ${csrfHeaderInput}${redirectInput}
+                  <textarea name="memo" placeholder="회원 관련 특이사항을 기록하세요">${esc(d.adminMemo)}</textarea>
+                  <button type="submit" class="btn btn--dark">메모 저장</button>
+                </form>
+              </div>
+            `;
+            });
+    }
+</script>
+</body>
+</html>
