@@ -108,4 +108,16 @@ public class Reservation {
         this.cancelledAt = LocalDateTime.now();
         this.cancelReason = reason;
     }
+
+    /**
+     * 부분 취소 시, 취소된 금액만큼 좌석 금액과 총 결제 금액을 차감합니다.
+     */
+    public void deductAmount(BigDecimal cancelAmount) {
+        if (this.seatAmount != null) {
+            this.seatAmount = this.seatAmount.subtract(cancelAmount);
+        }
+        if (this.totalAmount != null) {
+            this.totalAmount = this.totalAmount.subtract(cancelAmount);
+        }
+    }
 }

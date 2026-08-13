@@ -86,17 +86,27 @@ public class PaymentController {
             // 💡 1. 토스 API 호출 -> JsonNode 덩어리를 받습니다.
             JsonNode tossResponse = paymentService.confirmPayment(paymentKey, orderId, amount);
 
-            String tossMethod = tossResponse.get("method").asText();
-            String tossStatus = tossResponse.get("status").asText(); // "WAITING_FOR_DEPOSIT" 또는 "DONE"
+            // 💡 2. 글자 매핑 에러 방지: 혹시 모를 공백이나 줄바꿈을 완벽히 제거합니다.
+            String rawMethod = tossResponse.hasNonNull("method") ? tossResponse.get("method").asText() : "";
+            String tossMethod = rawMethod.replaceAll("\\s+", ""); // 모든 공백 제거
+            String tossStatus = tossResponse.hasNonNull("status") ? tossResponse.get("status").asText().trim() : "";
 
-            Payment.PayMethod payMethod = switch (tossMethod) {
-                case "가상계좌" -> Payment.PayMethod.VBANK;
-                case "계좌이체" -> Payment.PayMethod.BANK;
-                case "휴대폰" -> Payment.PayMethod.MOBILE;
-                default -> Payment.PayMethod.CARD;
-            };
+            log.info("🔥 [디버깅] 정제된 결제수단: [{}], 상태: [{}]", tossMethod, tossStatus);
 
-            // 💡 2. 가상계좌 정보 추출 로직
+            // 💡 3. switch 문 대신 contains(포함 여부)로 안전하게 매핑
+            Payment.PayMethod payMethod = Payment.PayMethod.CARD; // 기본값
+
+            if (tossMethod.contains("가상계좌")) {
+                payMethod = Payment.PayMethod.VBANK;
+            } else if (tossMethod.contains("계좌이체")) {
+                payMethod = Payment.PayMethod.BANK;
+            } else if (tossMethod.contains("휴대폰")) {
+                payMethod = Payment.PayMethod.MOBILE;
+            }
+
+            log.info("🔥 [디버깅] 최종 변환된 Enum: {}", payMethod);
+
+            // 💡 4. 가상계좌 정보 추출 로직
             String vbankNum = null;
             String vbankName = null;
             LocalDateTime vbankDueDate = null;
@@ -111,12 +121,12 @@ public class PaymentController {
                 vbankDueDate = OffsetDateTime.parse(dueDateStr).toLocalDateTime();
             }
 
-            // 💡 3. 토스 상태값에 따라 DB에 저장될 상태 결정
+            // 💡 5. 토스 상태값에 따라 DB에 저장될 상태 결정
             Payment.Status paymentStatus = "WAITING_FOR_DEPOSIT".equals(tossStatus)
                     ? Payment.Status.READY
                     : Payment.Status.SUCCESS;
 
-            // 💡 4. DB 확정 처리 시 새롭게 추출한 값들도 함께 넘겨줍니다. (ReservationService 수정 필요)
+            // 💡 6. DB 확정 처리 시 새롭게 추출한 값들도 함께 넘겨줍니다.
             Long reservationId = reservationService.confirmReservation(
                     paymentRequest, paymentKey, orderId, amount, payMethod,
                     paymentStatus, vbankNum, vbankName, vbankDueDate

@@ -1,168 +1,144 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* =========================================================
-       예매 상세 - 좌석 선택 / 일괄 취소 UI
-       실제 취소·환불 API 호출은 담당 팀원이 연결합니다.
-    ========================================================== */
-
     const selectAllCheckbox = document.getElementById("seatSelectAll");
-    const selectedCancelButton =
-        document.getElementById("selectedSeatCancelButton");
-
-    const seatCheckboxes =
-        Array.from(document.querySelectorAll(".seat-cancel-checkbox"));
-
-    const seatCancelButtons =
-        Array.from(document.querySelectorAll(".seat-cancel-button"));
-
+    const selectedCancelButton = document.getElementById("selectedSeatCancelButton");
+    const seatCheckboxes = Array.from(document.querySelectorAll(".seat-cancel-checkbox"));
+    const seatCancelButtons = Array.from(document.querySelectorAll(".seat-cancel-button"));
 
     /* =========================================================
        선택된 좌석 ID 목록 반환
     ========================================================== */
     function getSelectedSeatIds() {
-
         return seatCheckboxes
             .filter(checkbox => checkbox.checked)
             .map(checkbox => Number(checkbox.value));
     }
 
-
     /* =========================================================
        선택 상태에 따라 상단 버튼 / 전체 선택 상태 갱신
     ========================================================== */
     function updateSelectionState() {
+        const enabledCheckboxes = seatCheckboxes.filter(checkbox => !checkbox.disabled);
+        const selectedCheckboxes = enabledCheckboxes.filter(checkbox => checkbox.checked);
 
-        const enabledCheckboxes =
-            seatCheckboxes.filter(checkbox => !checkbox.disabled);
-
-        const selectedCheckboxes =
-            enabledCheckboxes.filter(checkbox => checkbox.checked);
-
-        /*
-         * 선택된 좌석이 하나라도 있을 때만
-         * '선택 취소/환불' 버튼을 활성화합니다.
-         */
         if (selectedCancelButton) {
-            selectedCancelButton.disabled =
-                selectedCheckboxes.length === 0;
+            selectedCancelButton.disabled = selectedCheckboxes.length === 0;
         }
 
-        /*
-         * 전체 선택 체크박스 상태
-         */
         if (selectAllCheckbox) {
-
-            const allSelected =
-                enabledCheckboxes.length > 0
-                && selectedCheckboxes.length === enabledCheckboxes.length;
-
-            const partiallySelected =
-                selectedCheckboxes.length > 0
-                && selectedCheckboxes.length < enabledCheckboxes.length;
+            const allSelected = enabledCheckboxes.length > 0 && selectedCheckboxes.length === enabledCheckboxes.length;
+            const partiallySelected = selectedCheckboxes.length > 0 && selectedCheckboxes.length < enabledCheckboxes.length;
 
             selectAllCheckbox.checked = allSelected;
-
-            /*
-             * 일부만 선택되었을 경우 브라우저 기본
-             * indeterminate 상태를 사용합니다.
-             */
             selectAllCheckbox.indeterminate = partiallySelected;
         }
     }
 
-
     /* =========================================================
-       전체 선택
+       전체 선택 체크박스 이벤트
     ========================================================== */
     if (selectAllCheckbox) {
-
         selectAllCheckbox.addEventListener("change", () => {
-
             seatCheckboxes.forEach(checkbox => {
-
-                /*
-                 * 취소 불가능한 좌석은 건드리지 않습니다.
-                 */
                 if (!checkbox.disabled) {
                     checkbox.checked = selectAllCheckbox.checked;
                 }
-
             });
-
             updateSelectionState();
         });
     }
 
-
     /* =========================================================
-       개별 좌석 선택
+       개별 좌석 체크박스 이벤트
     ========================================================== */
     seatCheckboxes.forEach(checkbox => {
-
         checkbox.addEventListener("change", () => {
             updateSelectionState();
         });
-
     });
 
+    /* =========================================================
+       🚀 [백엔드 API 호출] 서버로 취소 요청을 보내는 공통 함수
+    ========================================================== */
+    async function requestCancel(reservationId, seatIds) {
+        if (!confirm(`선택하신 ${seatIds.length}개의 좌석을 정말 취소/환불하시겠습니까?`)) {
+            return;
+        }
+
+        try {
+            // 💡 1. HTML에 숨겨둔 CSRF 암호를 찾아옵니다.
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+            // 💡 2. 보낼 헤더(Headers) 봇짐을 만듭니다.
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // 💡 3. 암호가 있으면 봇짐에 챙겨 넣습니다.
+            if (csrfToken && csrfHeader) {
+                headers[csrfHeader] = csrfToken;
+            }
+
+            // 백엔드의 취소 컨트롤러로 요청 전송
+            const response = await fetch('/api/reservations/cancel', {
+                method: 'POST',
+                headers: headers, // 💡 챙겨둔 봇짐(헤더)을 들고 갑니다.
+                body: JSON.stringify({
+                    reservationId: reservationId,
+                    reservationSeatIds: seatIds,
+                    cancelReason: "고객 변심"
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(errorData || "취소 처리에 실패했습니다.");
+            }
+
+            alert("성공적으로 취소되었습니다.");
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Cancel Error:", error);
+            alert(error.message);
+        }
+    }
 
     /* =========================================================
-       선택 좌석 일괄 취소 버튼
-       실제 API 연결 전까지는 ID만 확인합니다.
+       선택 좌석 일괄 취소 버튼 클릭 이벤트
     ========================================================== */
     if (selectedCancelButton) {
-
         selectedCancelButton.addEventListener("click", () => {
-
             const selectedSeatIds = getSelectedSeatIds();
 
             if (selectedSeatIds.length === 0) {
                 return;
             }
 
-            /*
-             * 추후 담당 팀원이 이 부분에
-             * 부분 취소/환불 API를 연결하면 됩니다.
-             */
-            console.log(
-                "선택 취소/환불 대상 reservationSeatIds:",
-                selectedSeatIds
-            );
+            // 첫 번째 개별 취소 버튼에서 공통된 reservationId를 가져옵니다.
+            const firstButton = document.querySelector('.seat-cancel-button');
+            if (!firstButton) return;
 
+            const reservationId = Number(firstButton.dataset.reservationId);
+
+            // API 호출 함수 실행 (배열 형태로 전송)
+            requestCancel(reservationId, selectedSeatIds);
         });
     }
 
-
     /* =========================================================
-       개별 좌석 취소 버튼
-       실제 API 연결 전까지는 ID만 확인합니다.
+       개별 좌석 취소 버튼 클릭 이벤트
     ========================================================== */
     seatCancelButtons.forEach(button => {
-
         button.addEventListener("click", () => {
+            const reservationId = Number(button.dataset.reservationId);
+            const reservationSeatId = Number(button.dataset.reservationSeatId);
 
-            const reservationId =
-                Number(button.dataset.reservationId);
-
-            const reservationSeatId =
-                Number(button.dataset.reservationSeatId);
-
-            /*
-             * 추후 담당 팀원이 이 부분에
-             * 좌석 1장 취소/환불 API를 연결하면 됩니다.
-             */
-            console.log(
-                "개별 취소/환불 대상:",
-                {
-                    reservationId,
-                    reservationSeatId
-                }
-            );
-
+            // API 호출 함수 실행 (단건이더라도 배열 형태로 감싸서 전송)
+            requestCancel(reservationId, [reservationSeatId]);
         });
-
     });
-
 
     /* =========================================================
        최초 화면 상태 설정
