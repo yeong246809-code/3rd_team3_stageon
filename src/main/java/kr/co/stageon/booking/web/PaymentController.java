@@ -1,5 +1,6 @@
 package kr.co.stageon.booking.web;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import kr.co.stageon.booking.domain.SeatHold;
 import kr.co.stageon.booking.domain.SeatHoldItem;
 import kr.co.stageon.booking.dto.PaymentRequest;
@@ -20,6 +21,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Slf4j
@@ -80,21 +83,45 @@ public class PaymentController {
                 throw new IllegalStateException("결제 시간이 초과되었거나 유효하지 않은 요청입니다.");
             }
 
-            // 💡 1. 토스 승인 API를 호출하고, 결과로 '결제 수단(method)'을 반환받습니다.
-            String tossMethod = paymentService.confirmPayment(paymentKey, orderId, amount);
+            // 💡 1. 토스 API 호출 -> JsonNode 덩어리를 받습니다.
+            JsonNode tossResponse = paymentService.confirmPayment(paymentKey, orderId, amount);
 
-            // 💡 2. 토스가 넘겨준 진짜 결제 수단 문자열을 우리 DB의 Enum 값으로 매핑!
+            String tossMethod = tossResponse.get("method").asText();
+            String tossStatus = tossResponse.get("status").asText(); // "WAITING_FOR_DEPOSIT" 또는 "DONE"
+
             Payment.PayMethod payMethod = switch (tossMethod) {
                 case "가상계좌" -> Payment.PayMethod.VBANK;
                 case "계좌이체" -> Payment.PayMethod.BANK;
                 case "휴대폰" -> Payment.PayMethod.MOBILE;
-                default -> Payment.PayMethod.CARD; // 신용카드 및 토스페이/카카오페이 등 간편결제
+                default -> Payment.PayMethod.CARD;
             };
 
-            // 3. DB 예매 확정 처리 (동적으로 변환된 payMethod 전달)
-            Long reservationId = reservationService.confirmReservation(paymentRequest, paymentKey, orderId, amount, payMethod);
+            // 💡 2. 가상계좌 정보 추출 로직
+            String vbankNum = null;
+            String vbankName = null;
+            LocalDateTime vbankDueDate = null;
 
-            // 4. Redis 정리
+            if (tossResponse.hasNonNull("virtualAccount")) {
+                JsonNode vaNode = tossResponse.get("virtualAccount");
+                vbankNum = vaNode.get("accountNumber").asText();
+                vbankName = vaNode.get("bankCode").asText(); // 토스 은행코드 (예: 06)
+
+                // "2026-08-19T16:43:13+09:00" 형태의 문자열을 LocalDateTime으로 변환
+                String dueDateStr = vaNode.get("dueDate").asText();
+                vbankDueDate = OffsetDateTime.parse(dueDateStr).toLocalDateTime();
+            }
+
+            // 💡 3. 토스 상태값에 따라 DB에 저장될 상태 결정
+            Payment.Status paymentStatus = "WAITING_FOR_DEPOSIT".equals(tossStatus)
+                    ? Payment.Status.READY
+                    : Payment.Status.SUCCESS;
+
+            // 💡 4. DB 확정 처리 시 새롭게 추출한 값들도 함께 넘겨줍니다. (ReservationService 수정 필요)
+            Long reservationId = reservationService.confirmReservation(
+                    paymentRequest, paymentKey, orderId, amount, payMethod,
+                    paymentStatus, vbankNum, vbankName, vbankDueDate
+            );
+
             bucket.delete();
 
             return "redirect:/booking/complete?reservationId=" + reservationId;

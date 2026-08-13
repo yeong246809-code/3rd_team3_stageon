@@ -31,7 +31,10 @@ public class ReservationService {
      * 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
      */
     @Transactional
-    public Long confirmReservation(PaymentRequest request, String paymentKey, String orderId, BigDecimal expectedAmount, Payment.PayMethod payMethod) {
+    public Long confirmReservation(PaymentRequest request, String paymentKey, String orderId,
+                                   BigDecimal expectedAmount, Payment.PayMethod payMethod,
+                                   Payment.Status paymentStatus, String vbankNum,
+                                   String vbankName, LocalDateTime vbankDueDate) {
 
         // 1. 임시 선점(SeatHold) 내역 조회
         SeatHold seatHold = seatHoldRepository.findById(request.seatHoldId())
@@ -63,24 +66,24 @@ public class ReservationService {
                 .provider(Payment.Provider.TOSSPAYMENTS)
                 .payMethod(payMethod)
                 .amount(expectedAmount)
-                .status(Payment.Status.SUCCESS)
+                .status(paymentStatus)
+                .vbankNum(vbankNum)
+                .vbankName(vbankName)
+                .vbankDueDate(vbankDueDate)
                 .requestedAt(LocalDateTime.now())
-                .processedAt(LocalDateTime.now())
+                .processedAt(paymentStatus == Payment.Status.SUCCESS ? LocalDateTime.now() : null)
                 .build();
         paymentRepository.save(payment);
 
         for (SeatHoldItem item : holdItems) {
             ScheduleSeat scheduleSeat = item.getScheduleSeat();
-
             scheduleSeat.reserve();
-
-
             ReservationSeat reservationSeat = ReservationSeat.create(reservation, scheduleSeat);
             reservationSeatRepository.save(reservationSeat);
         }
 
         seatHold.complete();
 
-        return reservation.getId(); // 완료 페이지로 넘기기 위해 ID 반환
+        return reservation.getId();
     }
 }
