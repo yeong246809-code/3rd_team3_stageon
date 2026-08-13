@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
     <title>StageOn | 예매 상세</title>
 
     <!-- 사이트·마이페이지 공통 스타일 -->
@@ -164,7 +166,7 @@
 
                                 <div>
                                     <dt>위치</dt>
-                                    <dd th:text="|${seat.sectionName} ${seat.rowLabel}열 ${seat.seatNumber}번|">
+                                    <dd th:text="|${seat.sectionName} ${seat.rowLabel} ${seat.seatNumber}|">
                                         R구역 B열 10번
                                     </dd>
                                 </div>
