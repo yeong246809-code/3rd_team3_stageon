@@ -199,6 +199,7 @@ public class AdminOrderService {
                 newBookingNumber,
                 old.getMember(),
                 old.getSchedule(),
+                old.getTicketCount(),
                 null,
                 old.getReceiveMethod(),
                 old.getSeatAmount(),
