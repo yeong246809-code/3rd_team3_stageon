@@ -2,6 +2,8 @@ services:
   redis:
     image: redis:8-alpine
     container_name: stageon-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     command:
       - redis-server
       - --requirepass
@@ -9,7 +11,22 @@ services:
       - --maxmemory
       - ${REDIS_MAXMEMORY}
       - --maxmemory-policy
-      - allkeys-lru
+      - noeviction
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
     ports:
       - "127.0.0.1:${REDIS_PORT}:6379"
+    volumes:
+      - stageon-redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
+
+volumes:
+  stageon-redis-data:

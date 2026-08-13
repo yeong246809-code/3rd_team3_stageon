@@ -10,19 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.HexFormat;
-import java.util.UUID;
 
 /**
  * [남수아 담당]
  * 회차 선택 화면에서 전달받은 scheduleId와 로그인 회원 정보를 이용해
- * waiting_queue_history 테이블에 최초 대기 이력을 생성합니다.
- *
- * Redis 등록, 대기 순번 계산, 대기열 화면 이동은 이 서비스의 책임이 아닙니다.
+ * waiting_queue_history 이력과 Redis 실시간 대기열을 함께 등록합니다.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,11 +24,13 @@ public class WaitingQueueHistoryCreateService {
     private final WaitingQueueHistoryRepository waitingQueueHistoryRepository;
     private final PerformanceScheduleRepository performanceScheduleRepository;
     private final MemberRepository memberRepository;
+    private final RedisWaitingQueueService redisWaitingQueueService;
+    private final QueueTokenService queueTokenService;
 
     /**
      * 선택한 회차와 로그인 회원을 기준으로 WAITING 상태의 이력을 저장합니다.
      *
-     * queueToken 원문은 이후 Redis 연동 시 사용할 수 있도록 반환하고,
+     * queueToken 원문은 HttpOnly 쿠키 발급에만 사용하도록 반환하고,
      * DB에는 SHA-256으로 변환한 64자리 해시값만 저장합니다.
      *
      * @param scheduleId 선택한 공연 회차 번호
@@ -45,7 +40,8 @@ public class WaitingQueueHistoryCreateService {
     @Transactional
     public QueueEntryResult create(
             Long scheduleId,
-            String memberEmail
+            String memberEmail,
+            String currentQueueToken
     ) {
         if (scheduleId == null) {
             throw new IllegalArgumentException("회차 번호가 필요합니다.");
@@ -71,11 +67,21 @@ public class WaitingQueueHistoryCreateService {
                         )
                 );
 
+        validateSalesWindow(schedule);
+
+        if (redisWaitingQueueService.isActiveToken(scheduleId, member.getId(), currentQueueToken)) {
+            String currentTokenHash = queueTokenService.hash(currentQueueToken);
+            WaitingQueueHistory currentHistory = waitingQueueHistoryRepository
+                    .findByScheduleIdAndQueueTokenHash(scheduleId, currentTokenHash)
+                    .orElseThrow(() -> new IllegalStateException("대기열 이력을 찾을 수 없습니다."));
+            return QueueEntryResult.from(currentHistory, currentQueueToken);
+        }
+
         // Redis에서 사용할 수 있는 예측 불가능한 원본 토큰을 생성합니다.
-        String queueToken = UUID.randomUUID().toString();
+        String queueToken = queueTokenService.issue();
 
         // DDL의 queue_token_hash VARCHAR(64)에 맞춰 SHA-256 16진수 값을 저장합니다.
-        String queueTokenHash = sha256(queueToken);
+        String queueTokenHash = queueTokenService.hash(queueToken);
         LocalDateTime joinedAt = LocalDateTime.now();
 
         WaitingQueueHistory history = WaitingQueueHistory.builder()
@@ -86,11 +92,15 @@ public class WaitingQueueHistoryCreateService {
                 .joinedAt(joinedAt)
                 .build();
 
-        WaitingQueueHistory savedHistory =
-                waitingQueueHistoryRepository.save(history);
+        WaitingQueueHistory savedHistory = waitingQueueHistoryRepository.saveAndFlush(history);
+
+        if (!redisWaitingQueueService.register(scheduleId, member.getId(), queueToken)) {
+            throw new IllegalStateException("이미 이 회차의 대기열에 참여 중입니다. 기존 대기 화면을 이용해 주세요.");
+        }
 
         return new QueueEntryResult(
                 savedHistory.getId(),
+                schedule.getPerformance().getId(),
                 schedule.getId(),
                 member.getId(),
                 queueToken,
@@ -100,33 +110,23 @@ public class WaitingQueueHistoryCreateService {
         );
     }
 
-    /**
-     * UUID 원문을 SHA-256으로 변환하면 16진수 64자리 문자열이 생성됩니다.
-     */
-    private String sha256(String value) {
-        try {
-            MessageDigest messageDigest =
-                    MessageDigest.getInstance("SHA-256");
-
-            byte[] digest = messageDigest.digest(
-                    value.getBytes(StandardCharsets.UTF_8)
-            );
-
-            return HexFormat.of().formatHex(digest);
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException(
-                    "대기열 토큰 해시 생성에 실패했습니다.",
-                    exception
-            );
+    private void validateSalesWindow(PerformanceSchedule schedule) {
+        LocalDateTime now = LocalDateTime.now();
+        if (schedule.getStatus() == PerformanceSchedule.Status.CANCELLED
+                || schedule.getStatus() == PerformanceSchedule.Status.CLOSED) {
+            throw new IllegalArgumentException("예매할 수 없는 회차입니다.");
+        }
+        if (now.isBefore(schedule.getSalesOpenAt())) {
+            throw new IllegalArgumentException("아직 예매가 시작되지 않은 회차입니다.");
+        }
+        if (!now.isBefore(schedule.getSalesCloseAt())) {
+            throw new IllegalArgumentException("예매가 종료된 회차입니다.");
         }
     }
 
-    /**
-     * 현재 화면은 이동하지 않지만, 이후 대기열 담당자가 Redis 흐름을 연결할 때
-     * queueToken 원문을 그대로 사용할 수 있도록 결과에 포함합니다.
-     */
     public record QueueEntryResult(
             Long historyId,
+            Long performanceId,
             Long scheduleId,
             Long memberId,
             String queueToken,
@@ -134,5 +134,17 @@ public class WaitingQueueHistoryCreateService {
             String status,
             LocalDateTime joinedAt
     ) {
+        private static QueueEntryResult from(WaitingQueueHistory history, String rawToken) {
+            return new QueueEntryResult(
+                    history.getId(),
+                    history.getSchedule().getPerformance().getId(),
+                    history.getSchedule().getId(),
+                    history.getMember().getId(),
+                    rawToken,
+                    history.getQueueTokenHash(),
+                    history.getStatus().name(),
+                    history.getJoinedAt()
+            );
+        }
     }
 }

@@ -64,6 +64,12 @@ public class SecurityConfig {
                                 "/api/payments/webhook"
                         ).permitAll()
 
+                        .requestMatchers(
+                                "/booking/**",
+                                "/api/waiting-queue-history",
+                                "/api/waiting-queue/**"
+                        ).hasAnyRole("USER", "ADMIN")
+
                         .requestMatchers("/mypage/**")
                         .hasAnyRole("USER", "ADMIN")
 

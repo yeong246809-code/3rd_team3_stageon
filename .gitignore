@@ -115,6 +115,8 @@ figma-main-adjust/
 
 # Separate local AI server (do not include in this project repository)
 academy-ai-server/
+stageon-ai-gateway/
+.tmp-sheet/
 
 # Generated Notion documentation assets
 /docs/diagrams/

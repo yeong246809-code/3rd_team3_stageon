@@ -58,4 +58,15 @@ public class WaitingQueueHistory {
         this.joinedAt = joinedAt;
         this.enteredAt = enteredAt;
     }
+
+    public void markEntered(LocalDateTime enteredAt) {
+        this.status = Status.ENTERED;
+        this.enteredAt = enteredAt;
+        this.expiredAt = null;
+    }
+
+    public void markExpired(LocalDateTime expiredAt) {
+        this.status = Status.EXPIRED;
+        this.expiredAt = expiredAt;
+    }
 }

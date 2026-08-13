@@ -8,45 +8,37 @@ import kr.co.stageon.queue.config.WaitingQueueProperties;
 import kr.co.stageon.queue.dto.QueueInfoResponse;
 import kr.co.stageon.queue.service.RedisWaitingQueueService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
-@RequestMapping("/booking")
+@RestController
 @RequiredArgsConstructor
-public class WaitingQueueController {
+public class WaitingQueueStatusApiController {
 
     private final RedisWaitingQueueService queueService;
     private final MemberRepository memberRepository;
     private final PerformanceScheduleRepository scheduleRepository;
 
-    @GetMapping("/queue")
-    public String queuePage(
-            @RequestParam("scheduleId") Long scheduleId,
+    @GetMapping("/api/waiting-queue/status")
+    public QueueInfoResponse status(
+            @RequestParam Long scheduleId,
             @CookieValue(name = WaitingQueueProperties.COOKIE_NAME, required = false) String queueToken,
-            @AuthenticationPrincipal UserDetails userDetails,
-            Model model
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
         Member member = memberRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("로그인 회원 정보를 찾을 수 없습니다."));
         PerformanceSchedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("선택한 공연 회차를 찾을 수 없습니다."));
-        Long performanceId = schedule.getPerformance().getId();
-        QueueInfoResponse queueInfo = queueService.getQueueInfo(
-                performanceId,
+
+        return queueService.getQueueInfo(
+                schedule.getPerformance().getId(),
                 scheduleId,
                 member.getId(),
                 queueToken
         );
-
-       model.addAttribute("queueInfo", queueInfo);
-
-        return "booking/queue";
     }
 }
