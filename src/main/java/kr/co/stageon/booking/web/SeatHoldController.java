@@ -4,12 +4,15 @@ import kr.co.stageon.booking.dto.SeatHoldRequest;
 import kr.co.stageon.booking.facade.SeatHoldRedissonFacade;
 import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
+import kr.co.stageon.queue.config.WaitingQueueProperties;
+import kr.co.stageon.queue.service.RedisWaitingQueueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -21,15 +24,22 @@ public class SeatHoldController {
 
     private final SeatHoldRedissonFacade seatHoldRedissonFacade;
     private final MemberRepository memberRepository;
+    private final RedisWaitingQueueService waitingQueueService;
 
     @PostMapping("/hold")
     public String holdSeats(SeatHoldRequest request,
+                            @CookieValue(name = WaitingQueueProperties.COOKIE_NAME, required = false) String queueToken,
                             @AuthenticationPrincipal UserDetails userDetails,
                             RedirectAttributes redirectAttributes) {
         try {
             // 1. 현재 로그인한 진짜 회원 정보 조회
             Member member = memberRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new IllegalArgumentException("로그인 정보가 유효하지 않습니다."));
+
+            if (!waitingQueueService.hasValidAdmission(request.scheduleId(), member.getId(), queueToken)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "대기열 입장 권한이 없거나 만료되었습니다.");
+                return "redirect:/booking/queue?scheduleId=" + request.scheduleId();
+            }
 
             // 2. DTO 생성자 순서에 맞게 정확히 매핑 (수정 완료)
             SeatHoldRequest securedRequest = new SeatHoldRequest(

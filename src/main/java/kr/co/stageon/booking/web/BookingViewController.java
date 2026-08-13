@@ -10,12 +10,15 @@ import kr.co.stageon.booking.service.BookingQueryService;
 import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
 import kr.co.stageon.performance.repository.PerformanceScheduleRepository;
+import kr.co.stageon.queue.config.WaitingQueueProperties;
+import kr.co.stageon.queue.service.RedisWaitingQueueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
@@ -35,6 +38,7 @@ public class BookingViewController {
     private final SeatHoldRepository seatHoldRepository;
     private final PerformanceScheduleRepository performanceScheduleRepository;
     private final MemberRepository memberRepository;
+    private final RedisWaitingQueueService waitingQueueService;
 
     /*@GetMapping({"/booking/queue", "/queue"})
     public String queue(@RequestParam(required = false) Long scheduleId, Model model) {
@@ -44,7 +48,8 @@ public class BookingViewController {
 
     @GetMapping({"/booking/seats", "/seat-select"})
     public String seats(@RequestParam(required = false) Long scheduleId,
-                        @AuthenticationPrincipal UserDetails userDetails, // 💡 Security 컨텍스트에서 로그인 유저 정보 주입
+                         @CookieValue(name = WaitingQueueProperties.COOKIE_NAME, required = false) String queueToken,
+                         @AuthenticationPrincipal UserDetails userDetails, // 💡 Security 컨텍스트에서 로그인 유저 정보 주입
                         Model model) {
 
         model.addAttribute("scheduleId", scheduleId);
@@ -52,6 +57,13 @@ public class BookingViewController {
         if (scheduleId == null) {
             model.addAttribute("groupedSeats", Collections.emptyMap());
         } else {
+            Member member = memberRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new IllegalArgumentException("로그인 정보가 유효하지 않습니다."));
+
+            if (!waitingQueueService.hasValidAdmission(scheduleId, member.getId(), queueToken)) {
+                return "redirect:/booking/queue?scheduleId=" + scheduleId;
+            }
+
             model.addAttribute("groupedSeats", bookingQueryService.findGroupedSeats(scheduleId));
             model.addAttribute("seatGrades", bookingQueryService.findSeatGrades(scheduleId));
 
@@ -67,8 +79,6 @@ public class BookingViewController {
             // ==============================================================
 
             // 1. 로그인 정보에서 회원 조회 후 실제 ID 추출
-            Member member = memberRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new IllegalArgumentException("로그인 정보가 유효하지 않습니다."));
             Long memberId = member.getId();
 
             // 2. 해당 회차의 최대 예매 가능 매수 조회 (기본값 4)

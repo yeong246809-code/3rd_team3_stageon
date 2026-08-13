@@ -802,8 +802,8 @@ data-sales-close-at=${#temporals.format(selection.salesCloseAt, 'yyyy-MM-dd''T''
              * 선택한 scheduleId를 서버에 전달하고,
              * 로그인 회원의 memberId는 서버에서 조회합니다.
              *
-             * 이 요청은 waiting_queue_history INSERT까지만 수행합니다.
-             * Redis 처리와 다음 화면 이동은 이 코드에 포함하지 않습니다.
+             * 서버가 waiting_queue_history와 Redis 대기열을 함께 등록하고,
+             * 성공하면 HttpOnly 쿠키를 받은 뒤 대기 화면으로 이동합니다.
              */
             const csrfToken = document
                     .querySelector('meta[name="_csrf"]')
@@ -839,8 +839,8 @@ data-sales-close-at=${#temporals.format(selection.salesCloseAt, 'yyyy-MM-dd''T''
                       }
               );
 
-              if (response.status === 401) {
-                alert("로그인 후 이용해 주세요.");
+              if (response.status === 401 || response.redirected) {
+                window.location.href = "/login?required";
                 return;
               }
 
@@ -855,7 +855,7 @@ data-sales-close-at=${#temporals.format(selection.salesCloseAt, 'yyyy-MM-dd''T''
 
               /*
                * waiting_queue_history 등록이 성공하면
-               * API가 반환한 queueToken을 가지고 대기열 화면으로 이동합니다.
+               * 원본 토큰은 HttpOnly 쿠키로 전달되므로 URL에는 포함하지 않습니다.
                */
               console.log(
                       "waiting_queue_history INSERT 성공",
@@ -864,9 +864,7 @@ data-sales-close-at=${#temporals.format(selection.salesCloseAt, 'yyyy-MM-dd''T''
 
               const queueUrl =
                       `/booking/queue`
-                      + `?performanceId=${encodeURIComponent(performanceId)}`
-                      + `&scheduleId=${encodeURIComponent(responseBody.scheduleId)}`
-                      + `&token=${encodeURIComponent(responseBody.queueToken)}`;
+                      + `?scheduleId=${encodeURIComponent(responseBody.scheduleId)}`;
 
               window.location.href = queueUrl;
               return;

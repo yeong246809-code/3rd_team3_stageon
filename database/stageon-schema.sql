@@ -296,6 +296,8 @@ CREATE TABLE waiting_queue_history (
     PRIMARY KEY (id),
     UNIQUE KEY uk_waiting_queue_token_hash (queue_token_hash),
     KEY idx_waiting_queue_schedule_status (schedule_id, status),
+    KEY idx_waiting_queue_schedule_member_status (schedule_id, member_id, status),
+    KEY idx_waiting_queue_schedule_status_joined (schedule_id, status, joined_at, id),
     CONSTRAINT fk_waiting_queue_schedule
         FOREIGN KEY (schedule_id) REFERENCES performance_schedules (id),
     CONSTRAINT fk_waiting_queue_member

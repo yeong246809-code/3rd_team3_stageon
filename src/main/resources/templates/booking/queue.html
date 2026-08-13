@@ -24,11 +24,11 @@
 
           <div th:if="${status == 'WAITING'}">
             <p style="margin-top:16px">현재 내 앞 대기 인원</p>
-            <div class="queue-count" th:text="${#numbers.formatInteger(queueInfo?.waitingOrder ?: 1284, 1, 'COMMA')}">1,284</div>
+            <div id="queueWaitingOrder" class="queue-count" th:text="${#numbers.formatInteger(queueInfo?.waitingOrder ?: 0, 1, 'COMMA')}">0</div>
             <div class="progress">
-              <i th:style="'width:' + ${queueInfo?.progressPercentage ?: 30} + '%'"></i>
+              <i id="queueProgress" th:style="'width:' + ${queueInfo?.progressPercentage ?: 5} + '%'"></i>
             </div>
-            <p class="section-copy" style="margin-top:14px"
+            <p id="queueEstimate" class="section-copy" style="margin-top:14px"
                th:text="|예상 대기 시간 약 ${queueInfo?.estimatedMinutes ?: 4}분 · 화면을 닫지 마세요.|">예상 대기 시간 약 4분 · 화면을 닫지 마세요.</p>
           </div>
 
@@ -44,7 +44,7 @@
         </div>
 
         <div th:if="${status != 'ENTERED'}" class="cluster" style="justify-content:center;margin-top:24px">
-          <a class="btn" th:href="@{/performances/{id}/schedules(id=${queueInfo?.performanceId ?: 1})}">회차 다시 선택</a>
+          <a class="btn" th:href="@{/booking/performances/{id}/schedules(id=${queueInfo?.performanceId ?: 1})}">회차 다시 선택</a>
         </div>
       </section>
     </main>
@@ -53,18 +53,54 @@
       /*<![CDATA[*/
       const status = /*[[${queueInfo?.status ?: 'WAITING'}]]*/ 'WAITING';
       const scheduleId = /*[[${queueInfo?.scheduleId ?: 1}]]*/ 1;
-      const token = /*[[${queueInfo?.queueToken ?: ''}]]*/ '';
 
       if (status === 'ENTERED') {
         // ENTERED 상태면 1.5초 뒤 좌석 선택 페이지로 자동 이동 (replace를 써서 뒤로가기 방지)
         setTimeout(() => {
-          window.location.replace(`/schedules/${scheduleId}/seats?token=${token}`);
+          window.location.replace(`/booking/seats?scheduleId=${encodeURIComponent(scheduleId)}`);
         }, 1500);
       } else if (status === 'WAITING') {
-        // WAITING 상태면 5초마다 현재 페이지를 새로고침하여 대기열 갱신
-        setTimeout(() => {
-          window.location.reload();
-        }, 5000);
+        let pollDelay = 3000;
+
+        const pollQueueStatus = async () => {
+          try {
+            const response = await fetch(
+                    `/api/waiting-queue/status?scheduleId=${encodeURIComponent(scheduleId)}`,
+                    {headers: {Accept: 'application/json'}, cache: 'no-store'}
+            );
+            if (response.status === 401 || response.redirected) {
+              window.location.replace('/login?required');
+              return;
+            }
+            if (!response.ok) {
+              throw new Error('대기열 상태를 확인할 수 없습니다.');
+            }
+
+            const queueInfo = await response.json();
+            if (queueInfo.status === 'ENTERED') {
+              window.location.replace(`/booking/seats?scheduleId=${encodeURIComponent(scheduleId)}`);
+              return;
+            }
+            if (queueInfo.status === 'EXPIRED') {
+              window.location.reload();
+              return;
+            }
+
+            document.getElementById('queueWaitingOrder').textContent =
+                    Number(queueInfo.waitingOrder || 0).toLocaleString('ko-KR');
+            document.getElementById('queueProgress').style.width =
+                    `${queueInfo.progressPercentage || 5}%`;
+            document.getElementById('queueEstimate').textContent =
+                    `예상 대기 시간 약 ${queueInfo.estimatedMinutes || 1}분 · 화면을 닫지 마세요.`;
+            pollDelay = Math.min(10000, pollDelay + 1000);
+          } catch (error) {
+            console.error(error);
+            pollDelay = Math.min(10000, pollDelay + 2000);
+          }
+          window.setTimeout(pollQueueStatus, pollDelay);
+        };
+
+        window.setTimeout(pollQueueStatus, pollDelay);
       }
       /*]]>*/
     </script>

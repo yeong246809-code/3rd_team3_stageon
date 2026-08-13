@@ -3,10 +3,12 @@ package kr.co.stageon.queue.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Profile({"local", "test"})
 @RequiredArgsConstructor
 public class TestDataController {
 
@@ -14,7 +16,7 @@ public class TestDataController {
 
     @GetMapping("/test/fill-redis")
     public String fillRedis() {
-        String waitingKey = "queue:schedule:1:waiting";
+        String waitingKey = "queue:{1}:waiting";
         long currentTime = System.currentTimeMillis();
 
         // 파이프라인 기법을 사용해 20만 건을 1초 만에 고속 저장!
