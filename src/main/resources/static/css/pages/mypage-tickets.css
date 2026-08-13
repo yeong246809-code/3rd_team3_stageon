@@ -119,6 +119,9 @@
 .ticket-modal__qr-view strong { margin-top: 15px; color: #101828; font-size: 13px; }
 .ticket-modal__qr-view p { margin: 6px 0 0; color: #667085; font-size: 11px; }
 
+/* hidden 속성이 적용된 모달 요소는 화면에서 완전히 숨김 */
+.ticket-modal [hidden] { display: none !important; }
+
 /* QR 이용 불가 / 오픈 전 안내 */
 .ticket-modal__unavailable { display: grid; justify-items: center; margin-top: 24px; padding: 30px 20px; text-align: center; }
 .ticket-modal__unavailable-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; background: #f2f4f7; color: #667085; font-size: 22px; font-weight: 800; }

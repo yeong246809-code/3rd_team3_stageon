@@ -116,18 +116,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =========================================================
-       티켓 QR 버튼 이벤트
-    ========================================================== */
+   티켓 QR 버튼 이벤트
+
+   AVAILABLE 상태일 때만 QR 확대 모달을 엽니다.
+   UPCOMING / ENDED 상태에서는 클릭해도 모달을 열지 않습니다.
+========================================================== */
 
     document.querySelectorAll(".ticket-qr__button")
         .forEach(button => {
 
             button.addEventListener("click", () => {
+
+                const status = button.dataset.ticketStatus;
+
+                // QR 사용 가능한 상태에서만 모달 표시
+                if (status !== "AVAILABLE") {
+                    return;
+                }
+
                 openQrModal(button);
             });
 
         });
-
 
     /* =========================================================
        닫기 버튼

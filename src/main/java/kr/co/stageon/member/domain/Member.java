@@ -108,6 +108,32 @@ public class Member {
         this.passwordHash = encodedPassword;
     }
 
+    /**
+     * 마이페이지에서 일반 회원정보를 수정합니다.
+     *
+     * 이메일은 로그인 아이디로 사용되기 때문에
+     * 여기서는 변경하지 않습니다.
+     */
+    public void updateProfile(
+            String name,
+            String phone,
+            String gender,
+            LocalDate birthDate
+    ) {
+
+        // 이름 수정
+        this.name = name;
+
+        // 휴대전화 번호 수정
+        this.phone = phone;
+
+        // 성별 수정
+        this.gender = gender;
+
+        // 생년월일 수정
+        this.birthDate = birthDate;
+    }
+
     // 관리자 권한 변경 (AD10: 관리자 회원 관리 화면)
     public void changeRole(Role newRole) {
         this.role = newRole;
