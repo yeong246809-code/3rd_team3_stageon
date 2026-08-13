@@ -63,7 +63,7 @@ public class MyTicketQueryService {
 
 
                 /*
-                 * QR은 공연 시작 24시간 전부터만 생성
+                 * QR은 공연 시작 2시간 전부터만 생성
                  *
                  * UPCOMING  → QR 없음
                  * AVAILABLE → QR 생성
@@ -115,9 +115,9 @@ public class MyTicketQueryService {
     /**
      * 티켓 화면 상태 계산
      *
-     * UPCOMING  : QR 오픈 전
-     * AVAILABLE : QR 이용 가능
-     * ENDED     : 공연 종료
+     * UPCOMING  : 공연 시작 24시간 이전
+     * AVAILABLE : 공연 시작 24시간 전 ~ 공연 종료 전
+     * ENDED     : 공연 종료 이후
      */
     private String determineTicketStatus(
             LocalDateTime startsAt,
@@ -148,13 +148,14 @@ public class MyTicketQueryService {
             LocalDateTime endTime =
                     startsAt.plusMinutes(runtimeMinutes);
 
-            if (now.isAfter(endTime)) {
+            // 공연 종료 시각과 같거나 지난 경우
+            if (!now.isBefore(endTime)) {
                 return "ENDED";
             }
         }
 
 
-        // QR 공개 후 ~ 공연 종료 전
+        // 공연 시작 2시간 전 ~ 공연 종료 전
         return "AVAILABLE";
     }
 }

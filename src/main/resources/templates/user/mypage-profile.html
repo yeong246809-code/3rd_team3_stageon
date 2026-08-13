@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>StageOn | 회원정보 수정</title>
+
+    <!-- 공통 스타일 -->
+    <link rel="stylesheet"
+          th:href="@{/css/app.css}"
+          href="/css/app.css">
+
+    <!-- 마이페이지 공통 스타일 -->
+    <link rel="stylesheet"
+          th:href="@{/css/pages/mypage.css}"
+          href="/css/pages/mypage.css">
+
+    <!-- 회원정보 수정 전용 스타일 -->
+    <link rel="stylesheet"
+          th:href="@{/css/pages/mypage-profile.css}"
+          href="/css/pages/mypage-profile.css">
+</head>
+
+
+<body id="top">
+
+<!-- =========================================================
+     공통 사이트 헤더
+========================================================= -->
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+
+<main class="mypage-page">
+
+    <div class="mypage-shell">
+
+
+        <!-- =======================================================
+             페이지 제목
+        ======================================================== -->
+        <header class="mypage-heading profile-heading">
+
+            <h1>
+                회원정보 수정
+            </h1>
+
+            <p>
+                회원님의 기본 정보와 비밀번호를 관리할 수 있습니다.
+            </p>
+
+        </header>
+
+
+        <div class="mypage-layout">
+
+
+            <!-- =====================================================
+                 마이페이지 공통 사이드바
+            ====================================================== -->
+            <div th:replace="~{fragments/mypage/mypage-sidebar :: sidebar('profile')}"></div>
+
+
+            <!-- =====================================================
+                 회원정보 수정 본문
+            ====================================================== -->
+            <section class="mypage-content profile-content">
+
+                <form class="profile-form"
+                      id="profile-form"
+                      th:action="@{/mypage/profile}"
+                      action="/mypage/profile"
+                      method="post">
+
+
+                    <!-- =================================================
+                         기본 정보
+                    ================================================== -->
+                    <section class="profile-panel">
+
+                        <div class="profile-panel__heading">
+
+                            <div>
+
+                                <small>
+                                    PROFILE
+                                </small>
+
+                                <h2>
+                                    기본 정보
+                                </h2>
+
+                                <p>
+                                    이름, 휴대전화, 성별과 생년월일을 수정할 수 있습니다.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="profile-fields">
+
+
+                            <!-- =================================================
+                                 이메일
+                                 로그인 아이디이므로 수정 불가
+                            ================================================== -->
+                            <div class="profile-field">
+
+                                <label for="profile-email">
+                                    이메일
+                                </label>
+
+
+                                <input id="profile-email"
+                                       class="profile-input is-readonly"
+                                       type="email"
+                                       th:value="${profile.email}"
+                                       readonly>
+
+
+                                <p class="profile-field__message">
+                                    이메일은 로그인 아이디로 사용되므로 변경할 수 없습니다.
+                                </p>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 이름
+                            ================================================== -->
+                            <div class="profile-field">
+
+                                <label for="profile-name">
+                                    이름
+                                    <span>*</span>
+                                </label>
+
+
+                                <input id="profile-name"
+                                       class="profile-input"
+                                       type="text"
+                                       name="name"
+                                       th:value="${profile.name}"
+                                       maxlength="80"
+                                       autocomplete="name"
+                                       required>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 휴대전화
+                            ================================================== -->
+                            <div class="profile-field">
+
+                                <label for="profile-phone">
+                                    휴대전화
+                                    <span>*</span>
+                                </label>
+
+
+                                <input id="profile-phone"
+                                       class="profile-input"
+                                       type="tel"
+                                       name="phone"
+                                       th:value="${profile.phone}"
+                                       placeholder="010-1234-5678"
+                                       autocomplete="tel"
+                                       required>
+
+
+                                <p class="profile-field__message">
+                                    휴대전화 번호는 숫자 또는 하이픈(-)을 포함해 입력할 수 있습니다.
+                                </p>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 성별 / 생년월일
+                            ================================================== -->
+                            <div class="profile-field-grid">
+
+
+                                <!-- 성별 -->
+                                <div class="profile-field">
+
+                                    <label>
+                                        성별
+                                    </label>
+
+
+                                    <div class="profile-radio-group">
+
+
+                                        <label class="profile-radio">
+
+                                            <input type="radio"
+                                                   name="gender"
+                                                   value="MALE"
+                                                   th:checked="${profile.gender == 'MALE'}">
+
+                                            <span>
+                        남성
+                      </span>
+
+                                        </label>
+
+
+                                        <label class="profile-radio">
+
+                                            <input type="radio"
+                                                   name="gender"
+                                                   value="FEMALE"
+                                                   th:checked="${profile.gender == 'FEMALE'}">
+
+                                            <span>
+                        여성
+                      </span>
+
+                                        </label>
+
+
+                                        <label class="profile-radio">
+
+                                            <input type="radio"
+                                                   name="gender"
+                                                   value=""
+                                                   th:checked="${profile.gender == null or #strings.isEmpty(profile.gender)}">
+
+                                            <span>
+                        선택 안 함
+                      </span>
+
+                                        </label>
+
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- 생년월일 -->
+                                <div class="profile-field">
+
+                                    <label for="profile-birth-date">
+                                        생년월일
+                                    </label>
+
+
+                                    <input id="profile-birth-date"
+                                           class="profile-input"
+                                           type="date"
+                                           name="birthDate"
+                                           th:value="${profile.birthDate}">
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================================
+                         비밀번호 변경
+                    ================================================== -->
+                    <section class="profile-panel">
+
+                        <div class="profile-panel__heading">
+
+                            <div>
+
+                                <small>
+                                    SECURITY
+                                </small>
+
+                                <h2>
+                                    비밀번호 변경
+                                </h2>
+
+                                <p>
+                                    비밀번호를 변경하지 않으려면 아래 입력란은 비워두세요.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="profile-fields">
+
+
+                            <!-- =================================================
+                                 현재 비밀번호
+                            ================================================== -->
+                            <div class="profile-field">
+
+                                <label for="profile-current-password">
+                                    현재 비밀번호
+                                </label>
+
+
+                                <input id="profile-current-password"
+                                       class="profile-input"
+                                       type="password"
+                                       name="currentPassword"
+                                       autocomplete="current-password"
+                                       placeholder="현재 비밀번호 입력">
+
+
+                                <p class="profile-field__message">
+                                    비밀번호 변경 시 현재 비밀번호 확인이 필요합니다.
+                                </p>
+
+                            </div>
+
+
+                            <!-- =================================================
+                                 새 비밀번호 / 확인
+                            ================================================== -->
+                            <div class="profile-field-grid">
+
+
+                                <!-- 새 비밀번호 -->
+                                <div class="profile-field">
+
+                                    <label for="profile-password">
+                                        새 비밀번호
+                                    </label>
+
+
+                                    <input id="profile-password"
+                                           class="profile-input"
+                                           type="password"
+                                           name="newPassword"
+                                           autocomplete="new-password"
+                                           placeholder="새 비밀번호 입력">
+
+
+                                    <p class="profile-field__message">
+                                        기존 비밀번호와 다른 비밀번호를 입력해 주세요.
+                                    </p>
+
+                                </div>
+
+
+                                <!-- 새 비밀번호 확인 -->
+                                <div class="profile-field">
+
+                                    <label for="profile-password-confirm">
+                                        새 비밀번호 확인
+                                    </label>
+
+
+                                    <input id="profile-password-confirm"
+                                           class="profile-input"
+                                           type="password"
+                                           name="newPasswordConfirm"
+                                           autocomplete="new-password"
+                                           placeholder="새 비밀번호 다시 입력">
+
+                                </div>
+
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================================
+                         서버 오류 메시지
+                    ================================================== -->
+                    <div class="profile-alert profile-alert--error"
+                         th:if="${error != null}"
+                         th:text="${error}">
+
+                        회원정보 수정 중 오류가 발생했습니다.
+
+                    </div>
+
+
+                    <!-- =================================================
+                         서버 성공 메시지
+                    ================================================== -->
+                    <div class="profile-alert profile-alert--success"
+                         th:if="${success != null}"
+                         th:text="${success}">
+
+                        회원정보가 수정되었습니다.
+
+                    </div>
+
+
+                    <!-- =================================================
+                         하단 버튼
+                    ================================================== -->
+                    <div class="profile-actions">
+
+
+                        <a class="profile-button profile-button--secondary"
+                           th:href="@{/mypage}"
+                           href="/mypage">
+
+                            취소
+
+                        </a>
+
+
+                        <button class="profile-button profile-button--primary"
+                                type="submit">
+
+                            변경사항 저장
+
+                        </button>
+
+
+                    </div>
+
+                </form>
+
+            </section>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- =========================================================
+     공통 푸터
+========================================================= -->
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+
+
+<!-- =========================================================
+     회원정보 수정 전용 JavaScript
+========================================================= -->
+<script th:src="@{/js/pages/mypage-profile.js}"
+        src="/js/pages/mypage-profile.js"></script>
+
+
+</body>
+</html>

@@ -148,15 +148,6 @@ public class MypageController {
         );
     }
 
-    @GetMapping("/profile")
-    public String profile(Model model) {
-        return placeholder(
-                model,
-                "profile",
-                "회원정보 수정",
-                "이름과 휴대전화 번호 등 회원 정보를 관리합니다."
-        );
-    }
 
     private Member findLoginMember(
             Authentication authentication
