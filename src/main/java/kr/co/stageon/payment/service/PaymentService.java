@@ -7,7 +7,6 @@ import kr.co.stageon.payment.domain.Payment;
 import kr.co.stageon.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +30,9 @@ public class PaymentService {
     /**
      * 토스페이먼츠 최종 결제 승인 (Confirm) API를 호출합니다.
      */
+    /**
+     * 토스페이먼츠 최종 결제 승인 (Confirm) API를 호출합니다.
+     */
     public JsonNode confirmPayment(String paymentKey, String orderId, BigDecimal amount) {
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -49,12 +51,14 @@ public class PaymentService {
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(
+            // 🚨 핵심 포인트: String이나 JsonNode 대신 byte[]로 받아옵니다. (한글 깨짐 원천 차단)
+            ResponseEntity<byte[]> response = restTemplate.postForEntity(
                     "https://api.tosspayments.com/v1/payments/confirm",
                     requestEntity,
-                    String.class
+                    byte[].class
             );
 
+            // 💡 순수 바이트 데이터를 JsonNode로 변환하면 스프링 에러도 없고 한글도 완벽하게 나옵니다.
             return objectMapper.readTree(response.getBody());
 
         } catch (Exception e) {
@@ -103,5 +107,70 @@ public class PaymentService {
         payment.complete();
 
         log.info("✅ 가상계좌 입금 확인 및 DB 업데이트 완료 - 주문번호: {}", orderId);
+    }
+
+    /**
+     * 가상계좌 미입금 취소 또는 일반 결제 취소 웹훅 수신 시 결제 상태를 업데이트합니다.
+     */
+    @Transactional
+    public void cancelPayment(String orderId) {
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문번호입니다: " + orderId));
+
+        if (payment.getStatus() == Payment.Status.CANCELED) {
+            log.info("이미 취소 처리된 결제건입니다. orderId: {}", orderId);
+            return;
+        }
+
+        // 💡 가상계좌 미입금 취소(READY)일 경우 전용 메서드 호출
+        if (payment.getStatus() == Payment.Status.READY) {
+            payment.markUnpaidCanceled();
+
+            // 🚨 여기에 예약 취소 및 좌석 원상복구(해제) 로직을 꼭 넣어주세요!
+            // 예: reservationService.cancelReservation(payment.getReservation().getId());
+        } else {
+            log.warn("미입금 취소 대상이 아닙니다. 현재 상태: {}", payment.getStatus());
+        }
+    }
+
+    /**
+     * 토스페이먼츠 결제 취소 API 호출 (부분/전체 취소 공통)
+     */
+    public void cancelTossPayment(Payment payment, BigDecimal cancelAmount, String cancelReason) {
+        RestTemplate restTemplate = new RestTemplate();
+        String secretKey = "test_sk_nRQoOaPz8LxZAbvJq0Wz8y47BMw6";
+        String authBasic = Base64.getEncoder().encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Basic " + authBasic);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("cancelReason", cancelReason);
+        payload.put("cancelAmount", cancelAmount);
+
+        // 🚨 [핵심 추가] 가상계좌(VBANK) 결제 건이라면 환불 계좌 정보를 반드시 추가해야 합니다.
+        if (payment.getPayMethod() == Payment.PayMethod.VBANK) {
+            Map<String, String> refundAccount = new HashMap<>();
+            refundAccount.put("bank", "20"); // 은행 코드 (20: 우리은행 등 토스 공식 코드 참고)
+            refundAccount.put("accountNumber", "1234567890123"); // 💡 테스트용 가짜 계좌번호
+            refundAccount.put("holderName", "테스트환불"); // 예금주명
+
+            payload.put("refundReceiveAccount", refundAccount);
+        }
+
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    "https://api.tosspayments.com/v1/payments/" + payment.getPaymentKey() + "/cancel",
+                    requestEntity,
+                    String.class
+            );
+            log.info("✅ 토스페이먼츠 결제 취소 성공: {}", response.getBody());
+        } catch (Exception e) {
+            log.error("토스 결제 취소 API 호출 실패", e);
+            throw new RuntimeException("결제망 취소 요청 중 오류가 발생했습니다.");
+        }
     }
 }

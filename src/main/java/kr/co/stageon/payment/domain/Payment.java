@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
-    public enum Status { READY, SUCCESS, FAILED, CANCELLED }
+    public enum Status { READY, SUCCESS, FAILED, CANCELED }
     public enum Provider { TOSSPAYMENTS }
     public enum PayMethod { CARD, VBANK, BANK, MOBILE } //결제수단 - 카드, 가상계좌, 무통장입금, 모바일
 
@@ -111,13 +111,34 @@ public class Payment {
         this.processedAt = LocalDateTime.now();
     }
 
-    /** AD09 관리자 강제취소 시 결제를 취소 상태로 전환하고 환불 누적액을 기록합니다. */
+    /** AD09 관리자 강제취소 시 결제를 취소 상태로 전환하고 환불 누적액을 기록합니다. + 사용자 취소 */
     public void markCancelled(BigDecimal refundAmount) {
         if (this.status != Status.SUCCESS) {
             throw new IllegalStateException("성공한 결제만 취소할 수 있습니다.");
         }
-        this.status = Status.CANCELLED;
+        this.status = Status.CANCELED;
         this.cancelAmount = this.cancelAmount.add(refundAmount);
         this.processedAt = LocalDateTime.now();
+    }
+
+    //미입금 취소
+    public void markUnpaidCanceled() {
+        if (this.status != Status.READY) {
+            throw new IllegalStateException("결제 대기 상태에서만 미입금 취소가 가능합니다.");
+        }
+        this.status = Status.CANCELED;
+        // 돈을 낸 적이 없으니 cancelAmount 계산은 뺍니다.
+        this.processedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 부분 취소 시, 결제 상태는 SUCCESS로 유지하고 취소 누적 금액만 증가시킵니다.
+     */
+    public void addCancelAmount(BigDecimal amount) {
+        if (this.cancelAmount == null) {
+            this.cancelAmount = BigDecimal.ZERO;
+        }
+        this.cancelAmount = this.cancelAmount.add(amount);
+        this.processedAt = LocalDateTime.now(); // 부분 취소 처리 시간 갱신 (선택 사항)
     }
 }

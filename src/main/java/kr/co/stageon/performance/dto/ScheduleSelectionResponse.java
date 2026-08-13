@@ -9,9 +9,9 @@ import java.util.List;
  * [남수아 담당]
  * 날짜·회차 선택 화면 전용 DTO입니다.
  *
- * 기존 ScheduleResponse는 사용하거나 수정하지 않습니다.
+ * salesOpenAt / salesCloseAt을 화면으로 전달하여
+ * 회차가 현재 시간에 맞춰 자동으로 열리고 닫히도록 합니다.
  */
-
 public record ScheduleSelectionResponse(
         Long scheduleId,
         Long performanceId,
@@ -19,6 +19,8 @@ public record ScheduleSelectionResponse(
         String venueHallName,
         Integer roundNumber,
         LocalDateTime startsAt,
+        LocalDateTime salesOpenAt,
+        LocalDateTime salesCloseAt,
         Integer maxTicketsPerMember,
         String status,
         List<SeatGradeAvailabilityResponse> seatGrades
@@ -37,6 +39,8 @@ public record ScheduleSelectionResponse(
                 venueHall.getName(),
                 schedule.getRoundNumber(),
                 schedule.getStartsAt(),
+                schedule.getSalesOpenAt(),
+                schedule.getSalesCloseAt(),
                 schedule.getMaxTicketsPerMember(),
                 schedule.getStatus().name(),
                 seatGrades

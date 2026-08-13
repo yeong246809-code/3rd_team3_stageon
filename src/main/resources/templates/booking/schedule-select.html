@@ -175,6 +175,8 @@
              data-time=${#temporals.format(selection.startsAt, 'HH:mm')},
              data-round=${selection.roundNumber},
              data-status=${selection.status},
+             data-sales-open-at=${#temporals.format(selection.salesOpenAt, 'yyyy-MM-dd''T''HH:mm:ss')},
+data-sales-close-at=${#temporals.format(selection.salesCloseAt, 'yyyy-MM-dd''T''HH:mm:ss')},
              data-venue=${selection.venueName},
              data-hall=${selection.venueHallName},
              data-max-tickets=${selection.maxTicketsPerMember}">
@@ -232,6 +234,11 @@
       scheduleId: Number(item.dataset.scheduleId),
       date: item.dataset.date,
       time: item.dataset.time,
+
+      // 예매 시작 / 종료 시간
+      salesOpenAt: item.dataset.salesOpenAt,
+      salesCloseAt: item.dataset.salesCloseAt,
+
       roundNumber: Number(item.dataset.round),
       status: item.dataset.status,
       venue: item.dataset.venue,
@@ -242,10 +249,38 @@
     };
   });
 
+  /*
+ * 현재 시각 기준으로
+ * 해당 회차가 실제 예매 가능한지 판단합니다.
+ */
+  function isScheduleBookable(schedule) {
+
+    const now = new Date();
+    const salesOpenAt = new Date(schedule.salesOpenAt);
+    const salesCloseAt = new Date(schedule.salesCloseAt);
+
+    /*
+     * 공연 취소는 판매 시간과 관계없이 항상 예매 불가입니다.
+     *
+     * OPEN / SCHEDULED / CLOSED 값은 자동 오픈·마감 판정에 사용하지 않습니다.
+     * 실제 예매 가능 여부는 salesOpenAt / salesCloseAt으로 계산합니다.
+     */
+    if (schedule.status === "CANCELLED") {
+      return false;
+    }
+
+    /*
+     * 예매 시작 시간 <= 현재 < 예매 종료 시간
+     * 그리고 실제 잔여 좌석이 있어야 선택할 수 있습니다.
+     */
+    return now >= salesOpenAt
+            && now < salesCloseAt
+            && schedule.totalAvailableSeatCount > 0;
+  }
+
   const selectableSchedules = schedules.filter(
           (schedule) =>
-                  schedule.status === "OPEN"
-                  && schedule.totalAvailableSeatCount > 0
+                  isScheduleBookable(schedule)
   );
 
   const availableDates = [
@@ -295,19 +330,53 @@
   let selectedDate = null;
   let selectedScheduleId = null;
 
+  /*
+   * 화면에 표시할 회차 상태를 현재 시간 기준으로 계산합니다.
+   *
+   * DB의 OPEN / SCHEDULED / CLOSED 값을 그대로 표시하지 않고
+   * salesOpenAt / salesCloseAt을 기준으로 자동으로 상태를 바꿉니다.
+   * CANCELLED만 관리자가 강제로 막은 상태이므로 우선 적용합니다.
+   */
   function getStatusLabel(schedule) {
+    const now = new Date();
+    const salesOpenAt = new Date(schedule.salesOpenAt);
+    const salesCloseAt = new Date(schedule.salesCloseAt);
+
+    // 공연 취소
+    if (schedule.status === "CANCELLED") {
+      return "공연 취소";
+    }
+
+    // 아직 티켓 오픈 전
+    if (now < salesOpenAt) {
+      return "예매 예정";
+    }
+
+    // 회차별 예매 마감 시간이 지난 경우
+    if (now >= salesCloseAt) {
+      return "판매 종료";
+    }
+
+    // 판매 기간 중이지만 잔여 좌석이 없는 경우
     if (schedule.totalAvailableSeatCount === 0) {
       return "매진";
     }
 
-    const labels = {
-      OPEN: "예매 가능",
-      SCHEDULED: "예매 예정",
-      CLOSED: "판매 종료",
-      CANCELLED: "공연 취소"
-    };
+    // 티켓 오픈 후 ~ 마감 전 + 잔여 좌석 있음
+    return "예매 가능";
+  }
 
-    return labels[schedule.status] || schedule.status;
+  /* 상태 문구에 맞는 CSS 클래스를 반환합니다. */
+  function getStatusClass(schedule) {
+    const label = getStatusLabel(schedule);
+
+    if (label === "예매 가능") return "open";
+    if (label === "예매 예정") return "scheduled";
+    if (label === "판매 종료") return "closed";
+    if (label === "공연 취소") return "cancelled";
+    if (label === "매진") return "sold-out";
+
+    return "closed";
   }
 
   function formatSelectedDate(dateText) {
@@ -401,7 +470,7 @@
       let dateStatusLabel = "공연 없음";
 
       if (dateSchedules.some(
-              (schedule) => schedule.status === "OPEN"
+              (schedule) => isScheduleBookable(schedule)
       )) {
         dateStatusLabel = "예매 가능";
       } else if (dateSchedules.some(
@@ -585,9 +654,9 @@
     }
 
     dateSchedules.forEach((schedule) => {
+      // 실제 판매 시작/마감 시간을 기준으로 회차 선택 가능 여부를 계산합니다.
       const selectable =
-              schedule.status === "OPEN"
-              && schedule.totalAvailableSeatCount > 0;
+              isScheduleBookable(schedule);
 
       const scheduleButton =
               document.createElement("button");
@@ -638,7 +707,7 @@
             </span>
 
             <span class="schedule-status
-                         status-${schedule.status.toLowerCase()}">
+                         status-${getStatusClass(schedule)}">
               ${getStatusLabel(schedule)}
             </span>
 

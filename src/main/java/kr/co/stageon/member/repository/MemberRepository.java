@@ -1,6 +1,8 @@
 package kr.co.stageon.member.repository;
 
 import kr.co.stageon.member.domain.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,5 +45,21 @@ public interface MemberRepository
     Optional<Member> findActiveMemberByNameAndNormalizedPhone(
             @Param("name") String name,
             @Param("phone") String phone
+    );
+
+    // AD10 관리자 회원 목록: 이름/이메일 검색 + 권한/상태 필터 + 페이지네이션
+    @Query("""
+            SELECT m FROM Member m
+            WHERE (:role IS NULL OR m.role = :role)
+              AND (:status IS NULL OR m.status = :status)
+              AND (:keyword IS NULL OR m.name LIKE CONCAT('%', :keyword, '%')
+                   OR m.email LIKE CONCAT('%', :keyword, '%'))
+            ORDER BY m.id DESC
+            """)
+    Page<Member> search(
+            @Param("role") Member.Role role,
+            @Param("status") Member.Status status,
+            @Param("keyword") String keyword,
+            Pageable pageable
     );
 }

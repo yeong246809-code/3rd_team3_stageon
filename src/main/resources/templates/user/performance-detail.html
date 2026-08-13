@@ -16,8 +16,10 @@
             <span class="eyebrow"
                   th:text="${performance.genreLabel + (#strings.isEmpty(performance.region) ? '' : ' · ' + performance.region)}">뮤지컬 · 서울</span>
             <span class="performance-status"
-                  th:classappend="${performance.status == 'ON_SALE'} ? ' is-on-sale'"
-                  th:text="${performance.statusLabel}">예매 가능</span>
+                  th:classappend="' performance-status--' + ${#strings.toLowerCase(bookingStatus.status)}"
+                  th:text="${bookingStatus.statusLabel}">
+                예매 가능
+            </span>
           </div>
           <h1 th:text="${performance.title}">공연명</h1>
         </header>
@@ -70,15 +72,205 @@
             </dl>
           </section>
 
-          <aside class="card card--shadow detail-booking">
+          <!-- =========================================
+     공연 예매 상태 카드
+     ========================================= -->
+          <aside class="card card--shadow detail-booking"
+                 th:classappend="' detail-booking--' + ${#strings.toLowerCase(bookingStatus.status)}">
+
+            <!-- 상태 배지 -->
             <span class="detail-booking__status"
-                  th:classappend="${performance.status == 'ON_SALE'} ? ' is-on-sale'"
-                  th:text="${performance.statusLabel}">예매 가능</span>
-            <h2 th:text="${performance.status == 'ON_SALE' ? '지금 예매할 수 있어요' : '예매 일정을 확인해 보세요'}">예매 일정을 확인해 보세요</h2>
-            <p>날짜와 회차, 잔여 좌석은 다음 단계에서 확인할 수 있습니다.</p>
-            <a class="btn btn--primary btn--wide"
+                  th:text="${bookingStatus.statusLabel}">
+        티켓 오픈 예정
+    </span>
+
+
+            <!-- 상태별 제목 -->
+            <h2 th:text="${bookingStatus.title}">
+              티켓 오픈 예정
+            </h2>
+
+
+            <!-- =====================================
+                 티켓 오픈 예정
+                 ===================================== -->
+            <div class="detail-booking__panel"
+                 th:if="${bookingStatus.status == 'UPCOMING'}">
+
+              <div class="detail-booking__panel-icon">
+                <!-- 별도 아이콘 라이브러리를 쓰지 않기 위해
+                     CSS로 시계 모양을 표현 -->
+                <span class="booking-icon booking-icon--clock"></span>
+              </div>
+
+              <strong class="detail-booking__panel-label">
+                티켓 오픈
+              </strong>
+
+              <span class="detail-booking__date"
+                    th:text="${#temporals.format(
+                  bookingStatus.nextOpenAt,
+                  'yyyy.MM.dd'
+              )}">
+            2026.08.13
+        </span>
+
+              <strong class="detail-booking__time"
+                      th:text="${#temporals.format(
+                    bookingStatus.nextOpenAt,
+                    'HH:mm'
+                )}">
+                12:00
+              </strong>
+
+            </div>
+
+
+            <!-- =====================================
+                 예매 가능
+                 ===================================== -->
+            <div class="detail-booking__panel"
+                 th:if="${bookingStatus.status == 'AVAILABLE'}">
+
+              <div class="detail-booking__panel-icon">
+                <span class="booking-icon booking-icon--ticket">✓</span>
+              </div>
+
+              <strong class="detail-booking__panel-label">
+                예매 진행
+              </strong>
+
+              <span class="detail-booking__panel-message">
+            날짜와 회차를 선택해 주세요.
+        </span>
+
+            </div>
+
+
+            <!-- =====================================
+                 예매 마감
+                 ===================================== -->
+            <div class="detail-booking__panel"
+                 th:if="${bookingStatus.status == 'CLOSED'}">
+
+              <div class="detail-booking__panel-icon">
+                <span class="booking-icon">−</span>
+              </div>
+
+              <strong class="detail-booking__panel-label">
+                예매 마감
+              </strong>
+
+              <span class="detail-booking__panel-message">
+            온라인 예매가 종료되었습니다.
+        </span>
+
+            </div>
+
+
+            <!-- =====================================
+                 공연 종료
+                 ===================================== -->
+            <div class="detail-booking__panel"
+                 th:if="${bookingStatus.status == 'ENDED'}">
+
+              <div class="detail-booking__panel-icon">
+                <span class="booking-icon">✓</span>
+              </div>
+
+              <strong class="detail-booking__panel-label">
+                공연 종료
+              </strong>
+
+              <span class="detail-booking__panel-message">
+            지난 공연 정보입니다.
+        </span>
+
+            </div>
+
+
+            <!-- =====================================
+                 공연 취소
+                 ===================================== -->
+            <div class="detail-booking__panel"
+                 th:if="${bookingStatus.status == 'CANCELLED'}">
+
+              <div class="detail-booking__panel-icon">
+                <span class="booking-icon">!</span>
+              </div>
+
+              <strong class="detail-booking__panel-label">
+                공연 취소
+              </strong>
+
+              <span class="detail-booking__panel-message">
+            해당 공연이 취소되었습니다.
+        </span>
+
+            </div>
+
+
+            <!-- 상태 설명 -->
+            <div class="detail-booking__notice">
+
+              <span class="detail-booking__notice-icon">!</span>
+
+              <div>
+                <p th:text="${bookingStatus.description}">
+                  오픈 시간에 맞춰 다시 확인해 주세요.
+                </p>
+
+                <!-- 오픈 예정 -->
+                <small th:if="${bookingStatus.status == 'UPCOMING'}">
+                  예매 시작 전까지 버튼이 비활성화됩니다.
+                </small>
+
+                <!-- 예매 가능 -->
+                <small th:if="${bookingStatus.status == 'AVAILABLE'}">
+                  원하시는 회차와 좌석을 선택해 주세요.
+                </small>
+
+                <!-- 예매 마감 -->
+                <small th:if="${bookingStatus.status == 'CLOSED'}">
+                  공연은 예정대로 진행됩니다.
+                </small>
+
+                <!-- 공연 종료 -->
+                <small th:if="${bookingStatus.status == 'ENDED'}">
+                  지난 공연 정보입니다.
+                </small>
+
+                <!-- 공연 취소 -->
+                <small th:if="${bookingStatus.status == 'CANCELLED'}">
+                  자세한 내용은 공지사항을 확인해 주세요.
+                </small>
+              </div>
+
+            </div>
+
+
+            <!-- =====================================
+                 예매 가능일 때만 실제 링크
+                 ===================================== -->
+            <a class="btn btn--primary btn--wide detail-booking__button"
+               th:if="${bookingStatus.bookable}"
                th:href="@{/booking/performances/{id}/schedules(id=${performance.id})}"
-               href="/performances">예매 일정 확인</a>
+               th:text="${bookingStatus.buttonText}">
+              예매 일정 확인
+            </a>
+
+
+            <!-- =====================================
+                 예매할 수 없는 상태
+                 ===================================== -->
+            <button type="button"
+                    class="btn btn--wide detail-booking__button detail-booking__button--disabled"
+                    th:unless="${bookingStatus.bookable}"
+                    disabled
+                    th:text="${bookingStatus.buttonText}">
+              티켓 오픈 예정
+            </button>
+
           </aside>
         </section>
 
