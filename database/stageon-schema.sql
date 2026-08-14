@@ -397,7 +397,7 @@ CREATE TABLE refunds (
 CREATE TABLE tickets (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '티켓 번호',
     reservation_seat_id BIGINT NOT NULL COMMENT '티켓이 발급된 예약 좌석 번호',
-    ticket_number VARCHAR(50) NOT NULL COMMENT '사용자에게 표시할 티켓번호',
+    ticket_number VARCHAR(30) NOT NULL COMMENT '예약의 booking_number와 동일한 티켓번호',
     status VARCHAR(20) NOT NULL COMMENT '티켓 상태(ISSUED, USED, CANCELLED)',
     qr_token_hash VARCHAR(64) NULL COMMENT 'QR 인증 토큰 해시',
     issued_at DATETIME(6) NOT NULL COMMENT '티켓 발급 일시',
@@ -406,10 +406,12 @@ CREATE TABLE tickets (
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '등록 일시',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ticket_reservation_seat (reservation_seat_id),
-    UNIQUE KEY uk_ticket_number (ticket_number),
+    KEY idx_ticket_number (ticket_number),
     UNIQUE KEY uk_ticket_qr_token_hash (qr_token_hash),
     CONSTRAINT fk_ticket_reservation_seat
-        FOREIGN KEY (reservation_seat_id) REFERENCES reservation_seats (id)
+        FOREIGN KEY (reservation_seat_id) REFERENCES reservation_seats (id),
+    CONSTRAINT fk_ticket_booking_number
+        FOREIGN KEY (ticket_number) REFERENCES reservations (booking_number)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='선택 기능용 모바일 및 QR 티켓 (안 써도 되는 테이블)';
 
 -- Optional raw external API archive. Parsed performance rows remain independently usable.
