@@ -204,6 +204,23 @@
   window.addEventListener('pagehide', function() {
     releaseHoldOnExit();
   });
+
+  let timeRemaining = 300;
+
+  const countdown = setInterval(function() {
+    timeRemaining--;
+
+    if (timeRemaining <= 0) {
+      clearInterval(countdown);
+      alert("결제 대기 시간(5분)이 만료되어 좌석 선점이 취소되었습니다.\n처음부터 다시 예매를 진행해 주세요.");
+
+      // 예약 폼이나 결제 창에서 튕겨낼 때 좌석 해제 API 호출
+      releaseHoldOnExit();
+
+      // 메인 화면이나 좌석 선택 화면으로 강제 이동
+      window.location.href = '/';
+    }
+  }, 1000);
 </script>
 </body>
 </html>

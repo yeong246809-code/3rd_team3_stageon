@@ -10,6 +10,8 @@ import kr.co.stageon.booking.dto.PaymentRequest;
 import kr.co.stageon.payment.domain.Payment;
 import kr.co.stageon.payment.repository.PaymentRepository;
 import kr.co.stageon.payment.service.PaymentService;
+import kr.co.stageon.ticket.domain.Ticket;
+import kr.co.stageon.ticket.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class ReservationService {
     private final ReservationSeatRepository reservationSeatRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
+    private final TicketRepository ticketRepository;
 
     /**
      * 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
@@ -80,13 +83,28 @@ public class ReservationService {
         for (SeatHoldItem item : holdItems) {
             ScheduleSeat scheduleSeat = item.getScheduleSeat();
             scheduleSeat.reserve();
+
             ReservationSeat reservationSeat = ReservationSeat.create(reservation, scheduleSeat);
             reservationSeatRepository.save(reservationSeat);
+
+            // 🚨 예약 좌석이 저장된 직후, 수령 방법이 모바일이면 티켓 엔티티 생성
+            if (reservation.getReceiveMethod() == Reservation.ReceiveMethod.MOBILE) {
+                String qrToken = java.util.UUID.randomUUID().toString().replace("-", "");
+
+                Ticket ticket = Ticket.builder()
+                        .reservationSeat(reservationSeat) // 방금 위에서 만든 reservationSeat 사용
+                        .ticketNumber(reservation.getBookingNumber())
+                        .qrTokenHash(qrToken)
+                        .build();
+
+                ticketRepository.save(ticket);
+            }
         }
 
         seatHold.complete();
 
         return reservation.getId();
+
     }
 
     /**

@@ -4,6 +4,8 @@ import kr.co.stageon.booking.domain.SeatHold;
 import kr.co.stageon.booking.domain.SeatHoldItem;
 import kr.co.stageon.booking.repository.SeatHoldItemRepository;
 import kr.co.stageon.booking.repository.SeatHoldRepository;
+// 💡 실시간 방송을 위해 추가된 import
+import kr.co.stageon.booking.service.SeatRealtimeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,6 +24,8 @@ public class SeatHoldExpirationScheduler {
     private final SeatHoldRepository seatHoldRepository;
     private final SeatHoldItemRepository seatHoldItemRepository;
     private final StringRedisTemplate redisTemplate;
+    // 💡 SSE 서비스 의존성 주입
+    private final SeatRealtimeService seatRealtimeService;
 
     // 1분마다 실행
     @Scheduled(fixedDelay = 60000)
@@ -50,9 +54,15 @@ public class SeatHoldExpirationScheduler {
 
         // 4. 개별 좌석들을 다시 예매 가능 상태로 롤백
         for (SeatHoldItem item : expiredItems) {
+            Long seatId = item.getScheduleSeat().getId(); // 💡 아이디 변수 추출
+
             item.getScheduleSeat().release();
-            redisTemplate.delete("seat:selecting:" + item.getScheduleSeat().getId());
-            log.info("회수된 좌석 ID: {}", item.getScheduleSeat().getId());
+            redisTemplate.delete("seat:selecting:" + seatId);
+
+            // 🚨 [핵심 추가] DB와 Redis를 청소한 직후, 화면에 좌석을 풀라고 실시간 방송!
+            seatRealtimeService.notifySeatStatus(seatId, "AVAILABLE");
+
+            log.info("회수된 좌석 ID: {}", seatId);
         }
 
         log.info("⏰ 총 {}개의 장바구니와 {}개의 좌석이 만료되어 회수되었습니다.", expiredHolds.size(), expiredItems.size());
