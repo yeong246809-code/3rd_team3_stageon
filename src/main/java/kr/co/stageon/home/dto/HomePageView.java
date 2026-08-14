@@ -4,7 +4,7 @@ import java.util.List;
 
 /** 홈 화면의 각 데이터 영역을 한 번에 전달하는 뷰 모델입니다. */
 public record HomePageView(
-        List<HomePerformanceView> banners,
+        List<HomeBannerView> banners,
         List<HomeTicketOpenView> ticketOpenings,
         List<HomeGenreRankingView> genreRankings,
         HomePerformanceView featuredPerformance

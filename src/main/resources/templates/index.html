@@ -1,330 +1,333 @@
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="StageOn AI 기반 실시간 공연 예매 플랫폼">
-    <title>StageOn | 공연의 순간을 만나다</title>
-    <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
-  </head>
-  <body id="top" data-header-theme="midnight">
-    <div th:replace="~{fragments/common/site-header :: header}"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StageOn AI 기반 실시간 공연 예매 플랫폼">
+  <title>StageOn | 공연의 순간을 만나다</title>
+  <link rel="stylesheet" th:href="@{/css/index.css}" href="/css/index.css">
+</head>
+<body id="top" data-header-theme="midnight">
+<div th:replace="~{fragments/common/site-header :: header}"></div>
 
-    <main class="home-main">
-      <section class="cylinder-hero" aria-label="주요 공연 배너">
-        <div class="carousel-shell" data-carousel>
-          <button class="carousel-arrow carousel-arrow--prev" type="button" aria-label="이전 배너" data-carousel-prev>‹</button>
+<main class="home-main">
+  <section class="cylinder-hero" aria-label="주요 공연 배너">
+    <div class="carousel-shell" data-carousel>
+      <button class="carousel-arrow carousel-arrow--prev" type="button" aria-label="이전 배너" data-carousel-prev>‹</button>
 
-          <div class="carousel-stage">
-            <article class="hero-slide"
-                     data-slide
-                     th:if="${homeData != null and homeData.hasBanners()}"
-                     th:each="banner, bannerStat : ${homeData.banners}"
-                     th:classappend="${bannerStat.first} ? ' is-active'"
-                     th:attr="aria-hidden=${!bannerStat.first}">
-              <img th:src="${#strings.isEmpty(banner.imageUrl) ? banner.fallbackImageUrl : banner.imageUrl}"
-                   src="/images/home/hero-active.jpg"
-                   th:attr="data-poster-fallback=${banner.fallbackImageUrl}"
-                   th:alt="${banner.title + ' 공연 이미지'}"
-                   alt="공연 이미지">
-              <div class="hero-shade"></div>
-              <div class="hero-copy">
-                <div class="hero-kicker"><span th:text="${banner.statusLabel}">NOW ON SALE</span> StageOn 추천 공연</div>
-                <h1 th:text="${banner.title}">공연 제목</h1>
-                <p th:text="${banner.description}">공연 소개</p>
-                <div class="hero-meta"><b>기간</b> <span th:text="${banner.periodText}">공연 기간</span></div>
-                <div class="hero-actions">
-                  <a class="red-button"
-                     th:href="@{/performances/{id}/schedules(id=${banner.id})}"
-                     href="/performances">실시간 예매하기</a>
-                  <a class="ghost-button"
-                     th:href="@{/performances/{id}(id=${banner.id})}"
-                     href="/performances">자세히 보기</a>
-                </div>
-              </div>
-            </article>
-
-            <article class="hero-slide"
-                     data-slide
-                     aria-hidden="true"
-                     th:if="${homeData == null or !homeData.hasBanners()}">
-              <img th:src="@{/images/home/hero-prev.jpg}" src="/images/home/hero-prev.jpg" alt="레미제라블 공연 장면">
-              <div class="hero-shade"></div>
-              <div class="hero-copy">
-                <div class="hero-kicker"><span>MASTERPIECE</span> 오래도록 사랑받은 무대</div>
-                <h1>뮤지컬 〈레미제라블〉</h1>
-                <p>혁명의 불꽃 속에서 피어나는 용서와 사랑. 시대를 넘어 울리는 거대한 합창을 만나보세요.</p>
-                <div class="hero-meta"><b>기간</b> 2026.09.12 ~ 2026.12.28</div>
-                <div class="hero-actions">
-                  <a class="red-button" th:href="@{/performances(keyword='레미제라블')}" href="/performances?keyword=레미제라블">실시간 예매하기</a>
-                  <a class="ghost-button" th:href="@{/performances(keyword='레미제라블')}" href="/performances?keyword=레미제라블">자세히 보기</a>
-                </div>
-              </div>
-            </article>
-
-            <article class="hero-slide is-active"
-                     data-slide
-                     aria-hidden="false"
-                     th:if="${homeData == null or !homeData.hasBanners()}">
-              <img th:src="@{/images/home/hero-active.jpg}" src="/images/home/hero-active.jpg" alt="드라큘라 공연 장면">
-              <div class="hero-shade"></div>
-              <div class="hero-copy">
-                <div class="hero-kicker"><span>BEST SELLER</span> 샤롯데씨어터 단독 예매 진행 중</div>
-                <h1>뮤지컬 〈드라큘라〉</h1>
-                <p>“죽음을 초월한 세기의 러브스토리” 오리지널 라이선스 10주년, 가장 매혹적인 무대의 귀환.</p>
-                <div class="hero-meta"><b>기간</b> 2026.12.06 ~ 2027.03.03</div>
-                <div class="hero-actions">
-                  <a class="red-button" th:href="@{/performances(keyword='드라큘라')}" href="/performances?keyword=드라큘라">실시간 예매하기</a>
-                  <a class="ghost-button" th:href="@{/performances(keyword='드라큘라')}" href="/performances?keyword=드라큘라">자세히 보기</a>
-                </div>
-              </div>
-              <aside class="live-card">
-                <div class="live-label">REALTIME BOOKING <i></i></div>
-                <small>오늘의 뮤지컬 전체 예매율</small>
-                <strong>1위 <em>34.2%</em></strong>
-                <hr>
-                <small>실시간 인기 캐스팅 회차</small>
-                <b>12월 14일 14:00 · 김준수</b>
-                <span>* 잔여석 극소량 남음</span>
-              </aside>
-            </article>
-
-            <article class="hero-slide"
-                     data-slide
-                     aria-hidden="true"
-                     th:if="${homeData == null or !homeData.hasBanners()}">
-              <img th:src="@{/images/home/hero-next.jpg}" src="/images/home/hero-next.jpg" alt="시카고 공연 장면">
-              <div class="hero-shade"></div>
-              <div class="hero-copy">
-                <div class="hero-kicker"><span>HOT PICK</span> 브로드웨이 오리지널 감성</div>
-                <h1>뮤지컬 〈시카고〉</h1>
-                <p>재즈와 욕망, 범죄와 스타덤이 뒤엉킨 도시. 눈을 뗄 수 없는 쇼가 다시 시작됩니다.</p>
-                <div class="hero-meta"><b>기간</b> 2026.10.01 ~ 2027.01.12</div>
-                <div class="hero-actions">
-                  <a class="red-button" th:href="@{/performances(keyword='시카고')}" href="/performances?keyword=시카고">실시간 예매하기</a>
-                  <a class="ghost-button" th:href="@{/performances(keyword='시카고')}" href="/performances?keyword=시카고">자세히 보기</a>
-                </div>
-              </div>
-            </article>
+      <div class="carousel-stage">
+        <article class="hero-slide"
+                 data-slide
+                 th:if="${homeData != null and homeData.hasBanners()}"
+                 th:each="banner, bannerStat : ${homeData.banners}"
+                 th:classappend="${bannerStat.first} ? ' is-active'"
+                 th:attr="aria-hidden=${!bannerStat.first}">
+          <img th:src="${#strings.isEmpty(banner.imageUrl) ? banner.fallbackImageUrl : banner.imageUrl}"
+               src="/images/home/hero-active.jpg"
+               th:attr="data-poster-fallback=${banner.fallbackImageUrl}"
+               th:alt="${banner.title + ' 공연 이미지'}"
+               alt="공연 이미지">
+          <div class="hero-shade"></div>
+          <div class="hero-copy">
+            <div class="hero-kicker" th:if="${!#strings.isEmpty(banner.badgeText)}">
+              <span th:text="${banner.badgeText}">NOW ON SALE</span> StageOn 추천 공연
+            </div>
+            <h1 th:text="${banner.title}">공연 제목</h1>
+            <p th:text="${banner.description}">공연 소개</p>
+            <div class="hero-meta" th:if="${!#strings.isEmpty(banner.periodText)}">
+              <b>기간</b> <span th:text="${banner.periodText}">공연 기간</span>
+            </div>
+            <div class="hero-actions">
+              <a class="red-button" th:href="${banner.button1Url}" th:text="${banner.button1Text}"
+                 href="/performances">실시간 예매하기</a>
+              <a class="ghost-button" th:href="${banner.button2Url}" th:text="${banner.button2Text}"
+                 href="/performances">자세히 보기</a>
+            </div>
           </div>
+        </article>
 
-          <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="다음 배너" data-carousel-next>›</button>
-          <div class="carousel-status" aria-label="배너 위치">
+        <article class="hero-slide"
+                 data-slide
+                 aria-hidden="true"
+                 th:if="${homeData == null or !homeData.hasBanners()}">
+          <img th:src="@{/images/home/hero-prev.jpg}" src="/images/home/hero-prev.jpg" alt="레미제라블 공연 장면">
+          <div class="hero-shade"></div>
+          <div class="hero-copy">
+            <div class="hero-kicker"><span>MASTERPIECE</span> 오래도록 사랑받은 무대</div>
+            <h1>뮤지컬 〈레미제라블〉</h1>
+            <p>혁명의 불꽃 속에서 피어나는 용서와 사랑. 시대를 넘어 울리는 거대한 합창을 만나보세요.</p>
+            <div class="hero-meta"><b>기간</b> 2026.09.12 ~ 2026.12.28</div>
+            <div class="hero-actions">
+              <a class="red-button" th:href="@{/performances(keyword='레미제라블')}" href="/performances?keyword=레미제라블">실시간 예매하기</a>
+              <a class="ghost-button" th:href="@{/performances(keyword='레미제라블')}" href="/performances?keyword=레미제라블">자세히 보기</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="hero-slide is-active"
+                 data-slide
+                 aria-hidden="false"
+                 th:if="${homeData == null or !homeData.hasBanners()}">
+          <img th:src="@{/images/home/hero-active.jpg}" src="/images/home/hero-active.jpg" alt="드라큘라 공연 장면">
+          <div class="hero-shade"></div>
+          <div class="hero-copy">
+            <div class="hero-kicker"><span>BEST SELLER</span> 샤롯데씨어터 단독 예매 진행 중</div>
+            <h1>뮤지컬 〈드라큘라〉</h1>
+            <p>“죽음을 초월한 세기의 러브스토리” 오리지널 라이선스 10주년, 가장 매혹적인 무대의 귀환.</p>
+            <div class="hero-meta"><b>기간</b> 2026.12.06 ~ 2027.03.03</div>
+            <div class="hero-actions">
+              <a class="red-button" th:href="@{/performances(keyword='드라큘라')}" href="/performances?keyword=드라큘라">실시간 예매하기</a>
+              <a class="ghost-button" th:href="@{/performances(keyword='드라큘라')}" href="/performances?keyword=드라큘라">자세히 보기</a>
+            </div>
+          </div>
+          <aside class="live-card">
+            <div class="live-label">REALTIME BOOKING <i></i></div>
+            <small>오늘의 뮤지컬 전체 예매율</small>
+            <strong>1위 <em>34.2%</em></strong>
+            <hr>
+            <small>실시간 인기 캐스팅 회차</small>
+            <b>12월 14일 14:00 · 김준수</b>
+            <span>* 잔여석 극소량 남음</span>
+          </aside>
+        </article>
+
+        <article class="hero-slide"
+                 data-slide
+                 aria-hidden="true"
+                 th:if="${homeData == null or !homeData.hasBanners()}">
+          <img th:src="@{/images/home/hero-next.jpg}" src="/images/home/hero-next.jpg" alt="시카고 공연 장면">
+          <div class="hero-shade"></div>
+          <div class="hero-copy">
+            <div class="hero-kicker"><span>HOT PICK</span> 브로드웨이 오리지널 감성</div>
+            <h1>뮤지컬 〈시카고〉</h1>
+            <p>재즈와 욕망, 범죄와 스타덤이 뒤엉킨 도시. 눈을 뗄 수 없는 쇼가 다시 시작됩니다.</p>
+            <div class="hero-meta"><b>기간</b> 2026.10.01 ~ 2027.01.12</div>
+            <div class="hero-actions">
+              <a class="red-button" th:href="@{/performances(keyword='시카고')}" href="/performances?keyword=시카고">실시간 예매하기</a>
+              <a class="ghost-button" th:href="@{/performances(keyword='시카고')}" href="/performances?keyword=시카고">자세히 보기</a>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="다음 배너" data-carousel-next>›</button>
+      <div class="carousel-status" aria-label="배너 위치">
             <span data-dot
                   th:if="${homeData != null and homeData.hasBanners()}"
                   th:each="banner, bannerStat : ${homeData.banners}"
                   th:classappend="${bannerStat.first} ? ' is-active'"></span>
-            <th:block th:if="${homeData == null or !homeData.hasBanners()}">
-              <span data-dot></span><span class="is-active" data-dot></span><span data-dot></span>
-            </th:block>
-          </div>
-          <div class="carousel-timer" aria-hidden="true"><i data-carousel-timer></i></div>
+        <th:block th:if="${homeData == null or !homeData.hasBanners()}">
+          <span data-dot></span><span class="is-active" data-dot></span><span data-dot></span>
+        </th:block>
+      </div>
+      <div class="carousel-timer" aria-hidden="true"><i data-carousel-timer></i></div>
+    </div>
+  </section>
+
+  <section class="light-section">
+    <div class="stage-shell">
+      <header class="section-heading">
+        <div>
+          <span class="eyebrow">COMING SOON</span>
+          <h2>티켓 오픈</h2>
+          <p>가장 먼저 만나는 인기 공연 예매 정보</p>
         </div>
-      </section>
+        <a th:href="@{/performances}" href="/performances">전체보기 →</a>
+      </header>
 
-      <section class="light-section">
-        <div class="stage-shell">
-          <header class="section-heading">
-            <div>
-              <span class="eyebrow">COMING SOON</span>
-              <h2>티켓 오픈</h2>
-              <p>가장 먼저 만나는 인기 공연 예매 정보</p>
-            </div>
-            <a th:href="@{/performances}" href="/performances">전체보기 →</a>
-          </header>
+      <div class="poster-grid">
+        <a class="poster-card"
+           th:if="${homeData != null and homeData.hasTicketOpenings()}"
+           th:each="ticket : ${homeData.ticketOpenings}"
+           th:href="@{/performances/{id}(id=${ticket.performanceId})}"
+           href="/performances">
+          <img th:src="${#strings.isEmpty(ticket.imageUrl) ? ticket.fallbackImageUrl : ticket.imageUrl}"
+               src="/images/home/ticket-1.jpg"
+               th:attr="data-poster-fallback=${ticket.fallbackImageUrl}"
+               th:alt="${ticket.title + ' 포스터'}"
+               alt="공연 포스터">
+          <span class="open-badge" th:text="${ticket.badgeText}">D-DAY</span>
+          <h3 th:text="${ticket.title}">공연 제목</h3>
+          <p th:text="${ticket.venueName}">공연장</p>
+          <small th:text="${ticket.salesOpenText}">티켓 오픈 일정</small>
+        </a>
 
-          <div class="poster-grid">
-            <a class="poster-card"
-               th:if="${homeData != null and homeData.hasTicketOpenings()}"
-               th:each="ticket : ${homeData.ticketOpenings}"
-               th:href="@{/performances/{id}(id=${ticket.performanceId})}"
+        <a class="poster-card"
+           th:if="${homeData == null or !homeData.hasTicketOpenings()}"
+           th:href="@{/performances(keyword='킹키부츠')}" href="/performances?keyword=킹키부츠">
+          <img th:src="@{/images/home/ticket-1.jpg}" src="/images/home/ticket-1.jpg" alt="킹키부츠 포스터">
+          <span class="open-badge">D-2</span><h3>뮤지컬 〈킹키부츠〉</h3><p>블루스퀘어 신한카드홀</p><small>08.06 (목) 14:00 티켓 오픈</small>
+        </a>
+        <a class="poster-card"
+           th:if="${homeData == null or !homeData.hasTicketOpenings()}"
+           th:href="@{/performances(keyword='레미제라블')}" href="/performances?keyword=레미제라블">
+          <img th:src="@{/images/home/ticket-2.jpg}" src="/images/home/ticket-2.jpg" alt="레미제라블 포스터">
+          <span class="open-badge">D-4</span><h3>뮤지컬 〈레미제라블〉</h3><p>예술의전당 오페라극장</p><small>08.08 (토) 11:00 티켓 오픈</small>
+        </a>
+        <a class="poster-card"
+           th:if="${homeData == null or !homeData.hasTicketOpenings()}"
+           th:href="@{/performances(keyword='Summer Jazz Live 2026')}" href="/performances?keyword=Summer%20Jazz%20Live%202026">
+          <img th:src="@{/images/home/ticket-3.jpg}" src="/images/home/ticket-3.jpg" alt="Summer Jazz Live 2026 포스터">
+          <span class="open-badge">D-7</span><h3>Summer Jazz Live 2026</h3><p>세종문화회관 대극장</p><small>08.11 (화) 14:00 티켓 오픈</small>
+        </a>
+        <a class="poster-card"
+           th:if="${homeData == null or !homeData.hasTicketOpenings()}"
+           th:href="@{/performances(keyword='조성진')}" href="/performances?keyword=조성진">
+          <img th:src="@{/images/home/ticket-4.jpg}" src="/images/home/ticket-4.jpg" alt="조성진 피아노 리사이틀 포스터">
+          <span class="open-badge">D-9</span><h3>조성진 피아노 리사이틀</h3><p>롯데콘서트홀</p><small>08.13 (목) 11:00 티켓 오픈</small>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="ranking-section">
+    <div class="stage-shell">
+      <header class="section-heading section-heading--dark">
+        <div>
+          <span class="eyebrow eyebrow--gold">WEEKLY BEST</span>
+          <h2>장르별 랭킹</h2>
+          <p>지금 가장 많이 예매하는 공연</p>
+        </div>
+        <div class="rank-tabs"
+             role="tablist"
+             aria-label="장르별 예매 랭킹"
+             th:if="${homeData != null}">
+          <button type="button"
+                  role="tab"
+                  data-ranking-tab
+                  th:each="genreRanking, genreStat : ${homeData.genreRankings}"
+                  th:id="${'ranking-tab-' + genreStat.index}"
+                  th:classappend="${genreStat.first} ? ' is-active'"
+                  th:attr="aria-selected=${genreStat.first},aria-controls=${'ranking-panel-' + genreStat.index},tabindex=${genreStat.first ? '0' : '-1'}"
+                  th:text="${genreRanking.label}">뮤지컬</button>
+        </div>
+      </header>
+
+      <div class="ranking-panels" data-ranking-tabs th:if="${homeData != null}">
+        <section class="ranking-panel"
+                 role="tabpanel"
+                 tabindex="0"
+                 th:each="genreRanking, genreStat : ${homeData.genreRankings}"
+                 th:id="${'ranking-panel-' + genreStat.index}"
+                 th:attr="aria-labelledby=${'ranking-tab-' + genreStat.index}"
+                 th:hidden="${!genreStat.first}">
+          <div class="ranking-grid" th:if="${genreRanking.hasRankings()}">
+            <a class="ranking-card"
+               th:each="ranking, rankingStat : ${genreRanking.rankings}"
+               th:href="@{/performances/{id}(id=${ranking.performanceId})}"
                href="/performances">
-              <img th:src="${#strings.isEmpty(ticket.imageUrl) ? ticket.fallbackImageUrl : ticket.imageUrl}"
-                   src="/images/home/ticket-1.jpg"
-                   th:attr="data-poster-fallback=${ticket.fallbackImageUrl}"
-                   th:alt="${ticket.title + ' 포스터'}"
-                   alt="공연 포스터">
-              <span class="open-badge" th:text="${ticket.badgeText}">D-DAY</span>
-              <h3 th:text="${ticket.title}">공연 제목</h3>
-              <p th:text="${ticket.venueName}">공연장</p>
-              <small th:text="${ticket.salesOpenText}">티켓 오픈 일정</small>
-            </a>
-
-            <a class="poster-card"
-               th:if="${homeData == null or !homeData.hasTicketOpenings()}"
-               th:href="@{/performances(keyword='킹키부츠')}" href="/performances?keyword=킹키부츠">
-              <img th:src="@{/images/home/ticket-1.jpg}" src="/images/home/ticket-1.jpg" alt="킹키부츠 포스터">
-              <span class="open-badge">D-2</span><h3>뮤지컬 〈킹키부츠〉</h3><p>블루스퀘어 신한카드홀</p><small>08.06 (목) 14:00 티켓 오픈</small>
-            </a>
-            <a class="poster-card"
-               th:if="${homeData == null or !homeData.hasTicketOpenings()}"
-               th:href="@{/performances(keyword='레미제라블')}" href="/performances?keyword=레미제라블">
-              <img th:src="@{/images/home/ticket-2.jpg}" src="/images/home/ticket-2.jpg" alt="레미제라블 포스터">
-              <span class="open-badge">D-4</span><h3>뮤지컬 〈레미제라블〉</h3><p>예술의전당 오페라극장</p><small>08.08 (토) 11:00 티켓 오픈</small>
-            </a>
-            <a class="poster-card"
-               th:if="${homeData == null or !homeData.hasTicketOpenings()}"
-               th:href="@{/performances(keyword='Summer Jazz Live 2026')}" href="/performances?keyword=Summer%20Jazz%20Live%202026">
-              <img th:src="@{/images/home/ticket-3.jpg}" src="/images/home/ticket-3.jpg" alt="Summer Jazz Live 2026 포스터">
-              <span class="open-badge">D-7</span><h3>Summer Jazz Live 2026</h3><p>세종문화회관 대극장</p><small>08.11 (화) 14:00 티켓 오픈</small>
-            </a>
-            <a class="poster-card"
-               th:if="${homeData == null or !homeData.hasTicketOpenings()}"
-               th:href="@{/performances(keyword='조성진')}" href="/performances?keyword=조성진">
-              <img th:src="@{/images/home/ticket-4.jpg}" src="/images/home/ticket-4.jpg" alt="조성진 피아노 리사이틀 포스터">
-              <span class="open-badge">D-9</span><h3>조성진 피아노 리사이틀</h3><p>롯데콘서트홀</p><small>08.13 (목) 11:00 티켓 오픈</small>
+              <div>
+                <img th:src="${#strings.isEmpty(ranking.imageUrl) ? ranking.fallbackImageUrl : ranking.imageUrl}"
+                     src="/images/posters/default-musical.webp"
+                     th:attr="data-poster-fallback=${ranking.fallbackImageUrl}"
+                     th:alt="${#strings.isEmpty(ranking.imageUrl) ? '' : ranking.title + ' 포스터'}"
+                     loading="lazy"
+                     decoding="async"
+                     alt="">
+                <b th:text="${rankingStat.count}">1</b>
+              </div>
+              <h3 th:text="${ranking.title}">공연 제목</h3>
+              <p th:text="${ranking.genre}">장르</p>
+              <small>최근 7일 예매 <span th:text="${ranking.ticketCount + '석'}">0석</span> · 장르 내 <strong th:text="${ranking.shareText}">0.0%</strong></small>
             </a>
           </div>
-        </div>
-      </section>
-
-      <section class="ranking-section">
-        <div class="stage-shell">
-          <header class="section-heading section-heading--dark">
-            <div>
-              <span class="eyebrow eyebrow--gold">WEEKLY BEST</span>
-              <h2>장르별 랭킹</h2>
-              <p>지금 가장 많이 예매하는 공연</p>
-            </div>
-            <div class="rank-tabs"
-                 role="tablist"
-                 aria-label="장르별 예매 랭킹"
-                 th:if="${homeData != null}">
-              <button type="button"
-                      role="tab"
-                      data-ranking-tab
-                      th:each="genreRanking, genreStat : ${homeData.genreRankings}"
-                      th:id="${'ranking-tab-' + genreStat.index}"
-                      th:classappend="${genreStat.first} ? ' is-active'"
-                      th:attr="aria-selected=${genreStat.first},aria-controls=${'ranking-panel-' + genreStat.index},tabindex=${genreStat.first ? '0' : '-1'}"
-                      th:text="${genreRanking.label}">뮤지컬</button>
-            </div>
-          </header>
-
-          <div class="ranking-panels" data-ranking-tabs th:if="${homeData != null}">
-            <section class="ranking-panel"
-                     role="tabpanel"
-                     tabindex="0"
-                     th:each="genreRanking, genreStat : ${homeData.genreRankings}"
-                     th:id="${'ranking-panel-' + genreStat.index}"
-                     th:attr="aria-labelledby=${'ranking-tab-' + genreStat.index}"
-                     th:hidden="${!genreStat.first}">
-              <div class="ranking-grid" th:if="${genreRanking.hasRankings()}">
-                <a class="ranking-card"
-                   th:each="ranking, rankingStat : ${genreRanking.rankings}"
-                   th:href="@{/performances/{id}(id=${ranking.performanceId})}"
-                   href="/performances">
-                  <div>
-                    <img th:src="${#strings.isEmpty(ranking.imageUrl) ? ranking.fallbackImageUrl : ranking.imageUrl}"
-                         src="/images/posters/default-musical.webp"
-                         th:attr="data-poster-fallback=${ranking.fallbackImageUrl}"
-                         th:alt="${#strings.isEmpty(ranking.imageUrl) ? '' : ranking.title + ' 포스터'}"
-                         loading="lazy"
-                         decoding="async"
-                         alt="">
-                    <b th:text="${rankingStat.count}">1</b>
-                  </div>
-                  <h3 th:text="${ranking.title}">공연 제목</h3>
-                  <p th:text="${ranking.genre}">장르</p>
-                  <small>최근 7일 예매 <span th:text="${ranking.ticketCount + '석'}">0석</span> · 장르 내 <strong th:text="${ranking.shareText}">0.0%</strong></small>
-                </a>
-              </div>
-              <div class="ranking-empty" th:unless="${genreRanking.hasRankings()}" aria-live="polite">
-                <strong th:text="${genreRanking.label + '의 최근 7일 예매 데이터가 없습니다.'}">최근 예매 데이터가 없습니다.</strong>
-                <p>확정된 예매 좌석이 생기면 이곳에 순위가 표시됩니다.</p>
-              </div>
-              <a class="ranking-more"
-                 th:href="@{/performances(genre=${genreRanking.genre})}"
-                 href="/performances">이 장르 공연 전체보기 →</a>
-            </section>
+          <div class="ranking-empty" th:unless="${genreRanking.hasRankings()}" aria-live="polite">
+            <strong th:text="${genreRanking.label + '의 최근 7일 예매 데이터가 없습니다.'}">최근 예매 데이터가 없습니다.</strong>
+            <p>확정된 예매 좌석이 생기면 이곳에 순위가 표시됩니다.</p>
           </div>
-        </div>
-      </section>
+          <a class="ranking-more"
+             th:href="@{/performances(genre=${genreRanking.genre})}"
+             href="/performances">이 장르 공연 전체보기 →</a>
+        </section>
+      </div>
+    </div>
+  </section>
 
-      <section class="phantom-scene" data-fog-scene data-fog-mode="webgl" style="--reveal: 0">
-        <img class="phantom-backdrop" th:src="@{/images/home/phantom-bg.jpg}" src="/images/home/phantom-bg.jpg" alt="오페라의 유령 무대 배경">
-        <div class="phantom-vignette"></div>
-        <canvas class="three-fog-canvas" data-three-fog aria-hidden="true"></canvas>
-        <div class="phantom-content">
+  <section class="phantom-scene" data-fog-scene data-fog-mode="webgl" style="--reveal: 0">
+    <img class="phantom-backdrop" th:src="@{/images/home/phantom-bg.jpg}" src="/images/home/phantom-bg.jpg" alt="오페라의 유령 무대 배경">
+    <div class="phantom-vignette"></div>
+    <canvas class="three-fog-canvas" data-three-fog aria-hidden="true"></canvas>
+    <div class="phantom-content">
           <span th:text="${homeData != null and homeData.hasFeaturedPerformance()
                   ? homeData.featuredPerformance.genre + ' · FEATURED'
                   : 'THE PHANTOM OF THE OPERA'}">THE PHANTOM OF THE OPERA</span>
-          <h2 th:text="${homeData != null and homeData.hasFeaturedPerformance()
+      <h2 th:text="${homeData != null and homeData.hasFeaturedPerformance()
                   ? homeData.featuredPerformance.title
                   : '뮤지컬 〈오페라의 유령〉'}">뮤지컬 〈오페라의 유령〉</h2>
-          <p th:text="${homeData != null and homeData.hasFeaturedPerformance()
+      <p th:text="${homeData != null and homeData.hasFeaturedPerformance()
                   ? homeData.featuredPerformance.description
                   : '신화가 된 무대, 거장이 남긴 세기의 명작. 거대한 샹들리에의 불빛 아래 아름답고도 처절한 러브스토리가 다시 시작됩니다.'}">신화가 된 무대, 거장이 남긴 세기의 명작. 거대한 샹들리에의 불빛 아래 아름답고도 처절한 러브스토리가 다시 시작됩니다.</p>
-          <div class="phantom-poster">
-            <img th:if="${homeData != null and homeData.hasFeaturedPerformance()}"
-                 th:src="${#strings.isEmpty(homeData.featuredPerformance.imageUrl)
+      <div class="phantom-poster">
+        <img th:if="${homeData != null and homeData.hasFeaturedPerformance()}"
+             th:src="${#strings.isEmpty(homeData.featuredPerformance.imageUrl)
                          ? homeData.featuredPerformance.fallbackImageUrl
                          : homeData.featuredPerformance.imageUrl}"
-                 th:attr="data-poster-fallback=${homeData.featuredPerformance.fallbackImageUrl}"
-                 src="/images/home/phantom-poster.jpg"
-                 th:alt="${#strings.isEmpty(homeData.featuredPerformance.imageUrl)
+             th:attr="data-poster-fallback=${homeData.featuredPerformance.fallbackImageUrl}"
+             src="/images/home/phantom-poster.jpg"
+             th:alt="${#strings.isEmpty(homeData.featuredPerformance.imageUrl)
                          ? ''
                          : homeData.featuredPerformance.title + ' 포스터'}"
-                 alt="대표 공연 포스터">
-            <img th:if="${homeData == null or !homeData.hasFeaturedPerformance()}"
-                 th:src="@{/images/home/phantom-poster.jpg}"
-                 src="/images/home/phantom-poster.jpg"
-                 alt="오페라의 유령 포스터">
-          </div>
-          <dl th:if="${homeData != null and homeData.hasFeaturedPerformance()}">
-            <div><dt>장르</dt><dd th:text="${homeData.featuredPerformance.genre}">공연 장르</dd></div>
-            <div><dt>기간</dt><dd th:text="${homeData.featuredPerformance.periodText}">공연 기간</dd></div>
-          </dl>
-          <dl th:if="${homeData == null or !homeData.hasFeaturedPerformance()}">
-            <div><dt>공연장</dt><dd>예술의전당 오페라극장</dd></div>
-            <div><dt>기간</dt><dd>2026.11.01 ~ 2027.02.09</dd></div>
-          </dl>
-          <a class="red-button"
-             th:if="${homeData != null and homeData.hasFeaturedPerformance()}"
-             th:href="@{/performances/{id}(id=${homeData.featuredPerformance.id})}"
-             href="/performances">이 공연 자세히 보기</a>
-          <a class="red-button"
-             th:if="${homeData == null or !homeData.hasFeaturedPerformance()}"
-             th:href="@{/performances(keyword='오페라의 유령')}"
-             href="/performances?keyword=오페라의%20유령">베일 아래의 전설 만나보기</a>
+             alt="대표 공연 포스터">
+        <img th:if="${homeData == null or !homeData.hasFeaturedPerformance()}"
+             th:src="@{/images/home/phantom-poster.jpg}"
+             src="/images/home/phantom-poster.jpg"
+             alt="오페라의 유령 포스터">
+      </div>
+      <dl th:if="${homeData != null and homeData.hasFeaturedPerformance()}">
+        <div><dt>장르</dt><dd th:text="${homeData.featuredPerformance.genre}">공연 장르</dd></div>
+        <div><dt>기간</dt><dd th:text="${homeData.featuredPerformance.periodText}">공연 기간</dd></div>
+      </dl>
+      <dl th:if="${homeData == null or !homeData.hasFeaturedPerformance()}">
+        <div><dt>공연장</dt><dd>예술의전당 오페라극장</dd></div>
+        <div><dt>기간</dt><dd>2026.11.01 ~ 2027.02.09</dd></div>
+      </dl>
+      <a class="red-button"
+         th:if="${homeData != null and homeData.hasFeaturedPerformance()}"
+         th:href="@{/performances/{id}(id=${homeData.featuredPerformance.id})}"
+         href="/performances">이 공연 자세히 보기</a>
+      <a class="red-button"
+         th:if="${homeData == null or !homeData.hasFeaturedPerformance()}"
+         th:href="@{/performances(keyword='오페라의 유령')}"
+         href="/performances?keyword=오페라의%20유령">베일 아래의 전설 만나보기</a>
+    </div>
+  </section>
+
+  <section class="ai-section">
+    <div class="stage-shell">
+      <header class="section-heading section-heading--dark">
+        <div>
+          <span class="eyebrow eyebrow--gold">STAGEON INTELLIGENCE</span>
+          <h2>AI 맞춤 추천</h2>
+          <p>당신의 취향과 관람 기록을 바탕으로 골랐어요</p>
         </div>
-      </section>
+        <a th:href="@{/ai}" href="/ai">추천 설정 변경 →</a>
+      </header>
 
-      <section class="ai-section">
-        <div class="stage-shell">
-          <header class="section-heading section-heading--dark">
-            <div>
-              <span class="eyebrow eyebrow--gold">STAGEON INTELLIGENCE</span>
-              <h2>AI 맞춤 추천</h2>
-              <p>당신의 취향과 관람 기록을 바탕으로 골랐어요</p>
-            </div>
-            <a th:href="@{/ai}" href="/ai">추천 설정 변경 →</a>
-          </header>
+      <div class="ai-grid">
+        <a class="ai-card" th:href="@{/ai}" href="/ai">
+          <img th:src="@{/images/home/ai-1.jpg}" src="/images/home/ai-1.jpg" alt="시카고 공연 이미지">
+          <div><span>✦ MY CUSTOM PICK</span><h3>뮤지컬 〈시카고〉 오리지널</h3><p>관능적이고 위트 넘치는 고품격 정통 브로드웨이 무대.</p></div>
+        </a>
+        <a class="ai-card" th:href="@{/ai}" href="/ai">
+          <img th:src="@{/images/home/ai-2.jpg}" src="/images/home/ai-2.jpg" alt="클래식 공연 이미지">
+          <div><span>✦ MY CUSTOM PICK</span><h3>베토벤 피아노 소나타 전곡</h3><p>깊은 감성과 밀도 높은 해석을 좋아하는 당신을 위한 리사이틀.</p></div>
+        </a>
+        <a class="ai-card" th:href="@{/ai}" href="/ai">
+          <img th:src="@{/images/home/ai-3.jpg}" src="/images/home/ai-3.jpg" alt="연극 공연 이미지">
+          <div><span>✦ MY CUSTOM PICK</span><h3>연극 〈아트 ART〉</h3><p>인간 내면과 우정을 예리하게 비추는 세련된 블랙 코미디.</p></div>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
 
-          <div class="ai-grid">
-            <a class="ai-card" th:href="@{/ai}" href="/ai">
-              <img th:src="@{/images/home/ai-1.jpg}" src="/images/home/ai-1.jpg" alt="시카고 공연 이미지">
-              <div><span>✦ MY CUSTOM PICK</span><h3>뮤지컬 〈시카고〉 오리지널</h3><p>관능적이고 위트 넘치는 고품격 정통 브로드웨이 무대.</p></div>
-            </a>
-            <a class="ai-card" th:href="@{/ai}" href="/ai">
-              <img th:src="@{/images/home/ai-2.jpg}" src="/images/home/ai-2.jpg" alt="클래식 공연 이미지">
-              <div><span>✦ MY CUSTOM PICK</span><h3>베토벤 피아노 소나타 전곡</h3><p>깊은 감성과 밀도 높은 해석을 좋아하는 당신을 위한 리사이틀.</p></div>
-            </a>
-            <a class="ai-card" th:href="@{/ai}" href="/ai">
-              <img th:src="@{/images/home/ai-3.jpg}" src="/images/home/ai-3.jpg" alt="연극 공연 이미지">
-              <div><span>✦ MY CUSTOM PICK</span><h3>연극 〈아트 ART〉</h3><p>인간 내면과 우정을 예리하게 비추는 세련된 블랙 코미디.</p></div>
-            </a>
-          </div>
-        </div>
-      </section>
-    </main>
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
 
-    <div th:replace="~{fragments/common/site-footer :: footer}"></div>
-    <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
-
-    <script defer th:src="@{/js/vendor/three.min.js}" src="/js/vendor/three.min.js"></script>
-    <script defer th:src="@{/js/poster-fallback.js}" src="/js/poster-fallback.js"></script>
-    <script defer th:src="@{/js/home.js}" src="/js/home.js"></script>
-    <script defer th:src="@{/js/three-fog.js}" src="/js/three-fog.js"></script>
-  </body>
+<script defer th:src="@{/js/vendor/three.min.js}" src="/js/vendor/three.min.js"></script>
+<script defer th:src="@{/js/poster-fallback.js}" src="/js/poster-fallback.js"></script>
+<script defer th:src="@{/js/home.js}" src="/js/home.js"></script>
+<script defer th:src="@{/js/three-fog.js}" src="/js/three-fog.js"></script>
+</body>
 </html>
