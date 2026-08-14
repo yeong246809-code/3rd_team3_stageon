@@ -1,7 +1,10 @@
 package kr.co.stageon.home.service;
 
+import kr.co.stageon.banner.domain.Banner;
+import kr.co.stageon.banner.repository.BannerRepository;
 import kr.co.stageon.booking.domain.Reservation;
 import kr.co.stageon.booking.repository.ReservationRepository;
+import kr.co.stageon.home.dto.HomeBannerView;
 import kr.co.stageon.home.dto.HomePageView;
 import kr.co.stageon.home.dto.HomeGenreRankingView;
 import kr.co.stageon.home.dto.HomePerformanceView;
@@ -19,11 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/** 홈 화면에 필요한 공개 공연 데이터를 읽기 전용으로 조합합니다. */
+/** 홈 화면에 필요한 공개 공연·배너 데이터를 읽기 전용으로 조합합니다. */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -33,10 +35,12 @@ public class HomeQueryService {
             List.of(Performance.Status.UPCOMING, Performance.Status.ON_SALE);
     private static final List<PerformanceSchedule.Status> VISIBLE_SCHEDULE_STATUSES =
             List.of(PerformanceSchedule.Status.SCHEDULED, PerformanceSchedule.Status.OPEN);
+    private static final int MAX_BANNERS = 6;
 
     private final PerformanceRepository performanceRepository;
     private final PerformanceScheduleRepository scheduleRepository;
     private final ReservationRepository reservationRepository;
+    private final BannerRepository bannerRepository;
 
     @Value("${stageon.home.featured-performance-id:0}")
     private long featuredPerformanceId;
@@ -44,15 +48,10 @@ public class HomeQueryService {
     public HomePageView getHomePage() {
         LocalDateTime now = LocalDateTime.now(Clock.systemDefaultZone());
 
-        List<Performance> performances = performanceRepository.findPublishedForHome(
-                VISIBLE_PERFORMANCE_STATUSES,
-                now.toLocalDate(),
-                PageRequest.of(0, 12)
-        );
-
-        List<HomePerformanceView> banners = performances.stream()
-                .limit(3)
-                .map(HomePerformanceView::from)
+        List<Banner> activeBanners = bannerRepository.findByActiveTrueOrderByDisplayOrderAscIdAsc(
+                PageRequest.of(0, MAX_BANNERS));
+        List<HomeBannerView> banners = activeBanners.stream()
+                .map(HomeBannerView::from)
                 .toList();
 
         List<HomeTicketOpenView> ticketOpenings = scheduleRepository.findUpcomingTicketOpenings(
@@ -79,12 +78,12 @@ public class HomeQueryService {
 
         HomePerformanceView featured = featuredPerformanceId > 0
                 ? performanceRepository.findPublishedByIdForHome(
-                                featuredPerformanceId,
-                                VISIBLE_PERFORMANCE_STATUSES,
-                                now.toLocalDate()
-                        )
-                        .map(HomePerformanceView::from)
-                        .orElse(null)
+                        featuredPerformanceId,
+                        VISIBLE_PERFORMANCE_STATUSES,
+                        now.toLocalDate()
+                )
+                .map(HomePerformanceView::from)
+                .orElse(null)
                 : null;
 
         return new HomePageView(banners, ticketOpenings, genreRankings, featured);

@@ -1,0 +1,123 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 배너 등록·수정</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-banners.css}" href="/css/pages/admin-banners.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1 th:text="${form.id} != null ? '배너 수정' : '배너 등록'">배너 등록·수정</h1>
+                    <p>메인 페이지 히어로 슬라이더 배너 정보를 관리합니다.</p>
+                </div>
+                <div class="cluster">
+                    <a class="btn" th:href="@{/admin/banners}">목록으로</a>
+                    <button class="btn btn--dark" type="submit" form="bannerForm">저장</button>
+                </div>
+            </header>
+
+            <form id="bannerForm" class="card stack" method="post" enctype="multipart/form-data"
+                  th:object="${form}"
+                  th:action="${form.id} != null ? @{'/admin/banners/' + ${form.id}} : @{/admin/banners}">
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" th:field="*{imageUrl}">
+
+                <h2>배너 이미지</h2>
+                <div class="poster-upload">
+                    <img class="poster-preview" id="bannerPreview"
+                         th:src="${form.imageUrl} ?: '#'"
+                         th:if="${form.imageUrl}" alt="배너 미리보기"
+                         onerror="this.style.display='none'; document.getElementById('bannerPreviewEmpty').style.display='flex';">
+                    <div class="poster-preview poster-preview--empty" id="bannerPreviewEmpty"
+                         th:style="${form.imageUrl} ? 'display:none' : 'display:flex'">
+                        이미지 없음
+                    </div>
+                    <div class="field">
+                        <label>배너 이미지 업로드</label>
+                        <input class="input file-input" type="file" name="bannerFile" accept="image/*" onchange="previewBanner(this)">
+                    </div>
+                </div>
+
+                <div class="section-heading">
+                    <h2>기본 정보</h2>
+                    <span class="required-guide"><span class="required-mark">*</span> 표시는 필수 항목입니다.</span>
+                </div>
+                <div class="admin-form-grid">
+                    <div class="field">
+                        <label><span class="required-mark">*</span> 제목</label>
+                        <input class="input" type="text" th:field="*{title}" required>
+                    </div>
+                    <div class="field">
+                        <label>연결 공연</label>
+                        <select class="input" th:field="*{performanceId}">
+                            <option value="">선택 안함(커스텀 링크 사용)</option>
+                            <option th:each="p : ${performances}" th:value="${p.id}" th:text="${p.title}"></option>
+                        </select>
+                    </div>
+                    <div class="field field--full">
+                        <label>서브 문구</label>
+                        <textarea class="input" rows="2" th:field="*{description}"></textarea>
+                    </div>
+                    <div class="field">
+                        <label>기간 시작 표기</label>
+                        <input class="input" type="text" placeholder="예: 2026.12.06" th:field="*{periodStartText}">
+                    </div>
+                    <div class="field">
+                        <label>기간 종료 표기</label>
+                        <input class="input" type="text" placeholder="예: 2027.03.03" th:field="*{periodEndText}">
+                    </div>
+                    <div class="field">
+                        <label>상단 뱃지 문구</label>
+                        <input class="input" type="text" placeholder="예: NOW ON SALE" th:field="*{badgeText}">
+                    </div>
+                    <div class="field">
+                        <label>노출 여부</label>
+                        <label class="switch">
+                            <input type="checkbox" th:field="*{active}">
+                            <span>노출함</span>
+                        </label>
+                    </div>
+                    <div class="field">
+                        <label>커스텀 링크(연결 공연 미선택 시)</label>
+                        <input class="input" type="text" placeholder="https://..." th:field="*{linkUrl}">
+                    </div>
+                </div>
+
+                <div class="section-heading">
+                    <h2>버튼 설정</h2>
+                </div>
+                <div class="admin-form-grid">
+                    <div class="field">
+                        <label>주 버튼 문구</label>
+                        <input class="input" type="text" placeholder="실시간 예매하기" th:field="*{button1Text}">
+                    </div>
+                    <div class="field">
+                        <label>주 버튼 링크(미입력 시 연결 공연 예매 페이지 자동 사용)</label>
+                        <input class="input" type="text" th:field="*{button1Url}">
+                    </div>
+                    <div class="field">
+                        <label>보조 버튼 문구</label>
+                        <input class="input" type="text" placeholder="자세히 보기" th:field="*{button2Text}">
+                    </div>
+                    <div class="field">
+                        <label>보조 버튼 링크(미입력 시 연결 공연 상세 페이지 자동 사용)</label>
+                        <input class="input" type="text" th:field="*{button2Url}">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<script th:src="@{/js/pages/admin-banner-form.js}" src="/js/pages/admin-banner-form.js"></script>
+</body>
+</html>
