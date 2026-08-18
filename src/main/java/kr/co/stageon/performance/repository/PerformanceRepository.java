@@ -4,6 +4,7 @@ import kr.co.stageon.performance.domain.Performance;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -84,4 +85,12 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
             @Param("statuses") List<Performance.Status> statuses,
             @Param("today") LocalDate today
     );
+
+    /**
+     * 오늘 날짜(today)가 공연 종료일(endDate)보다 큰 경우 (즉, 종료일이 이미 지난 경우)
+     * 공연 상태가 ENDED가 아닌 것들을 찾아 전부 ENDED로 일괄 변경합니다.
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Performance p SET p.status = 'ENDED' WHERE p.status != 'ENDED' AND p.endDate < :today")
+    int bulkUpdateStatusToEnded(@Param("today") LocalDate today);
 }

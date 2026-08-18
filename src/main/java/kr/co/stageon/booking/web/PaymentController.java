@@ -83,7 +83,16 @@ public class PaymentController {
                 throw new IllegalStateException("결제 시간이 초과되었거나 유효하지 않은 요청입니다.");
             }
 
-            // 💡 1. 토스 API 호출 -> JsonNode 덩어리를 받습니다.
+            // 🚨 [최후의 보루 방어막 추가!] 토스 결제 승인을 내기 전에 우리 DB 좌석 상태부터 확인합니다.
+            SeatHold seatHold = seatHoldRepository.findById(paymentRequest.seatHoldId())
+                    .orElseThrow(() -> new IllegalStateException("결제 선점 정보를 찾을 수 없습니다."));
+
+            if (seatHold.getStatus() != SeatHold.Status.ACTIVE) {
+                // 이미 백그라운드 스케줄러가 EXPIRED(만료) 처리해서 좌석이 풀린 경우
+                throw new IllegalStateException("결제 대기 시간(5분)이 초과되어 좌석 선점이 취소되었습니다. 처음부터 다시 예매해 주세요.");
+            }
+
+            // 💡 1. 좌석이 안전하게 확보된 것이 확인되면, 비로소 토스 API 호출!
             JsonNode tossResponse = paymentService.confirmPayment(paymentKey, orderId, amount);
 
             // 💡 2. 글자 매핑 에러 방지: 혹시 모를 공백이나 줄바꿈을 완벽히 제거합니다.
@@ -138,7 +147,7 @@ public class PaymentController {
 
         } catch (Exception e) {
             log.error("결제 승인 중 오류 발생: ", e);
-            redirectAttributes.addFlashAttribute("errorMessage", "결제 처리 중 문제가 발생했습니다.");
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage() != null ? e.getMessage() : "결제 처리 중 문제가 발생했습니다.");
             return "redirect:/";
         }
     }

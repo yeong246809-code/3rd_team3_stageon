@@ -130,4 +130,11 @@ public class Performance {
         this.venueHall = venueHall;
         this.basePrice = basePrice;
     }
+
+    /**
+     * 공연 종료 일자가 지나면 상태를 ENDED로 변경합니다.
+     */
+    public void markAsEnded() {
+        this.status = Status.ENDED;
+    }
 }

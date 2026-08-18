@@ -109,7 +109,21 @@
       button.style.border = "";
       updateSummaryPanel();
 
-      navigator.sendBeacon(`/api/seats/${seatId}/uncheck`);
+      // 🚨 기존 sendBeacon 지우고 CSRF 토큰을 포함한 fetch(keepalive) 코드로 교체!
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+      const headers = {};
+      if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+      }
+
+      fetch(`/api/seats/${seatId}/uncheck`, {
+        method: 'POST',
+        headers: headers,
+        keepalive: true // 페이지 이동 시에도 백그라운드에서 요청이 확실히 가도록 보장
+      }).catch(err => console.error("선택 해제 실패:", err));
+
     } else {
       // 새로운 좌석 클릭 -> 최대 매수 검증
       if (selectedSeats.size >= REMAINING_TICKETS) {
@@ -316,9 +330,22 @@
 
   function releaseHoldOnExit() {
     if (!isSubmitting) {
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+      const headers = {};
+      if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+      }
+
       // 내가 클릭해서 장바구니에 담아둔 좌석들을 돌면서 개별 Redis 락 해제
       selectedSeats.forEach((value, seatId) => {
-        navigator.sendBeacon(`/api/seats/${seatId}/uncheck`);
+        // 🚨 기존 sendBeacon 지우고 CSRF 토큰을 포함한 fetch(keepalive) 코드로 교체!
+        fetch(`/api/seats/${seatId}/uncheck`, {
+          method: 'POST',
+          headers: headers,
+          keepalive: true
+        }).catch(err => console.error("이탈 시 해제 실패:", err));
       });
     }
   }

@@ -4,6 +4,7 @@ import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.domain.PerformanceSchedule;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -66,4 +67,16 @@ public interface PerformanceScheduleRepository extends JpaRepository<Performance
             @Param("performanceStatuses") List<Performance.Status> performanceStatuses,
             Pageable pageable
     );
+
+    // 1. 오픈 시간이 지났고, 아직 마감 시간이 안 된 예정된(SCHEDULED) 회차를 OPEN으로 변경
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PerformanceSchedule ps SET ps.status = 'OPEN' " +
+            "WHERE ps.status = 'SCHEDULED' AND ps.salesOpenAt <= :now AND ps.salesCloseAt > :now")
+    int openSchedules(@Param("now") LocalDateTime now);
+
+    // 2. 마감 시간이 지난 회차를 CLOSED로 변경 (예정 상태이거나 오픈 상태였던 것들 모두)
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE PerformanceSchedule ps SET ps.status = 'CLOSED' " +
+            "WHERE ps.status IN ('SCHEDULED', 'OPEN') AND ps.salesCloseAt <= :now")
+    int closeSchedules(@Param("now") LocalDateTime now);
 }
