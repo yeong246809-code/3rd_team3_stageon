@@ -1,11 +1,8 @@
 package kr.co.stageon.booking.web;
 
-import kr.co.stageon.booking.domain.Reservation;
-import kr.co.stageon.booking.domain.SeatHold;
 import kr.co.stageon.booking.dto.ReservationDetailResponse;
-import kr.co.stageon.booking.repository.ReservationRepository;
 import kr.co.stageon.booking.repository.ScheduleSeatRepository;
-import kr.co.stageon.booking.repository.SeatHoldRepository;
+import kr.co.stageon.booking.service.BookingLimitService;
 import kr.co.stageon.booking.service.BookingQueryService;
 import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
@@ -34,11 +31,10 @@ public class BookingViewController {
     private final BookingQueryService bookingQueryService;
     private final ScheduleSeatRepository scheduleSeatRepository;
 
-    private final ReservationRepository reservationRepository;
-    private final SeatHoldRepository seatHoldRepository;
     private final PerformanceScheduleRepository performanceScheduleRepository;
     private final MemberRepository memberRepository;
     private final RedisWaitingQueueService waitingQueueService;
+    private final BookingLimitService bookingLimitService;
 
     /*@GetMapping({"/booking/queue", "/queue"})
     public String queue(@RequestParam(required = false) Long scheduleId, Model model) {
@@ -81,26 +77,17 @@ public class BookingViewController {
             // 1. 로그인 정보에서 회원 조회 후 실제 ID 추출
             Long memberId = member.getId();
 
-            // 2. 해당 회차의 최대 예매 가능 매수 조회 (기본값 4)
-            int maxTickets = performanceScheduleRepository.findById(scheduleId)
-                    .map(s -> s.getMaxTicketsPerMember())
-                    .orElse(4);
-
-            // 3. 이미 결제 완료된 수량
-            int reservedCount = reservationRepository.sumTicketCountByMemberIdAndScheduleId(
-                    memberId, scheduleId, Reservation.Status.RESERVED
+            // 2. 선택한 회차의 한도와 공연 전체에서 이미 사용한 매수를 비교합니다.
+            var schedule = performanceScheduleRepository.findById(scheduleId)
+                    .orElseThrow(() -> new IllegalArgumentException("공연 회차를 찾을 수 없습니다."));
+            int maxTickets = schedule.getMaxTicketsPerMember() == null
+                    ? 4
+                    : schedule.getMaxTicketsPerMember();
+            int remainingTickets = bookingLimitService.remainingTickets(
+                    memberId,
+                    schedule.getPerformance().getId(),
+                    maxTickets
             );
-
-            // 4. 선점(결제 대기) 중인 수량
-            int heldCount = seatHoldRepository.countByMemberIdAndScheduleIdAndStatusIn(
-                    memberId, scheduleId, List.of(SeatHold.Status.ACTIVE)
-            );
-
-            // 5. 남은 수량 계산 (0보다 작아지지 않도록 처리)
-            int remainingTickets = maxTickets - reservedCount - heldCount;
-            if (remainingTickets < 0) {
-                remainingTickets = 0;
-            }
 
             // 6. 화면(HTML의 Javascript)으로 값 전달
             model.addAttribute("maxTickets", maxTickets);
