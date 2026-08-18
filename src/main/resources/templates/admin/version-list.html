@@ -1,0 +1,138 @@
+
+
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 버전 관리</title>
+    <meta name="_csrf" th:content="${_csrf.token}" content="">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" content="">
+    <meta name="_csrf_parameter" th:content="${_csrf.parameterName}" content="">
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-versions.css}" href="/css/pages/admin-versions.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>버전 관리</h1>
+                    <p>프로젝트의 버전별 변경 이력(신규 기능, 개선, 버그수정)을 기록하고 조회합니다.</p>
+                </div>
+                <div class="cluster">
+                    <a class="btn btn--dark" th:href="@{/admin/versions/new}">버전 이력 등록</a>
+                </div>
+            </header>
+
+            <div class="alert alert--success" th:if="${message}" th:text="${message}"></div>
+            <div class="alert alert--error" th:if="${error}" th:text="${error}"></div>
+
+            <div class="card">
+                <table class="admin-table version-table">
+                    <thead>
+                    <tr>
+                        <th>버전</th>
+                        <th>구분</th>
+                        <th>제목</th>
+                        <th>작성자</th>
+                        <th>배포일</th>
+                        <th>관리</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(versions)}">
+                        <td colspan="6" class="empty-row">등록된 버전 이력이 없습니다.</td>
+                    </tr>
+                    <tr th:each="v : ${versions}">
+                        <td class="cell-title" th:text="${v.version()}">v1.2.0</td>
+                        <td>
+                            <span class="badge version-badge--feature" th:if="${v.category().name() == 'FEATURE'}">신규 기능</span>
+                            <span class="badge version-badge--improvement" th:if="${v.category().name() == 'IMPROVEMENT'}">개선</span>
+                            <span class="badge version-badge--bugfix" th:if="${v.category().name() == 'BUGFIX'}">버그수정</span>
+                        </td>
+                        <td th:text="${v.title()}">제목</td>
+                        <td th:text="${v.author()}">작성자</td>
+                        <td th:text="${#temporals.format(v.releasedAt(), 'yyyy.MM.dd')}">2026.01.01</td>
+                        <td>
+                            <button type="button" class="btn--sm btn--view js-version-detail" th:attr="data-id=${v.id()}">상세보기</button>
+                            <a class="btn--sm btn--edit" th:href="@{'/admin/versions/' + ${v.id()} + '/edit'}">수정</a>
+                            <form method="post" th:action="@{'/admin/versions/' + ${v.id()} + '/delete'}"
+                                  onsubmit="return confirm('이 버전 이력을 삭제하시겠습니까?');" style="display:inline;">
+                                <button type="submit" class="btn--sm btn--delete">삭제</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- 버전 상세 모달 -->
+<div class="version-modal" id="versionModal">
+    <div class="version-modal__backdrop" onclick="closeVersionModal()"></div>
+    <div class="version-modal__content" id="versionModalContent">
+        <button type="button" class="version-modal__close" onclick="closeVersionModal()">&times;</button>
+        <div id="versionModalBody">
+            <div class="version-modal__loading">불러오는 중…</div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /* Thymeleaf 서버 URL 변수 주입 전용 스크립트입니다. 순수 JS 배열/객체 리터럴은
+       아래 일반 <script> 블록에 작성합니다. (th:inline="javascript" + [[...]] 충돌 방지) */
+    window.__VERSION_DETAIL_URL_BASE__ = /*[[@{/admin/versions}]]*/ '/admin/versions';
+</script>
+<script th:inline="none">
+    const versionDetailUrlBase = window.__VERSION_DETAIL_URL_BASE__;
+
+    document.querySelectorAll('.js-version-detail').forEach(btn => {
+        btn.addEventListener('click', () => openVersionDetail(btn.dataset.id));
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeVersionModal();
+    });
+
+    function closeVersionModal() {
+        document.getElementById('versionModal').classList.remove('is-open');
+    }
+
+    function categoryLabel(c) {
+        return {FEATURE: '신규 기능', IMPROVEMENT: '개선', BUGFIX: '버그수정'}[c] || c;
+    }
+    function categoryBadgeClass(c) {
+        return {FEATURE: 'version-badge--feature', IMPROVEMENT: 'version-badge--improvement', BUGFIX: 'version-badge--bugfix'}[c] || '';
+    }
+
+    function openVersionDetail(id) {
+        document.getElementById('versionModalBody').innerHTML = '<div class="version-modal__loading">불러오는 중…</div>';
+        document.getElementById('versionModal').classList.add('is-open');
+
+        fetch(versionDetailUrlBase + '/' + id + '/detail')
+            .then(res => res.json())
+            .then(d => {
+                document.getElementById('versionModalBody').innerHTML = `
+              <div class="version-modal__head">
+                <div class="version-modal__eyebrow">${d.version}</div>
+                <h3 class="version-modal__title">${d.title}</h3>
+                <div class="version-modal__meta">
+                  <span class="badge ${categoryBadgeClass(d.category)}">${categoryLabel(d.category)}</span>
+                  <span>${d.author}</span>
+                  <span>${d.releasedAt}</span>
+                </div>
+              </div>
+              <div class="version-modal__desc">${(d.description || '상세 설명이 없습니다.').replace(/\n/g, '<br>')}</div>
+            `;
+            });
+    }
+</script>
+</body>
+</html>
