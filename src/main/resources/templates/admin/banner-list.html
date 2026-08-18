@@ -21,6 +21,7 @@
                     <p>메인 페이지 히어로 슬라이더에 노출되는 배너를 관리합니다.</p>
                 </div>
                 <div class="cluster">
+                    <a class="btn" th:href="@{/admin/banners/settings}">배너 전환 속도 설정</a>
                     <a class="btn btn--dark" th:href="@{/admin/banners/new}">배너 등록</a>
                 </div>
             </header>
@@ -59,9 +60,9 @@
                         <td th:text="${banner.title}">배너 제목</td>
                         <td th:text="${banner.performanceTitle} ?: '-'">-</td>
                         <td>
-              <span th:if="${banner.periodStartText != null or banner.periodEndText != null}"
-                    th:text="${(banner.periodStartText ?: '') + ' ~ ' + (banner.periodEndText ?: '')}"></span>
-                            <span th:unless="${banner.periodStartText != null or banner.periodEndText != null}">-</span>
+            <span th:if="${banner.periodStart != null or banner.periodEnd != null}"
+                  th:text="${(banner.periodStart != null ? #temporals.format(banner.periodStart, 'yyyy.MM.dd') : '') + ' ~ ' + (banner.periodEnd != null ? #temporals.format(banner.periodEnd, 'yyyy.MM.dd') : '')}"></span>
+                            <span th:unless="${banner.periodStart != null or banner.periodEnd != null}">-</span>
                         </td>
                         <td>
                             <form method="post" th:action="@{'/admin/banners/' + ${banner.id} + '/toggle'}">

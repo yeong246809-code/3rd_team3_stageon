@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /** 메인 페이지 히어로 슬라이더에 노출되는 관리자 등록 배너입니다. */
@@ -35,11 +36,11 @@ public class Banner {
     @Column(name = "link_url", length = 500)
     private String linkUrl;
 
-    @Column(name = "period_start_text", length = 50)
-    private String periodStartText;
+    @Column(name = "period_start")
+    private LocalDate periodStart;
 
-    @Column(name = "period_end_text", length = 50)
-    private String periodEndText;
+    @Column(name = "period_end")
+    private LocalDate periodEnd;
 
     @Column(name = "badge_text", length = 50)
     private String badgeText;
@@ -69,7 +70,7 @@ public class Banner {
     private LocalDateTime updatedAt;
 
     public static Banner create(String title, String description, String imageUrl, Performance performance,
-                                String linkUrl, String periodStartText, String periodEndText, String badgeText,
+                                String linkUrl, LocalDate periodStart, LocalDate periodEnd, String badgeText,
                                 String button1Text, String button1Url, String button2Text, String button2Url,
                                 int displayOrder, boolean active) {
         Banner b = new Banner();
@@ -78,8 +79,8 @@ public class Banner {
         b.imageUrl = imageUrl;
         b.performance = performance;
         b.linkUrl = linkUrl;
-        b.periodStartText = periodStartText;
-        b.periodEndText = periodEndText;
+        b.periodStart = periodStart;
+        b.periodEnd = periodEnd;
         b.badgeText = badgeText;
         b.button1Text = button1Text;
         b.button1Url = button1Url;
@@ -91,7 +92,7 @@ public class Banner {
     }
 
     public void update(String title, String description, String imageUrl, Performance performance,
-                       String linkUrl, String periodStartText, String periodEndText, String badgeText,
+                       String linkUrl, LocalDate periodStart, LocalDate periodEnd, String badgeText,
                        String button1Text, String button1Url, String button2Text, String button2Url,
                        boolean active) {
         this.title = title;
@@ -99,8 +100,8 @@ public class Banner {
         this.imageUrl = imageUrl;
         this.performance = performance;
         this.linkUrl = linkUrl;
-        this.periodStartText = periodStartText;
-        this.periodEndText = periodEndText;
+        this.periodStart = periodStart;
+        this.periodEnd = periodEnd;
         this.badgeText = badgeText;
         this.button1Text = button1Text;
         this.button1Url = button1Url;

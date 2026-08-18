@@ -1,5 +1,6 @@
 package kr.co.stageon.home.service;
 
+import kr.co.stageon.setting.service.BannerSlideSettingService;
 import kr.co.stageon.banner.domain.Banner;
 import kr.co.stageon.banner.repository.BannerRepository;
 import kr.co.stageon.booking.domain.Reservation;
@@ -41,6 +42,7 @@ public class HomeQueryService {
     private final PerformanceScheduleRepository scheduleRepository;
     private final ReservationRepository reservationRepository;
     private final BannerRepository bannerRepository;
+    private final BannerSlideSettingService bannerSlideSettingService;
 
     @Value("${stageon.home.featured-performance-id:0}")
     private long featuredPerformanceId;
@@ -86,7 +88,9 @@ public class HomeQueryService {
                 .orElse(null)
                 : null;
 
-        return new HomePageView(banners, ticketOpenings, genreRankings, featured);
+        int slideIntervalSeconds = bannerSlideSettingService.getSlideIntervalSeconds();
+
+        return new HomePageView(banners, ticketOpenings, genreRankings, featured, slideIntervalSeconds);
     }
 
     private static HomeGenreRankingView toGenreRanking(

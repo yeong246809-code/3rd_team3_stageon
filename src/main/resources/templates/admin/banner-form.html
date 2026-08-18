@@ -33,12 +33,17 @@
                 <input type="hidden" th:field="*{imageUrl}">
 
                 <h2>배너 이미지</h2>
+                <p class="field-hint">
+                    히어로 영역은 <b>가로로 넓은 와이드 이미지</b>(권장 1920×800px, 최소 1600×640px)입니다.
+                    세로 포스터를 그대로 올리면 좌우가 크게 잘리고 화질도 흐려집니다.
+                    포토샵 등에서 포스터 속 인물이 중앙에 오도록 <b>와이드 비율로 새로 크롭</b>한 이미지를 올려주세요.
+                </p>
                 <div class="poster-upload">
-                    <img class="poster-preview" id="bannerPreview"
+                    <img class="poster-preview poster-preview--wide" id="bannerPreview"
                          th:src="${form.imageUrl} ?: '#'"
                          th:if="${form.imageUrl}" alt="배너 미리보기"
                          onerror="this.style.display='none'; document.getElementById('bannerPreviewEmpty').style.display='flex';">
-                    <div class="poster-preview poster-preview--empty" id="bannerPreviewEmpty"
+                    <div class="poster-preview poster-preview--wide poster-preview--empty" id="bannerPreviewEmpty"
                          th:style="${form.imageUrl} ? 'display:none' : 'display:flex'">
                         이미지 없음
                     </div>
@@ -69,12 +74,12 @@
                         <textarea class="input" rows="2" th:field="*{description}"></textarea>
                     </div>
                     <div class="field">
-                        <label>기간 시작 표기</label>
-                        <input class="input" type="text" placeholder="예: 2026.12.06" th:field="*{periodStartText}">
+                        <label>기간 시작일</label>
+                        <input class="input" type="date" th:field="*{periodStart}">
                     </div>
                     <div class="field">
-                        <label>기간 종료 표기</label>
-                        <input class="input" type="text" placeholder="예: 2027.03.03" th:field="*{periodEndText}">
+                        <label>기간 종료일</label>
+                        <input class="input" type="date" th:field="*{periodEnd}">
                     </div>
                     <div class="field">
                         <label>상단 뱃지 문구</label>
@@ -87,10 +92,6 @@
                             <span>노출함</span>
                         </label>
                     </div>
-                    <div class="field">
-                        <label>커스텀 링크(연결 공연 미선택 시)</label>
-                        <input class="input" type="text" placeholder="https://..." th:field="*{linkUrl}">
-                    </div>
                 </div>
 
                 <div class="section-heading">
@@ -102,16 +103,42 @@
                         <input class="input" type="text" placeholder="실시간 예매하기" th:field="*{button1Text}">
                     </div>
                     <div class="field">
-                        <label>주 버튼 링크(미입력 시 연결 공연 예매 페이지 자동 사용)</label>
-                        <input class="input" type="text" th:field="*{button1Url}">
+                        <label>주 버튼 이동 위치</label>
+                        <select class="input" th:field="*{button1LinkType}" onchange="toggleCustomUrl('button1')">
+                            <option value="AUTO">연결 공연 예매 페이지(자동)</option>
+                            <option value="PERFORMANCES">전체 공연 목록</option>
+                            <option value="GENRE_MUSICAL">뮤지컬</option>
+                            <option value="GENRE_PLAY">연극</option>
+                            <option value="GENRE_CONCERT">콘서트</option>
+                            <option value="GENRE_CLASSIC">클래식/무용</option>
+                            <option value="GENRE_EXHIBITION">전시/행사</option>
+                            <option value="AI_RECOMMEND">AI 맞춤 추천</option>
+                            <option value="CUSTOMER_CENTER">고객센터</option>
+                            <option value="CUSTOM">직접 입력(URL)</option>
+                        </select>
+                        <input class="input" type="text" id="button1UrlInput" placeholder="https://..." th:field="*{button1Url}"
+                               style="margin-top:8px;">
                     </div>
                     <div class="field">
                         <label>보조 버튼 문구</label>
                         <input class="input" type="text" placeholder="자세히 보기" th:field="*{button2Text}">
                     </div>
                     <div class="field">
-                        <label>보조 버튼 링크(미입력 시 연결 공연 상세 페이지 자동 사용)</label>
-                        <input class="input" type="text" th:field="*{button2Url}">
+                        <label>보조 버튼 이동 위치</label>
+                        <select class="input" th:field="*{button2LinkType}" onchange="toggleCustomUrl('button2')">
+                            <option value="AUTO">연결 공연 상세 페이지(자동)</option>
+                            <option value="PERFORMANCES">전체 공연 목록</option>
+                            <option value="GENRE_MUSICAL">뮤지컬</option>
+                            <option value="GENRE_PLAY">연극</option>
+                            <option value="GENRE_CONCERT">콘서트</option>
+                            <option value="GENRE_CLASSIC">클래식/무용</option>
+                            <option value="GENRE_EXHIBITION">전시/행사</option>
+                            <option value="AI_RECOMMEND">AI 맞춤 추천</option>
+                            <option value="CUSTOMER_CENTER">고객센터</option>
+                            <option value="CUSTOM">직접 입력(URL)</option>
+                        </select>
+                        <input class="input" type="text" id="button2UrlInput" placeholder="https://..." th:field="*{button2Url}"
+                               style="margin-top:8px;">
                     </div>
                 </div>
             </form>

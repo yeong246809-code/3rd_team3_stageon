@@ -7,7 +7,8 @@ public record HomePageView(
         List<HomeBannerView> banners,
         List<HomeTicketOpenView> ticketOpenings,
         List<HomeGenreRankingView> genreRankings,
-        HomePerformanceView featuredPerformance
+        HomePerformanceView featuredPerformance,
+        int bannerSlideIntervalSeconds
 ) {
     public boolean hasBanners() {
         return banners != null && !banners.isEmpty();

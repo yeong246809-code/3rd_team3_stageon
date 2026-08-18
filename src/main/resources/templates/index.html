@@ -13,7 +13,8 @@
 
 <main class="home-main">
   <section class="cylinder-hero" aria-label="주요 공연 배너">
-    <div class="carousel-shell" data-carousel>
+    <div class="carousel-shell" data-carousel
+         th:attr="data-autoplay-interval=${homeData != null ? homeData.bannerSlideIntervalSeconds() * 1000 : 3000}">
       <button class="carousel-arrow carousel-arrow--prev" type="button" aria-label="이전 배너" data-carousel-prev>‹</button>
 
       <div class="carousel-stage">
@@ -328,6 +329,7 @@
 <script defer th:src="@{/js/vendor/three.min.js}" src="/js/vendor/three.min.js"></script>
 <script defer th:src="@{/js/poster-fallback.js}" src="/js/poster-fallback.js"></script>
 <script defer th:src="@{/js/home.js}" src="/js/home.js"></script>
+<script defer th:src="@{/js/hero-autoplay.js}" src="/js/hero-autoplay.js"></script>
 <script defer th:src="@{/js/three-fog.js}" src="/js/three-fog.js"></script>
 </body>
 </html>

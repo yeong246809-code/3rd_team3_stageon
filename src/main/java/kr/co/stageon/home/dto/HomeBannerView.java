@@ -3,6 +3,8 @@ package kr.co.stageon.home.dto;
 import kr.co.stageon.banner.domain.Banner;
 import kr.co.stageon.performance.support.PerformanceGenres;
 
+import java.time.format.DateTimeFormatter;
+
 /** 홈 화면 히어로 슬라이더에 노출되는 관리자 등록 배너 읽기 모델입니다. */
 public record HomeBannerView(
         Long id,
@@ -17,8 +19,10 @@ public record HomeBannerView(
         String button2Text,
         String button2Url
 ) {
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
     public static HomeBannerView from(Banner banner) {
-        String period = joinPeriod(banner.getPeriodStartText(), banner.getPeriodEndText());
+        String period = joinPeriod(banner.getPeriodStart(), banner.getPeriodEnd());
         String fallback = banner.getPerformance() != null
                 ? PerformanceGenres.defaultPosterFor(banner.getPerformance().getGenre())
                 : null;
@@ -51,16 +55,16 @@ public record HomeBannerView(
         return "/performances";
     }
 
-    private static String joinPeriod(String start, String end) {
-        if ((start == null || start.isBlank()) && (end == null || end.isBlank())) {
+    private static String joinPeriod(java.time.LocalDate start, java.time.LocalDate end) {
+        if (start == null && end == null) {
             return "";
         }
-        if (end == null || end.isBlank()) {
-            return start;
+        if (end == null) {
+            return DATE_FORMATTER.format(start);
         }
-        if (start == null || start.isBlank()) {
-            return end;
+        if (start == null) {
+            return DATE_FORMATTER.format(end);
         }
-        return start + " ~ " + end;
+        return DATE_FORMATTER.format(start) + " ~ " + DATE_FORMATTER.format(end);
     }
 }
