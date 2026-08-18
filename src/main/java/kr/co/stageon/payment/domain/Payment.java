@@ -141,4 +141,5 @@ public class Payment {
         this.cancelAmount = this.cancelAmount.add(amount);
         this.processedAt = LocalDateTime.now(); // 부분 취소 처리 시간 갱신 (선택 사항)
     }
+
 }

@@ -53,13 +53,14 @@ public class Refund {
     private LocalDateTime createdAt;
 
     /** 관리자 강제취소 시 환불 이력을 즉시 완료 처리로 생성합니다(모의 결제이므로 실제 PG 연동 없음). */
-    public static Refund createCompleted(Payment payment, BigDecimal amount, Category category, String reason) {
+    public static Refund createCompleted(Payment payment, BigDecimal amount, Category category, String reason, String pgTid) {
         Refund refund = new Refund();
         refund.payment = payment;
         refund.amount = amount;
         refund.status = Status.COMPLETED;
         refund.refundCategory = category;
         refund.reason = reason;
+        refund.pgTid = pgTid; // 추가된 부분
         refund.requestedAt = LocalDateTime.now();
         refund.processedAt = LocalDateTime.now();
         return refund;

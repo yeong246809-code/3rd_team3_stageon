@@ -150,7 +150,7 @@ public class AdminOrderService {
         paymentRepository.findFirstByReservationIdAndStatusOrderByRequestedAtDesc(reservationId, Payment.Status.SUCCESS)
                 .ifPresent(payment -> {
                     payment.markCancelled(payment.getAmount());
-                    Refund refund = Refund.createCompleted(payment, payment.getAmount(), Refund.Category.ADMIN_CANCEL, reason);
+                    Refund refund = Refund.createCompleted(payment, payment.getAmount(), Refund.Category.ADMIN_CANCEL, reason, null);
                     refundRepository.save(refund);
                 });
 
@@ -250,4 +250,6 @@ public class AdminOrderService {
         if (phone == null || phone.length() < 4) return phone;
         return phone.substring(0, phone.length() - 4) + "****";
     }
+
+
 }

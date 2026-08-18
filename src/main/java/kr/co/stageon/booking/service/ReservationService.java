@@ -9,6 +9,7 @@ import kr.co.stageon.booking.repository.SeatHoldRepository;
 import kr.co.stageon.booking.dto.PaymentRequest;
 import kr.co.stageon.payment.domain.Payment;
 import kr.co.stageon.payment.repository.PaymentRepository;
+import kr.co.stageon.payment.repository.RefundRepository;
 import kr.co.stageon.payment.service.PaymentService;
 import kr.co.stageon.ticket.domain.Ticket;
 import kr.co.stageon.ticket.repository.TicketRepository;
@@ -31,6 +32,7 @@ public class ReservationService {
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
     private final TicketRepository ticketRepository;
+    private final RefundRepository refundRepository;
 
     /**
      * 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
@@ -130,38 +132,61 @@ public class ReservationService {
             throw new IllegalArgumentException("취소할 좌석이 없습니다.");
         }
 
-        // 4. 취소 금액 계산
-        BigDecimal totalCancelAmount = targetSeats.stream()
+        // 4. 취소 금액 계산 (수수료 공제 전 원래 가격)
+        BigDecimal originalCancelAmount = targetSeats.stream()
                 .map(ReservationSeat::getCapturedUnitPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 💡 [수수료 로직 추가] 공연 시작일 기준으로 실제 환불 금액 계산
+        LocalDateTime performanceStartAt = reservation.getSchedule().getStartsAt();
+        kr.co.stageon.payment.domain.CancelFeePolicy policy =
+                kr.co.stageon.payment.domain.CancelFeePolicy.getPolicy(LocalDateTime.now(), performanceStartAt);
+
+        BigDecimal actualRefundAmount = policy.calculateRefundAmount(originalCancelAmount);
+        String detailCancelReason = cancelReason + " (수수료 " + (int)(policy.getFeeRate() * 100) + "% 적용)";
 
         // 5. 토스페이먼츠 취소 API 호출 (실제 환불 처리)
         boolean isTossPayment = payment.getProvider() == Payment.Provider.TOSSPAYMENTS;
         boolean isSuccess = payment.getStatus() == Payment.Status.SUCCESS;
         boolean isVbankReady = payment.getPayMethod() == Payment.PayMethod.VBANK && payment.getStatus() == Payment.Status.READY;
 
+        String pgTid = null;
         if (isTossPayment && (isSuccess || isVbankReady) && payment.getPaymentKey() != null) {
-            paymentService.cancelTossPayment(payment, totalCancelAmount, cancelReason,
+            pgTid = paymentService.cancelTossPayment(payment, actualRefundAmount, detailCancelReason,
                     refundBank, refundAccountNumber, refundHolderName);
         }
 
-        // 6. DB 데이터 업데이트 (좌석 해제 및 삭제)
+        // 💡 [환불 내역 저장 추가] refunds 테이블에 취소 이력 기록!
+        kr.co.stageon.payment.domain.Refund refund = kr.co.stageon.payment.domain.Refund.createCompleted(
+                payment,
+                actualRefundAmount,
+                kr.co.stageon.payment.domain.Refund.Category.USER_CANCEL,
+                detailCancelReason,
+                pgTid
+        );
+        refundRepository.save(refund);
+
+        // 6. DB 데이터 업데이트 (좌석 해제 및 상태 변경)
         for (ReservationSeat seat : targetSeats) {
             seat.getScheduleSeat().release();
-            reservationSeatRepository.delete(seat);
+            seat.cancel();
+            ticketRepository.findByReservationSeatId(seat.getId())
+                    .ifPresent(Ticket::cancel);
         }
 
         // 7. 전체 취소 vs 부분 취소 상태값 변경
-        List<ReservationSeat> remainingSeats = reservationSeatRepository.findByReservationIdOrderByIdAsc(reservationId);
+        long remainingCount = reservationSeatRepository.findByReservationIdOrderByIdAsc(reservationId).stream()
+                .filter(seat -> seat.getStatus() != ReservationSeat.Status.CANCELLED) // 취소된 좌석 제외
+                .count();
 
-        if (remainingSeats.isEmpty()) {
-            // 남은 좌석이 없으면 전체 취소
-            reservation.cancel(cancelReason);
-            payment.markCancelled(totalCancelAmount);
+        if (remainingCount == 0) {
+            // 남은 좌석이 0개면 전체 취소
+            reservation.cancel(detailCancelReason);
+            payment.markCancelled(actualRefundAmount);
         } else {
             // 남은 좌석이 있으면 부분 취소
-            reservation.deductAmount(totalCancelAmount);
-            payment.addCancelAmount(totalCancelAmount);
+            reservation.deductAmount(originalCancelAmount);
+            payment.addCancelAmount(actualRefundAmount);
             reservation.decreaseTicketCount(targetSeats.size());
         }
     }
