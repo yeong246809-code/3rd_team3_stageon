@@ -107,4 +107,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("scheduleId") Long scheduleId,
             @Param("status") Reservation.Status status
     );
+
+    /** 한 회원이 동일 공연에서 이미 예매한 전체 티켓 수입니다. */
+    @Query("""
+            SELECT COALESCE(SUM(r.ticketCount), 0)
+            FROM Reservation r
+            WHERE r.member.id = :memberId
+              AND r.schedule.performance.id = :performanceId
+              AND r.status = :status
+            """)
+    Integer sumTicketCountByMemberIdAndPerformanceId(
+            @Param("memberId") Long memberId,
+            @Param("performanceId") Long performanceId,
+            @Param("status") Reservation.Status status
+    );
 }
