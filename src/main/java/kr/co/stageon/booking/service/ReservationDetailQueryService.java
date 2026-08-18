@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -41,7 +42,8 @@ public class ReservationDetailQueryService {
                                 seat.getCapturedSectionName(),
                                 seat.getCapturedRowLabel(),
                                 seat.getCapturedSeatNumber(),
-                                seat.getCapturedUnitPrice()
+                                seat.getCapturedUnitPrice(),
+                                seat.getStatus().name()
                         ))
                         .toList();
 
@@ -77,6 +79,7 @@ public class ReservationDetailQueryService {
                 reservation.getReservedAt(),
                 reservation.getCancelledAt(),
                 reservation.getCancelReason(),
+                latestPayment == null ? BigDecimal.ZERO : latestPayment.getCancelAmount(),
                 latestPayment == null ? null : latestPayment.getPayMethod().name(),
                 latestPayment == null ? null : latestPayment.getStatus().name(),
                 latestPayment == null ? null : latestPayment.getRequestedAt(),

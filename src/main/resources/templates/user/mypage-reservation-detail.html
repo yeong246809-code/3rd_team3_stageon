@@ -45,7 +45,8 @@
             <section class="mypage-content detail-content">
 
                 <!-- 공연과 예매 상태를 가장 먼저 보여주는 요약 카드 -->
-                <section class="detail-card detail-summary">
+                <section class="detail-card detail-summary"
+                         th:attr="data-starts-at=${#temporals.format(reservation.startsAt, 'yyyy-MM-dd''T''HH:mm:ss')}">
                     <div class="detail-poster">
                         <img th:if="${reservation.posterUrl != null and !#strings.isEmpty(reservation.posterUrl)}"
                              th:src="${reservation.posterUrl}"
@@ -107,7 +108,7 @@
 
                     <!-- 좌석 일괄 선택 / 취소 영역 -->
                     <div class="seat-detail-toolbar"
-                         th:if="${!#lists.isEmpty(reservation.seats)}">
+                         th:if="${!#lists.isEmpty(reservation.seats) and reservation.reservationStatus == 'RESERVED'}">
 
                         <label class="seat-select-all">
                             <input type="checkbox"
@@ -147,7 +148,8 @@
                                        class="seat-cancel-checkbox"
                                        name="reservationSeatIds"
                                        th:value="${seat.reservationSeatId}"
-                                       th:disabled="${reservation.reservationStatus != 'RESERVED'}">
+                                       th:attr="data-price=${seat.unitPrice}"
+                                       th:if="${seat.seatStatus != 'CANCELLED'}">
 
                                 <span class="seat-detail-check__box"
                                       aria-hidden="true"></span>
@@ -179,17 +181,23 @@
                                 </div>
                             </dl>
 
-                            <!-- 개별 취소/환불 버튼 (결제 수단/상태 속성 추가) -->
+                            <!-- 💡 수정 후: 이 '좌석'의 상태(seat.seatStatus)를 기준으로 판단! -->
                             <button type="button"
                                     class="seat-cancel-button"
-                                    th:disabled="${reservation.reservationStatus != 'RESERVED'}"
+                                    th:if="${seat.seatStatus != 'CANCELLED'}"
                                     th:attr="
-                                        data-reservation-id=${reservation.reservationId},
-                                        data-reservation-seat-id=${seat.reservationSeatId},
-                                        data-payment-method=${reservation.paymentProvider},
-                                        data-payment-status=${reservation.paymentStatus}">
-                                취소/환불
+                                    data-reservation-id=${reservation.reservationId},
+                                    data-reservation-seat-id=${seat.reservationSeatId},
+                                    data-payment-method=${reservation.paymentProvider},
+                                    data-payment-status=${reservation.paymentStatus}">
+                                                            취소/환불
                             </button>
+
+                            <!-- 취소 상태일 때는 버튼 대신 텍스트(배지) 노출 -->
+                            <span th:if="${seat.seatStatus == 'CANCELLED'}"
+                                  style="color: #999; font-size: 14px; font-weight: bold;">
+                                취소 완료
+                            </span>
 
                         </article>
                     </div>
@@ -224,7 +232,7 @@
                                 <dd th:text="${reservation.paymentStatus == 'SUCCESS'} ? '결제 완료' :
                                              (${reservation.paymentStatus == 'READY'} ? '결제 준비' :
                                              (${reservation.paymentStatus == 'FAILED'} ? '결제 실패' :
-                                             (${reservation.paymentStatus == 'CANCELLED'} ? '결제 취소' : '결제 정보 없음'))) ">
+                                             (${reservation.paymentStatus == 'CANCELED'} ? '결제 취소' : '결제 정보 없음'))) ">
                                     결제 완료
                                 </dd>
                             </div>
@@ -254,6 +262,13 @@
                          th:if="${reservation.reservationStatus == 'CANCELLED'}">
                     <div class="detail-card__heading"><h2>취소 정보</h2></div>
                     <dl>
+                        <div>
+                            <dt>환불 금액</dt>
+                            <!-- 백엔드 DTO에 cancelAmount 필드가 추가되어야 합니다 -->
+                            <dd style="color: #ff4d4f; font-weight: bold;"
+                                th:text="|${#numbers.formatInteger(reservation.cancelAmount, 0, 'COMMA')}원|">-</dd>
+                        </div>
+
                         <div>
                             <dt>취소 일시</dt>
                             <dd th:text="${reservation.cancelledAt != null} ?
@@ -306,6 +321,48 @@
         <div style="text-align: right;">
             <button type="button" id="closeRefundModalBtn" style="padding: 8px 16px; margin-right: 8px;">닫기</button>
             <button type="submit" style="padding: 8px 16px; background-color: #5a28ff; color: white; border: none; border-radius: 4px;">환불 요청</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="cancelReasonModal" style="padding: 20px; border-radius: 8px; border: 1px solid #ccc; max-width: 400px; margin: auto;">
+    <form method="dialog" id="cancelReasonForm">
+        <h3 style="margin-top: 0; margin-bottom: 8px;">예매 취소</h3>
+        <p style="font-size: 14px; color: #666; margin-bottom: 20px;">취소 사유를 선택해 주세요. 취소 수수료가 발생할 수 있습니다.</p>
+
+        <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span>선택한 좌석 금액</span>
+                <strong id="previewOriginalAmount">0원</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #ff4d4f;">
+                <span>취소 수수료 (<span id="previewFeeRate">0%</span>)</span>
+                <strong id="previewFeeAmount">- 0원</strong>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #ddd; margin: 12px 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 16px; align-items: center;">
+                <span>예상 환불 금액</span>
+                <strong id="previewRefundAmount" style="color: #5a28ff; font-size: 20px;">0원</strong>
+            </div>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 14px; margin-bottom: 4px; font-weight: bold;">취소 사유</label>
+            <select id="cancelReasonSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" required>
+                <option value="고객 단순 변심">고객 단순 변심</option>
+                <option value="개인 일정 변경">개인 일정 변경</option>
+                <option value="결제 수단 변경">결제 수단 변경</option>
+                <option value="타 공연 관람">타 공연 관람</option>
+                <option value="CUSTOM">기타 (직접 입력)</option>
+            </select>
+        </div>
+
+        <div id="customReasonWrapper" style="display: none; margin-bottom: 20px;">
+            <input type="text" id="customCancelReason" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" placeholder="상세 사유를 입력해 주세요">
+        </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <button type="button" id="closeCancelModalBtn" style="padding: 8px 16px; margin-right: 8px; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer;">닫기</button>
+            <button type="submit" style="padding: 8px 16px; background-color: #ff4d4f; color: white; border: none; border-radius: 4px; cursor: pointer;">취소 진행</button>
         </div>
     </form>
 </dialog>

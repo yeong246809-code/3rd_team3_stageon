@@ -31,6 +31,7 @@ public record ReservationDetailResponse(
         LocalDateTime reservedAt,
         LocalDateTime cancelledAt,
         String cancelReason,
+        BigDecimal cancelAmount,
         String paymentProvider,
         String paymentStatus,
         LocalDateTime paymentRequestedAt,
@@ -48,7 +49,8 @@ public record ReservationDetailResponse(
             String sectionName,
             String rowLabel,
             String seatNumber,
-            BigDecimal unitPrice
+            BigDecimal unitPrice,
+            String seatStatus
     ) {
     }
 

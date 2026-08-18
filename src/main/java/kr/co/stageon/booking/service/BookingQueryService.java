@@ -193,7 +193,8 @@ public class BookingQueryService {
                                 seat.getCapturedSectionName(),
                                 seat.getCapturedRowLabel(),
                                 seat.getCapturedSeatNumber(),
-                                seat.getCapturedUnitPrice()
+                                seat.getCapturedUnitPrice(),
+                                seat.getStatus().name()
                         ))
                         .toList();
 
@@ -225,15 +226,16 @@ public class BookingQueryService {
                 reservation.getSeatAmount(),
                 reservation.getFeeAmount(),
                 reservation.getDiscountAmount(),
-                reservation.getTotalAmount(),     // 진짜 총 결제 금액
+                reservation.getTotalAmount(),
                 reservation.getReservedAt(),
                 reservation.getCancelledAt(),
                 reservation.getCancelReason(),
-                "TOSSPAYMENTS",                   // PG사 고정
+                latestPayment == null ? BigDecimal.ZERO : latestPayment.getCancelAmount(),
+                latestPayment == null ? null : latestPayment.getPayMethod().name(),
                 latestPayment == null ? null : latestPayment.getStatus().name(),
                 latestPayment == null ? null : latestPayment.getRequestedAt(),
                 latestPayment == null ? null : latestPayment.getProcessedAt(),
-                seats                             // 진짜 선택한 좌석 리스트
+                seats
         );
     }
 

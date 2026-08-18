@@ -3,8 +3,11 @@ package kr.co.stageon.payment.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.stageon.booking.domain.Reservation;
+import kr.co.stageon.payment.domain.CancelFeePolicy;
 import kr.co.stageon.payment.domain.Payment;
+import kr.co.stageon.payment.domain.Refund;
 import kr.co.stageon.payment.repository.PaymentRepository;
+import kr.co.stageon.payment.repository.RefundRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -25,11 +28,9 @@ import java.util.Map;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final RefundRepository refundRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    /**
-     * 토스페이먼츠 최종 결제 승인 (Confirm) API를 호출합니다.
-     */
     /**
      * 토스페이먼츠 최종 결제 승인 (Confirm) API를 호출합니다.
      */
@@ -134,11 +135,43 @@ public class PaymentService {
     }
 
     /**
-     * 토스페이먼츠 결제 취소 API 호출 (부분/전체 취소 공통)
+     * 고객 직접 취소 (수수료 자동 계산 적용)
      */
-    public void cancelTossPayment(Payment payment, BigDecimal cancelAmount, String cancelReason,
-                                  String refundBank, String refundAccountNumber, String refundHolderName) {
-        RestTemplate restTemplate = new RestTemplate();
+    @Transactional
+    public void processUserCancelWithFee(Long paymentId, String refundBank, String refundAccountNumber, String refundHolderName) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("결제 내역이 없습니다."));
+
+        // 1. 공연 시작일 기준으로 수수료 및 환불액 계산
+        LocalDateTime performanceStartAt = payment.getReservation().getSchedule().getStartsAt();
+        LocalDateTime now = LocalDateTime.now();
+
+        CancelFeePolicy policy = CancelFeePolicy.getPolicy(now, performanceStartAt);
+        if (policy == CancelFeePolicy.D_DAY) {
+            throw new IllegalStateException("공연 당일은 취소 및 환불이 불가능합니다.");
+        }
+
+        BigDecimal refundAmount = policy.calculateRefundAmount(payment.getAmount());
+        String cancelReason = "고객 변심 취소 (수수료 " + (int)(policy.getFeeRate() * 100) + "% 차감)";
+
+        // 2. 토스 취소 API 호출 및 pgTid(transactionKey) 받아오기
+        String pgTid = cancelTossPayment(payment, refundAmount, cancelReason, refundBank, refundAccountNumber, refundHolderName);
+
+        // 3. refunds 테이블에 취소 이력 저장
+        Refund refund = Refund.createCompleted(payment, refundAmount, Refund.Category.USER_CANCEL, cancelReason, pgTid);
+        refundRepository.save(refund);
+
+        // 4. 결제 상태 및 예약 상태 변경
+        payment.markCancelled(refundAmount);
+    }
+
+    /**
+     * 토스 API 취소
+     */
+    public String cancelTossPayment(Payment payment, BigDecimal cancelAmount, String cancelReason,
+                                    String refundBank, String refundAccountNumber, String refundHolderName) {
+
+        ObjectMapper objectMapper = new ObjectMapper();
         String secretKey = "test_sk_nRQoOaPz8LxZAbvJq0Wz8y47BMw6";
         String authBasic = Base64.getEncoder().encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
 
@@ -150,30 +183,36 @@ public class PaymentService {
         payload.put("cancelReason", cancelReason);
         payload.put("cancelAmount", cancelAmount);
 
-        // [핵심 수정] 가상계좌(VBANK) 결제 건이라면 사용자가 입력한 진짜 계좌 정보를 넣습니다.
+        // 가상계좌(VBANK) 결제 건 환불 계좌 정보
         if (payment.getPayMethod() == Payment.PayMethod.VBANK && payment.getStatus() == Payment.Status.SUCCESS) {
-
-            if (refundBank == null || refundBank.isEmpty() || refundAccountNumber == null || refundAccountNumber.isEmpty()) {
+            if (refundBank == null || refundAccountNumber == null || refundHolderName == null) {
                 throw new IllegalArgumentException("입금 완료된 가상계좌 취소 시 환불 계좌 정보는 필수입니다.");
             }
-
             Map<String, String> refundAccount = new HashMap<>();
             refundAccount.put("bank", refundBank);
             refundAccount.put("accountNumber", refundAccountNumber);
             refundAccount.put("holderName", refundHolderName);
-
             payload.put("refundReceiveAccount", refundAccount);
         }
 
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(
+            // 한글 깨짐 방지를 위해 byte[]로 받습니다.
+            ResponseEntity<byte[]> response = restTemplate.postForEntity(
                     "https://api.tosspayments.com/v1/payments/" + payment.getPaymentKey() + "/cancel",
                     requestEntity,
-                    String.class
+                    byte[].class
             );
-            log.info("✅ 토스페이먼츠 환불 계좌 반영 결제 취소 성공: {}", response.getBody());
+
+            JsonNode responseNode = objectMapper.readTree(response.getBody());
+
+            // 토스 응답의 cancels 배열 첫 번째 항목에서 transactionKey(pgTid)를 빼옵니다.
+            if (responseNode.has("cancels") && responseNode.get("cancels").isArray()) {
+                return responseNode.get("cancels").get(0).get("transactionKey").asText();
+            }
+            return null;
+
         } catch (Exception e) {
             log.error("토스 결제 취소 API 호출 실패", e);
             throw new RuntimeException("결제망 취소 요청 중 오류가 발생했습니다.");
