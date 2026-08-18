@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** AD "배너 관리" 화면의 목록, 등록, 수정, 삭제, 순서변경, 노출토글을 담당합니다. */
@@ -24,9 +25,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AdminBannerService {
 
-    /** performance-form.html 포스터 업로드와 동일한 정적 리소스 루트(/uploads/**)를 사용합니다. */
     private static final String UPLOAD_DIR = "uploads/banners";
     private static final String UPLOAD_URL_PREFIX = "/uploads/banners/";
+
+    /** 버튼 링크 드롭다운의 "사전 정의 페이지" 옵션입니다. 폼의 select value -> 실제 이동 경로. */
+    public static final Map<String, String> PREDEFINED_LINKS = Map.ofEntries(
+            Map.entry("PERFORMANCES", "/performances"),
+            Map.entry("GENRE_MUSICAL", "/performances?genre=뮤지컬"),
+            Map.entry("GENRE_PLAY", "/performances?genre=연극"),
+            Map.entry("GENRE_CONCERT", "/performances?genre=콘서트"),
+            Map.entry("GENRE_CLASSIC", "/performances?genre=클래식/무용"),
+            Map.entry("GENRE_EXHIBITION", "/performances?genre=전시/행사"),
+            Map.entry("AI_RECOMMEND", "/ai-recommend"),
+            Map.entry("CUSTOMER_CENTER", "/support")
+    );
 
     private final BannerRepository bannerRepository;
     private final PerformanceRepository performanceRepository;
@@ -40,7 +52,7 @@ public class AdminBannerService {
                     Banner b = banners.get(i);
                     return new BannerListItemDto(
                             b.getId(), b.getTitle(), b.getImageUrl(),
-                            b.getPeriodStartText(), b.getPeriodEndText(),
+                            b.getPeriodStart(), b.getPeriodEnd(),
                             b.getDisplayOrder(), b.isActive(),
                             i == 0, i == last,
                             b.getPerformance() != null ? b.getPerformance().getTitle() : null
@@ -60,12 +72,14 @@ public class AdminBannerService {
         dto.setImageUrl(b.getImageUrl());
         dto.setPerformanceId(b.getPerformance() != null ? b.getPerformance().getId() : null);
         dto.setLinkUrl(b.getLinkUrl());
-        dto.setPeriodStartText(b.getPeriodStartText());
-        dto.setPeriodEndText(b.getPeriodEndText());
+        dto.setPeriodStart(b.getPeriodStart());
+        dto.setPeriodEnd(b.getPeriodEnd());
         dto.setBadgeText(b.getBadgeText());
         dto.setButton1Text(b.getButton1Text());
+        dto.setButton1LinkType(inferLinkType(b.getButton1Url()));
         dto.setButton1Url(b.getButton1Url());
         dto.setButton2Text(b.getButton2Text());
+        dto.setButton2LinkType(inferLinkType(b.getButton2Url()));
         dto.setButton2Url(b.getButton2Url());
         dto.setActive(b.isActive());
         return dto;
@@ -79,9 +93,9 @@ public class AdminBannerService {
 
         Banner banner = Banner.create(
                 form.getTitle(), form.getDescription(), imageUrl, performance,
-                form.getLinkUrl(), form.getPeriodStartText(), form.getPeriodEndText(), form.getBadgeText(),
-                blankToDefault(form.getButton1Text(), "실시간 예매하기"), form.getButton1Url(),
-                blankToDefault(form.getButton2Text(), "자세히 보기"), form.getButton2Url(),
+                form.getLinkUrl(), form.getPeriodStart(), form.getPeriodEnd(), form.getBadgeText(),
+                blankToDefault(form.getButton1Text(), "실시간 예매하기"), resolveButtonUrl(form.getButton1LinkType(), form.getButton1Url()),
+                blankToDefault(form.getButton2Text(), "자세히 보기"), resolveButtonUrl(form.getButton2LinkType(), form.getButton2Url()),
                 nextOrder, form.isActive()
         );
         bannerRepository.save(banner);
@@ -97,9 +111,9 @@ public class AdminBannerService {
 
         banner.update(
                 form.getTitle(), form.getDescription(), imageUrl, performance,
-                form.getLinkUrl(), form.getPeriodStartText(), form.getPeriodEndText(), form.getBadgeText(),
-                blankToDefault(form.getButton1Text(), "실시간 예매하기"), form.getButton1Url(),
-                blankToDefault(form.getButton2Text(), "자세히 보기"), form.getButton2Url(),
+                form.getLinkUrl(), form.getPeriodStart(), form.getPeriodEnd(), form.getBadgeText(),
+                blankToDefault(form.getButton1Text(), "실시간 예매하기"), resolveButtonUrl(form.getButton1LinkType(), form.getButton1Url()),
+                blankToDefault(form.getButton2Text(), "자세히 보기"), resolveButtonUrl(form.getButton2LinkType(), form.getButton2Url()),
                 form.isActive()
         );
     }
@@ -120,13 +134,11 @@ public class AdminBannerService {
         banner.toggleActive();
     }
 
-    /** 순서를 한 칸 위(더 앞 슬라이드)로 옮깁니다. */
     @Transactional
     public void moveUp(Long id) {
         swapWithNeighbor(id, -1);
     }
 
-    /** 순서를 한 칸 아래(더 뒤 슬라이드)로 옮깁니다. */
     @Transactional
     public void moveDown(Long id) {
         swapWithNeighbor(id, 1);
@@ -171,7 +183,29 @@ public class AdminBannerService {
         return (value == null || value.isBlank()) ? defaultValue : value;
     }
 
-    /** performance-form.html 포스터 업로드와 동일한 방식으로 파일을 저장합니다. 새 파일이 없으면 기존 URL을 유지합니다. */
+    /** 버튼 링크 드롭다운 선택값을 실제 URL로 변환합니다. AUTO는 null로 저장해 홈 화면에서 연결 공연 기준 자동 계산되게 합니다. */
+    private String resolveButtonUrl(String linkType, String customUrl) {
+        if (linkType == null || linkType.isBlank() || "AUTO".equals(linkType)) {
+            return null;
+        }
+        if ("CUSTOM".equals(linkType)) {
+            return (customUrl == null || customUrl.isBlank()) ? null : customUrl;
+        }
+        return PREDEFINED_LINKS.get(linkType);
+    }
+
+    /** 저장된 button URL을 보고 수정 폼의 드롭다운 선택값을 역으로 추정합니다. */
+    private String inferLinkType(String url) {
+        if (url == null || url.isBlank()) {
+            return "AUTO";
+        }
+        return PREDEFINED_LINKS.entrySet().stream()
+                .filter(e -> e.getValue().equals(url))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse("CUSTOM");
+    }
+
     private String resolveImageUrl(BannerFormDto form) {
         MultipartFile file = form.getBannerFile();
         if (file == null || file.isEmpty()) {

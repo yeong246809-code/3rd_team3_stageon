@@ -74,3 +74,24 @@
 .field--full {
     grid-column: 1 / -1;
 }
+
+.field-hint {
+    font-size: 13px;
+    color: #666;
+    background: #f7f7fb;
+    border: 1px solid #e7e7f0;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 8px 0 16px;
+    line-height: 1.5;
+}
+
+/* 배너 미리보기는 실제 히어로 영역과 동일한 와이드 비율(약 12:5)로 보여줘서
+   업로드 전에 잘림/비율을 미리 확인할 수 있게 합니다. */
+.poster-preview--wide {
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 12 / 5;
+    height: auto;
+    object-fit: cover;
+}

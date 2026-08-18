@@ -2,6 +2,7 @@ package kr.co.stageon.admin.web;
 
 import kr.co.stageon.admin.dto.BannerFormDto;
 import kr.co.stageon.admin.service.AdminBannerService;
+import kr.co.stageon.setting.service.BannerSlideSettingService;
 import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.repository.PerformanceRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +18,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminBannerController {
 
     private final AdminBannerService adminBannerService;
+    private final BannerSlideSettingService bannerSlideSettingService;
     private final PerformanceRepository performanceRepository;
 
     @GetMapping
     public String list(Model model) {
         model.addAttribute("banners", adminBannerService.getList());
+        model.addAttribute("slideIntervalSeconds", bannerSlideSettingService.getSlideIntervalSeconds());
         return "admin/banner-list";
     }
 
@@ -91,6 +94,25 @@ public class AdminBannerController {
     @PostMapping("/{id}/move-down")
     public String moveDown(@PathVariable Long id) {
         adminBannerService.moveDown(id);
+        return "redirect:/admin/banners";
+    }
+
+    /** 배너 슬라이드 자동 전환 간격 설정 화면입니다. */
+    @GetMapping("/settings")
+    public String settingsForm(Model model) {
+        model.addAttribute("slideIntervalSeconds", bannerSlideSettingService.getSlideIntervalSeconds());
+        return "admin/banner-settings";
+    }
+
+    @PostMapping("/settings")
+    public String saveSettings(@RequestParam int slideIntervalSeconds, RedirectAttributes ra) {
+        try {
+            bannerSlideSettingService.updateSlideIntervalSeconds(slideIntervalSeconds);
+            ra.addFlashAttribute("message", "전환 속도가 저장되었습니다.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/banners/settings";
+        }
         return "redirect:/admin/banners";
     }
 
