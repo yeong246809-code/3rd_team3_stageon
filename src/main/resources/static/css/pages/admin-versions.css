@@ -1,0 +1,34 @@
+/* 버전 관리 목록 - 카테고리 뱃지 색상 */
+.version-badge--feature { background: #e8f0ff; color: #2757d6; }
+.version-badge--improvement { background: #e4f7ec; color: #1a8a4a; }
+.version-badge--bugfix { background: #fde8e8; color: #c0392b; }
+
+.version-table .cell-title { font-weight: 700; }
+
+/* 상세보기 모달 */
+.version-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; padding: 24px; }
+.version-modal.is-open { display: flex; }
+.version-modal__backdrop { position: absolute; inset: 0; background: rgba(15,17,26,.65); }
+.version-modal__content {
+    position: relative; z-index: 1; width: min(640px, 92vw); max-height: 85vh;
+    overflow-y: auto; background: var(--canvas); border-radius: 20px; padding: 36px;
+    box-shadow: 0 24px 60px rgba(15,17,26,.35);
+}
+.version-modal__close {
+    position: absolute; top: 14px; right: 16px; width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; border-radius: 50%; background: var(--surface-2);
+    font-size: 20px; line-height: 1; cursor: pointer; color: var(--muted); transition: all .15s ease;
+}
+.version-modal__close:hover { background: var(--surface); color: var(--ink); }
+.version-modal__loading { color: var(--muted); font-size: 13px; padding: 20px 0; }
+.version-modal__eyebrow { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+.version-modal__title { margin: 8px 0 14px; font-size: 20px; font-weight: 800; color: var(--ink); }
+.version-modal__meta { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+.version-modal__desc {
+    padding-top: 18px; border-top: 1px solid var(--line);
+    font-size: 14px; line-height: 1.7; color: var(--ink-2); white-space: pre-line;
+}
+
+/* 등록/수정 폼 */
+.version-form .form-field label { display: block; margin-bottom: 8px; }
