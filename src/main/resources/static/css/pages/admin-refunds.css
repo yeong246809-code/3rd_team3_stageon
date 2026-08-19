@@ -1,0 +1,100 @@
+/* 환불 관리 - 필터 바 */
+.refund-filter__row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 16px; }
+.refund-filter__row select,
+.refund-filter__row input[type="date"],
+.refund-filter__row input[type="text"] {
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;
+}
+
+/* 환불 관리 - 목록 뱃지 */
+.refund-table .cell-title { font-weight: 700; }
+
+.refund-badge--completed { background: #e4f7ec; color: #1a8a4a; }
+.refund-badge--requested { background: #fff6e0; color: #b5850c; }
+.refund-badge--failed { background: #fde8e8; color: #c0392b; }
+
+.refund-badge--admin_cancel { background: #fde8e8; color: #c0392b; }
+.refund-badge--user_cancel { background: #e8f0ff; color: #2757d6; }
+.refund-badge--system { background: #eef0f4; color: #5b6472; }
+.refund-badge--manual { background: #f3e8ff; color: #7b2fd6; }
+
+/* 페이지네이션 */
+.pager { display: flex; gap: 6px; padding: 16px; justify-content: center; }
+.pager a {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px; font-size: 13px;
+    color: var(--muted); text-decoration: none;
+}
+.pager a.is-active { background: var(--ink); color: #fff; font-weight: 700; }
+
+/* 모달 공통 (버전 관리 패턴 재사용) */
+.refund-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; padding: 24px; }
+.refund-modal.is-open { display: flex; }
+.refund-modal__backdrop { position: absolute; inset: 0; background: rgba(15,17,26,.65); }
+.refund-modal__content {
+    position: relative; z-index: 1; width: min(640px, 92vw); max-height: 85vh;
+    overflow-y: auto; background: var(--canvas); border-radius: 20px; padding: 36px;
+    box-shadow: 0 24px 60px rgba(15,17,26,.35);
+}
+.refund-modal__close {
+    position: absolute; top: 14px; right: 16px; width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; border-radius: 50%; background: var(--surface-2);
+    font-size: 20px; line-height: 1; cursor: pointer; color: var(--muted); transition: all .15s ease;
+}
+.refund-modal__close:hover { background: var(--surface); color: var(--ink); }
+.refund-modal__loading { color: var(--muted); font-size: 13px; padding: 20px 0; }
+.refund-modal__eyebrow { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+.refund-modal__title { margin: 8px 0 14px; font-size: 20px; font-weight: 800; color: var(--ink); }
+.refund-modal__meta { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+.refund-modal__hint { font-size: 13px; color: var(--muted); margin: -6px 0 18px; }
+.refund-modal__grid {
+    display: grid; grid-template-columns: 130px 1fr; row-gap: 10px; column-gap: 12px;
+    font-size: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--line);
+}
+.refund-modal__grid dt { color: var(--muted); }
+.refund-modal__grid dd { margin: 0; color: var(--ink); font-weight: 600; }
+.refund-modal__desc { padding-top: 16px; font-size: 14px; line-height: 1.7; color: var(--ink-2); white-space: pre-line; }
+
+/* 수동 환불 폼 */
+.refund-form .form-field { margin-bottom: 16px; }
+.refund-form .form-field label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.refund-form .form-field input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;
+}
+
+/* 수동 환불 모달 - 회원 검색/선택 단계 */
+.manual-refund__step > label {
+    display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; color: var(--ink);
+}
+.manual-refund__step > input[type="text"] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;
+}
+.manual-refund__member-results,
+.manual-refund__payment-results {
+    display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 260px; overflow-y: auto;
+}
+.manual-refund__empty { font-size: 13px; color: var(--muted); padding: 12px 0; }
+
+.manual-refund__member-item,
+.manual-refund__payment-item {
+    display: flex; flex-direction: column; gap: 2px; text-align: left;
+    padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+.manual-refund__member-item:hover,
+.manual-refund__payment-item:hover { border-color: var(--brand); background: var(--surface-2); }
+.manual-refund__member-item strong { font-size: 14px; color: var(--ink); }
+.manual-refund__member-item span { font-size: 12px; color: var(--muted); }
+
+.manual-refund__payment-item__title { font-size: 14px; font-weight: 700; color: var(--ink); }
+.manual-refund__payment-item__meta { display: flex; gap: 12px; font-size: 12px; color: var(--muted); }
+
+.manual-refund__selected-member,
+.manual-refund__selected-payment { margin-bottom: 12px; }
+.manual-refund__member-badge {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 12px 14px; border-radius: 10px; background: var(--surface-2);
+}
+.manual-refund__member-badge strong { font-size: 14px; color: var(--ink); }
+.manual-refund__member-badge span { font-size: 12px; color: var(--muted); }

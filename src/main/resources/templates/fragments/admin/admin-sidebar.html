@@ -12,22 +12,36 @@
   <nav class="admin-nav" aria-label="관리자 메뉴">
     <a th:href="@{/admin/dashboard}" href="/admin/dashboard"
        th:classappend="${currentUri != null and currentUri.startsWith('/admin/dashboard')} ? 'is-active'">▦<span>통합 대시보드</span></a>
-    <a th:href="@{/admin/performances}" href="/admin/performances"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/performances')} ? 'is-active'">◫<span>공연 등록·수정</span></a>
-    <a th:href="@{/admin/venues}" href="/admin/venues"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/venues')} ? 'is-active'">⌂<span>공연장·좌석 관리</span></a>
-    <a th:href="@{/admin/schedules}" href="/admin/schedules"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/schedules')} ? 'is-active'">◷<span>일정·회차 관리</span></a>
-    <a th:href="@{/admin/seat-inventory}" href="/admin/seat-inventory"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/seat-inventory')} ? 'is-active'">▥<span>좌석 재고·선점 현황</span></a>
-    <a th:href="@{/admin/orders}" href="/admin/orders"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/orders')} ? 'is-active'">◎<span>예매·주문 조회</span></a>
-    <a th:href="@{/admin/members}" href="/admin/members"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/members')} ? 'is-active'">☺<span>회원 관리</span></a>
-    <a th:href="@{/admin/banners}" href="/admin/banners"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/banners')} ? 'is-active'">▤<span>배너 관리</span></a>
-    <a th:href="@{/admin/versions}" href="/admin/versions"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/versions')} ? 'is-active'">☰<span>버전 관리</span></a>
+
+    <div class="admin-nav__group">
+      <span class="admin-nav__group-label">공연 운영</span>
+      <a th:href="@{/admin/performances}" href="/admin/performances"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/performances')} ? 'is-active'">◫<span>공연 등록·수정</span></a>
+      <a th:href="@{/admin/venues}" href="/admin/venues"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/venues')} ? 'is-active'">⌂<span>공연장·좌석 관리</span></a>
+      <a th:href="@{/admin/schedules}" href="/admin/schedules"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/schedules')} ? 'is-active'">◷<span>일정·회차 관리</span></a>
+      <a th:href="@{/admin/seat-inventory}" href="/admin/seat-inventory"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/seat-inventory')} ? 'is-active'">▥<span>좌석 재고·선점 현황</span></a>
+    </div>
+
+    <div class="admin-nav__group">
+      <span class="admin-nav__group-label">예매·정산</span>
+      <a th:href="@{/admin/orders}" href="/admin/orders"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/orders')} ? 'is-active'">◎<span>예매·주문 조회</span></a>
+      <a th:href="@{/admin/refunds}" href="/admin/refunds"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/refunds')} ? 'is-active'">↺<span>환불 관리</span></a>
+    </div>
+
+    <div class="admin-nav__group">
+      <span class="admin-nav__group-label">회원·콘텐츠</span>
+      <a th:href="@{/admin/members}" href="/admin/members"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/members')} ? 'is-active'">☺<span>회원 관리</span></a>
+      <a th:href="@{/admin/banners}" href="/admin/banners"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/banners')} ? 'is-active'">▤<span>배너 관리</span></a>
+      <a th:href="@{/admin/versions}" href="/admin/versions"
+         th:classappend="${currentUri != null and currentUri.startsWith('/admin/versions')} ? 'is-active'">☰<span>버전 관리</span></a>
+    </div>
   </nav>
 
   <div class="admin-profile">
