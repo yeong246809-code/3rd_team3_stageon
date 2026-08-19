@@ -97,13 +97,6 @@ public class AdminBannerController {
         return "redirect:/admin/banners";
     }
 
-    /** 배너 슬라이드 자동 전환 간격 설정 화면입니다. */
-    @GetMapping("/settings")
-    public String settingsForm(Model model) {
-        model.addAttribute("slideIntervalSeconds", bannerSlideSettingService.getSlideIntervalSeconds());
-        return "admin/banner-settings";
-    }
-
     @PostMapping("/settings")
     public String saveSettings(@RequestParam int slideIntervalSeconds, RedirectAttributes ra) {
         try {
@@ -111,7 +104,6 @@ public class AdminBannerController {
             ra.addFlashAttribute("message", "전환 속도가 저장되었습니다.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/banners/settings";
         }
         return "redirect:/admin/banners";
     }

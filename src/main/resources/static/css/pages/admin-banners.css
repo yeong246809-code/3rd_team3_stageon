@@ -75,23 +75,174 @@
     grid-column: 1 / -1;
 }
 
-.field-hint {
-    font-size: 13px;
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 12, 20, 0.6);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: modal-fade-in 0.15s ease-out;
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+@keyframes modal-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 420px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(15, 15, 30, 0.2), 0 4px 12px rgba(0, 0, 0, 0.08);
+    animation: modal-pop-in 0.18s ease-out;
+}
+
+@keyframes modal-pop-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 22px 24px;
+    border-bottom: 1px solid #eeeef2;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    color: #16161f;
+    letter-spacing: -0.2px;
+}
+
+.modal-close {
+    border: none;
+    background: #f1f1f4;
+    font-size: 18px;
+    line-height: 1;
     color: #666;
-    background: #f7f7fb;
-    border: 1px solid #e7e7f0;
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin: 8px 0 16px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: #e4e4ea;
+}
+
+.modal-body {
+    padding: 22px 24px 24px;
+}
+
+.modal-desc {
+    margin: 0 0 20px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #74748a;
+}
+
+.modal-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2b2b36;
+    margin-bottom: 8px;
+}
+
+.modal-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fafafc;
+    border: 1.5px solid #e2e2e8;
+    border-radius: 10px;
+    padding: 6px 8px 6px 14px;
+    transition: border-color 0.15s;
+}
+
+.modal-input-group:focus-within {
+    border-color: #9a9aa8;
+}
+
+.modal-input-group .input {
+    width: 70px;
+    text-align: right;
+    font-size: 18px;
+    font-weight: 800;
+    color: #16161f;
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+}
+
+.modal-input-group .input:focus {
+    outline: none;
+}
+
+.modal-input-unit {
+    font-size: 14px;
+    color: #55556a;
+    font-weight: 700;
+    padding-right: 4px;
+}
+
+.modal-hint {
+    margin: 10px 0 0;
+    font-size: 12px;
+    color: #9a9aa8;
     line-height: 1.5;
 }
 
-/* 배너 미리보기는 실제 히어로 영역과 동일한 와이드 비율(약 12:5)로 보여줘서
-   업로드 전에 잘림/비율을 미리 확인할 수 있게 합니다. */
-.poster-preview--wide {
-    width: 100%;
-    max-width: 480px;
-    aspect-ratio: 12 / 5;
-    height: auto;
-    object-fit: cover;
+.modal-hint-default {
+    color: #c7c7d2;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #f4f0f1;
+}
+
+.modal-actions .btn {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid #e5e5eb;
+    background: #fff;
+    color: #55556a;
+}
+
+.modal-actions .btn:hover {
+    background: #f6f6f9;
+}
+
+.modal-actions .btn--dark {
+    border: none;
+    background: #16161f;
+    color: #fff;
+}
+
+.modal-actions .btn--dark:hover {
+    background: #2c2c3a;
 }
