@@ -30,4 +30,16 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     /** AD09 상세/취소 - 예매의 성공(SUCCESS) 결제 1건 조회 */
     Optional<Payment> findFirstByReservationIdAndStatusOrderByRequestedAtDesc(Long reservationId, Payment.Status status);
+
+    /** 환불 관리 - 수동 환불 대상 선택용, 특정 회원의 특정 상태 결제 목록(예매·공연정보 포함)입니다. */
+    @Query("""
+            SELECT p FROM Payment p
+            JOIN FETCH p.reservation r
+            JOIN FETCH r.schedule s
+            JOIN FETCH s.performance perf
+            WHERE r.member.id = :memberId AND p.status = :status
+            ORDER BY p.requestedAt DESC
+            """)
+    List<Payment> findByMemberIdAndStatusOrderByRequestedAtDesc(@Param("memberId") Long memberId,
+                                                                @Param("status") Payment.Status status);
 }

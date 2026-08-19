@@ -115,3 +115,21 @@
 .admin-profile__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .admin-profile__info strong { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-profile__info span { font-size: 12px; font-weight: 500; color: rgba(255,255,255,.55); }
+
+/* 사이드바 메뉴 그룹핑 - 공연 운영 / 예매·정산 / 회원·콘텐츠 */
+.admin-nav__group {
+    display: flex;
+    flex-direction: column;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+.admin-nav__group:first-of-type { margin-top: 10px; }
+.admin-nav__group-label {
+    padding: 0 20px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: rgba(255,255,255,.42);
+    text-transform: uppercase;
+}

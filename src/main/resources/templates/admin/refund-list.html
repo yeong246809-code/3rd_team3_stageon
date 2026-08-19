@@ -1,0 +1,339 @@
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 환불 관리</title>
+    <meta name="_csrf" th:content="${_csrf.token}" content="">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" content="">
+    <meta name="_csrf_parameter" th:content="${_csrf.parameterName}" content="">
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-refunds.css}" href="/css/pages/admin-refunds.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>환불 관리</h1>
+                    <p>결제 취소·환불 이력을 조회하고, 예매 취소 없이 결제 건 단위로 수동 환불을 처리합니다.</p>
+                </div>
+                <div class="cluster">
+                    <button type="button" class="btn btn--dark" onclick="openManualRefundModal()">수동 환불 처리</button>
+                </div>
+            </header>
+
+            <div class="alert alert--success" th:if="${message}" th:text="${message}"></div>
+            <div class="alert alert--error" th:if="${error}" th:text="${error}"></div>
+
+            <form class="card refund-filter" method="get" th:action="@{/admin/refunds}">
+                <div class="refund-filter__row">
+                    <select name="status">
+                        <option value="">전체 상태</option>
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+                                th:selected="${s == selectedStatus}"></option>
+                    </select>
+                    <select name="category">
+                        <option value="">전체 구분</option>
+                        <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"
+                                th:selected="${c == selectedCategory}"></option>
+                    </select>
+                    <input type="date" name="fromDate" th:value="${fromDate}">
+                    <span>~</span>
+                    <input type="date" name="toDate" th:value="${toDate}">
+                    <input type="text" name="keyword" placeholder="예매번호 / 회원명" th:value="${keyword}">
+                    <button type="submit" class="btn btn--sm">검색</button>
+                    <a class="btn btn--sm btn--ghost" th:href="@{/admin/refunds}">초기화</a>
+                </div>
+            </form>
+
+            <div class="card">
+                <table class="admin-table refund-table">
+                    <thead>
+                    <tr>
+                        <th>환불일시</th>
+                        <th>예매번호</th>
+                        <th>회원</th>
+                        <th>공연명</th>
+                        <th>환불금액</th>
+                        <th>구분</th>
+                        <th>사유</th>
+                        <th>상태</th>
+                        <th>관리</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(refunds.content)}">
+                        <td colspan="9" class="empty-row">조회된 환불 이력이 없습니다.</td>
+                    </tr>
+                    <tr th:each="rf : ${refunds.content}">
+                        <td th:text="${#temporals.format(rf.requestedAt(), 'yyyy.MM.dd HH:mm')}">2026.01.01 12:00</td>
+                        <td class="cell-title" th:text="${rf.bookingNumber()}">STG-000000</td>
+                        <td th:text="${rf.maskedMemberName()}">홍*</td>
+                        <td th:text="${rf.performanceTitle()}">공연명</td>
+                        <td th:text="${#numbers.formatDecimal(rf.amount(), 0, 'COMMA', 0, 'POINT')} + '원'">0원</td>
+                        <td>
+                            <span class="badge refund-badge--admin_cancel" th:if="${rf.category().name() == 'ADMIN_CANCEL'}">강제취소</span>
+                            <span class="badge refund-badge--user_cancel" th:if="${rf.category().name() == 'USER_CANCEL'}">회원취소</span>
+                            <span class="badge refund-badge--system" th:if="${rf.category().name() == 'SYSTEM'}">시스템</span>
+                            <span class="badge refund-badge--manual" th:if="${rf.category().name() == 'MANUAL'}">수동환불</span>
+                        </td>
+                        <td th:text="${rf.reason() != null ? rf.reason() : '-'}">-</td>
+                        <td>
+                            <span class="badge refund-badge--completed" th:if="${rf.status().name() == 'COMPLETED'}">완료</span>
+                            <span class="badge refund-badge--requested" th:if="${rf.status().name() == 'REQUESTED'}">요청</span>
+                            <span class="badge refund-badge--failed" th:if="${rf.status().name() == 'FAILED'}">실패</span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn--sm btn--view js-refund-detail" th:attr="data-id=${rf.refundId()}">상세보기</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="pager" th:if="${refunds.totalPages > 1}">
+                    <a th:each="p : ${#numbers.sequence(1, refunds.totalPages)}"
+                       th:href="@{/admin/refunds(page=${p}, status=${selectedStatus}, category=${selectedCategory}, keyword=${keyword}, fromDate=${fromDate}, toDate=${toDate})}"
+                       th:text="${p}"
+                       th:classappend="${p == currentPage} ? 'is-active'">1</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- 환불 상세 모달 -->
+<div class="refund-modal" id="refundModal">
+    <div class="refund-modal__backdrop" onclick="closeRefundModal()"></div>
+    <div class="refund-modal__content" id="refundModalContent">
+        <button type="button" class="refund-modal__close" onclick="closeRefundModal()">&times;</button>
+        <div id="refundModalBody">
+            <div class="refund-modal__loading">불러오는 중…</div>
+        </div>
+    </div>
+</div>
+
+<!-- 수동 환불 처리 모달: 회원 검색 -> 선택 -> 환불 가능 결제 선택 -> 금액/사유 입력 -->
+<div class="refund-modal" id="manualRefundModal">
+    <div class="refund-modal__backdrop" onclick="closeManualRefundModal()"></div>
+    <div class="refund-modal__content" id="manualRefundModalContent">
+        <button type="button" class="refund-modal__close" onclick="closeManualRefundModal()">&times;</button>
+        <h3 class="refund-modal__title">수동 환불 처리</h3>
+        <p class="refund-modal__hint">예매 취소 없이 결제 건 단위로 부분/전액 환불을 처리합니다.</p>
+
+        <!-- 1단계: 회원 검색 -->
+        <div class="manual-refund__step" id="memberSearchStep">
+            <label for="memberKeyword">회원 검색 (이름 또는 이메일)</label>
+            <input type="text" id="memberKeyword" placeholder="예: 홍길동 / hong@example.com" autocomplete="off">
+            <div class="manual-refund__member-results" id="memberSearchResults"></div>
+        </div>
+
+        <!-- 2단계: 선택된 회원 + 결제 목록 -->
+        <div class="manual-refund__step" id="paymentSelectStep" style="display:none;">
+            <div class="manual-refund__selected-member" id="selectedMemberInfo"></div>
+            <button type="button" class="btn--sm btn--ghost" onclick="resetMemberSelection()">다른 회원 선택</button>
+            <div class="manual-refund__payment-results" id="memberPaymentResults"></div>
+        </div>
+
+        <!-- 3단계: 환불 금액/사유 입력 -->
+        <form method="post" th:action="@{/admin/refunds/manual}" class="refund-form manual-refund__step" id="refundFormStep" style="display:none;">
+            <input type="hidden" name="redirectQuery" th:value="${'status=' + (selectedStatus != null ? selectedStatus : '') + '&category=' + (selectedCategory != null ? selectedCategory : '') + '&keyword=' + (keyword != null ? keyword : '') + '&page=' + currentPage}">
+            <input type="hidden" name="paymentId" id="selectedPaymentId">
+            <div class="manual-refund__selected-payment" id="selectedPaymentInfo"></div>
+            <div class="form-field">
+                <label for="amount">환불 금액(원)</label>
+                <input type="number" id="amount" name="amount" required min="1" step="1">
+            </div>
+            <div class="form-field">
+                <label for="reason">환불 사유</label>
+                <input type="text" id="reason" name="reason" maxlength="200" required>
+            </div>
+            <div class="cluster">
+                <button type="submit" class="btn btn--dark">환불 처리</button>
+                <button type="button" class="btn--sm btn--ghost" onclick="backToPaymentSelect()">결제 건 다시 선택</button>
+                <button type="button" class="btn btn--ghost" onclick="closeManualRefundModal()">취소</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /* Thymeleaf 서버 URL 변수 주입 전용 스크립트입니다. 순수 JS 리터럴은
+       아래 일반 <script> 블록에 작성합니다. (th:inline="javascript" + [[...]] 충돌 방지) */
+    window.__REFUND_BASE_URL__ = /*[[@{/admin/refunds}]]*/ '/admin/refunds';
+</script>
+<script th:inline="none">
+    const refundBaseUrl = window.__REFUND_BASE_URL__;
+
+    document.querySelectorAll('.js-refund-detail').forEach(btn => {
+        btn.addEventListener('click', () => openRefundDetail(btn.dataset.id));
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeRefundModal(); closeManualRefundModal(); }
+    });
+
+    function closeRefundModal() {
+        document.getElementById('refundModal').classList.remove('is-open');
+    }
+    function openManualRefundModal() {
+        resetManualRefundModal();
+        document.getElementById('manualRefundModal').classList.add('is-open');
+    }
+    function closeManualRefundModal() {
+        document.getElementById('manualRefundModal').classList.remove('is-open');
+        resetManualRefundModal();
+    }
+    function resetManualRefundModal() {
+        document.getElementById('memberSearchStep').style.display = '';
+        document.getElementById('paymentSelectStep').style.display = 'none';
+        document.getElementById('refundFormStep').style.display = 'none';
+        document.getElementById('memberKeyword').value = '';
+        document.getElementById('memberSearchResults').innerHTML = '';
+        document.getElementById('memberPaymentResults').innerHTML = '';
+        document.getElementById('selectedMemberInfo').innerHTML = '';
+        document.getElementById('selectedPaymentInfo').innerHTML = '';
+        document.getElementById('selectedPaymentId').value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('reason').value = '';
+    }
+    function resetMemberSelection() {
+        document.getElementById('memberSearchStep').style.display = '';
+        document.getElementById('paymentSelectStep').style.display = 'none';
+        document.getElementById('refundFormStep').style.display = 'none';
+    }
+    function backToPaymentSelect() {
+        document.getElementById('paymentSelectStep').style.display = '';
+        document.getElementById('refundFormStep').style.display = 'none';
+    }
+
+    function statusLabel(s) {
+        return {COMPLETED: '완료', REQUESTED: '요청', FAILED: '실패'}[s] || s;
+    }
+    function statusBadgeClass(s) {
+        return {COMPLETED: 'refund-badge--completed', REQUESTED: 'refund-badge--requested', FAILED: 'refund-badge--failed'}[s] || '';
+    }
+    function categoryLabel(c) {
+        return {ADMIN_CANCEL: '강제취소', USER_CANCEL: '회원취소', SYSTEM: '시스템', MANUAL: '수동환불'}[c] || c;
+    }
+    function categoryBadgeClass(c) {
+        return {ADMIN_CANCEL: 'refund-badge--admin_cancel', USER_CANCEL: 'refund-badge--user_cancel', SYSTEM: 'refund-badge--system', MANUAL: 'refund-badge--manual'}[c] || '';
+    }
+    function payMethodLabel(m) {
+        return {CARD: '카드', VBANK: '가상계좌', BANK: '무통장입금', MOBILE: '모바일'}[m] || m;
+    }
+    function formatMoney(n) {
+        return (n || 0).toLocaleString('ko-KR') + '원';
+    }
+
+    function openRefundDetail(id) {
+        document.getElementById('refundModalBody').innerHTML = '<div class="refund-modal__loading">불러오는 중…</div>';
+        document.getElementById('refundModal').classList.add('is-open');
+
+        fetch(refundBaseUrl + '/' + id + '/detail')
+            .then(res => res.json())
+            .then(d => {
+                document.getElementById('refundModalBody').innerHTML = `
+              <div class="refund-modal__head">
+                <div class="refund-modal__eyebrow">${d.bookingNumber}</div>
+                <h3 class="refund-modal__title">${d.performanceTitle}</h3>
+                <div class="refund-modal__meta">
+                  <span class="badge ${categoryBadgeClass(d.category)}">${categoryLabel(d.category)}</span>
+                  <span class="badge ${statusBadgeClass(d.status)}">${statusLabel(d.status)}</span>
+                  <span>${d.maskedMemberName}</span>
+                </div>
+              </div>
+              <dl class="refund-modal__grid">
+                <dt>결제 ID</dt><dd>${d.paymentId}</dd>
+                <dt>결제수단</dt><dd>${payMethodLabel(d.payMethod)}</dd>
+                <dt>결제금액</dt><dd>${formatMoney(d.paymentAmount)}</dd>
+                <dt>결제 누적취소액</dt><dd>${formatMoney(d.paymentCancelAmount)}</dd>
+                <dt>이번 환불금액</dt><dd>${formatMoney(d.amount)}</dd>
+                <dt>PG 거래번호</dt><dd>${d.pgTid || '-'}</dd>
+                <dt>요청일시</dt><dd>${d.requestedAt ? d.requestedAt.replace('T', ' ') : '-'}</dd>
+                <dt>처리일시</dt><dd>${d.processedAt ? d.processedAt.replace('T', ' ') : '-'}</dd>
+              </dl>
+              <div class="refund-modal__desc">${d.reason || '사유가 입력되지 않았습니다.'}</div>
+            `;
+            });
+    }
+
+    /* 회원 검색 자동완성 (디바운스 300ms) */
+    let memberSearchTimer = null;
+    document.getElementById('memberKeyword').addEventListener('input', (e) => {
+        clearTimeout(memberSearchTimer);
+        const keyword = e.target.value.trim();
+        const resultBox = document.getElementById('memberSearchResults');
+        if (keyword.length < 1) {
+            resultBox.innerHTML = '';
+            return;
+        }
+        memberSearchTimer = setTimeout(() => {
+            fetch(refundBaseUrl + '/members/search?keyword=' + encodeURIComponent(keyword))
+                .then(res => res.json())
+                .then(members => {
+                    if (members.length === 0) {
+                        resultBox.innerHTML = '<div class="manual-refund__empty">검색 결과가 없습니다.</div>';
+                        return;
+                    }
+                    resultBox.innerHTML = members.map(m => `
+                        <button type="button" class="manual-refund__member-item" onclick='selectMember(${m.memberId}, ${JSON.stringify(m.name)}, ${JSON.stringify(m.email)})'>
+                            <strong>${m.name}</strong>
+                            <span>${m.email}</span>
+                            <span>${m.maskedPhone || ''}</span>
+                        </button>
+                    `).join('');
+                });
+        }, 300);
+    });
+
+    function selectMember(memberId, name, email) {
+        document.getElementById('selectedMemberInfo').innerHTML = `
+            <div class="manual-refund__member-badge"><strong>${name}</strong><span>${email}</span></div>
+        `;
+        document.getElementById('memberSearchStep').style.display = 'none';
+        document.getElementById('paymentSelectStep').style.display = '';
+        document.getElementById('refundFormStep').style.display = 'none';
+
+        const paymentBox = document.getElementById('memberPaymentResults');
+        paymentBox.innerHTML = '<div class="refund-modal__loading">불러오는 중…</div>';
+
+        fetch(refundBaseUrl + '/members/' + memberId + '/payments')
+            .then(res => res.json())
+            .then(payments => {
+                if (payments.length === 0) {
+                    paymentBox.innerHTML = '<div class="manual-refund__empty">환불 가능한 결제 건이 없습니다.</div>';
+                    return;
+                }
+                paymentBox.innerHTML = payments.map(p => `
+                    <button type="button" class="manual-refund__payment-item" onclick='selectPayment(${JSON.stringify(p)})'>
+                        <div class="manual-refund__payment-item__title">${p.bookingNumber} · ${p.performanceTitle}</div>
+                        <div class="manual-refund__payment-item__meta">
+                            <span>결제금액 ${formatMoney(p.amount)}</span>
+                            <span>환불가능액 ${formatMoney(p.refundableAmount)}</span>
+                        </div>
+                    </button>
+                `).join('');
+            });
+    }
+
+    function selectPayment(p) {
+        document.getElementById('selectedPaymentId').value = p.paymentId;
+        document.getElementById('selectedPaymentInfo').innerHTML = `
+            <div class="manual-refund__member-badge">
+                <strong>${p.bookingNumber} · ${p.performanceTitle}</strong>
+                <span>결제 ID ${p.paymentId} · 환불가능액 ${formatMoney(p.refundableAmount)}</span>
+            </div>
+        `;
+        document.getElementById('amount').max = p.refundableAmount;
+        document.getElementById('amount').value = p.refundableAmount;
+        document.getElementById('paymentSelectStep').style.display = 'none';
+        document.getElementById('refundFormStep').style.display = '';
+    }
+</script>
+</body>
+</html>
