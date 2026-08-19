@@ -50,13 +50,32 @@
                               th:text="|총 ${#lists.size(reservations)}건|">총 0건</span>
                     </div>
 
-                    <!-- 예매 목록 -->
-                    <div class="reservation-list"
-                         th:if="${!#lists.isEmpty(reservations)}">
+                    <!-- 💡 탭 및 정렬 툴바 추가 -->
+                    <div class="reservation-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #eee; padding-bottom: 12px;">
+                        <ul id="statusTabs" style="display: flex; gap: 20px; list-style: none; padding: 0; margin: 0; font-size: 16px;">
+                            <li class="active" data-tab="ALL" style="font-weight: bold; color: #5a28ff; cursor: pointer;">전체</li>
+                            <li data-tab="RESERVED" style="color: #888; cursor: pointer;">예매 완료</li>
+                            <li data-tab="CANCELLED" style="color: #888; cursor: pointer;">예매 취소</li>
+                        </ul>
+                        <select id="sortSelect" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            <option value="created_desc">예매일자 최신순</option>
+                            <option value="created_asc">예매일자 과거순</option>
+                            <option value="starts_asc">공연일자 빠른순</option>
+                            <option value="starts_desc">공연일자 늦은순</option>
+                        </select>
+                    </div>
 
+                    <!-- 예매 목록 -->
+                    <!-- 🚨 JS에서 제어할 수 있도록 th:if 제거하고 id 추가 -->
+                    <div class="reservation-list" id="reservationList">
+
+                        <!-- 💡 카드에 data- 속성 추가 -->
                         <a class="reservation-card"
                            th:each="reservation : ${reservations}"
-                           th:href="@{/mypage/reservations/{id}(id=${reservation.id})}">
+                           th:href="@{/mypage/reservations/{id}(id=${reservation.id})}"
+                           th:attr="data-status=${reservation.status}, 
+                                    data-created-at=${reservation.reservedAt},
+                                    data-starts-at=${reservation.startsAt}">
 
                             <!-- 티켓 표시 -->
                             <div class="reservation-ticket" aria-hidden="true">
@@ -68,12 +87,14 @@
                             <div class="reservation-card__body">
                                 <div class="reservation-card__meta">
                                     <span class="reservation-status"
+                                          th:with="isPassed=${reservation.startsAt != null and reservation.startsAt.isBefore(#temporals.createNow())}"
                                           th:classappend="${reservation.status == 'CANCELLED'} ? ' reservation-status--cancelled' :
                                                          (${reservation.status == 'PENDING'} ? ' reservation-status--pending' :
-                                                         (${reservation.status == 'EXPIRED'} ? ' reservation-status--expired' : ''))"
+                                                         (${reservation.status == 'EXPIRED' or (reservation.status == 'RESERVED' and isPassed)} ? ' reservation-status--cancelled' : ''))"
                                           th:text="${reservation.status == 'CANCELLED'} ? '예매 취소' :
                                                    (${reservation.status == 'PENDING'} ? '결제 대기' :
-                                                   (${reservation.status == 'EXPIRED'} ? '결제 만료' : '예매 완료'))">
+                                                   (${reservation.status == 'EXPIRED'} ? '결제 만료' :
+                                                   (${reservation.status == 'RESERVED' and isPassed} ? '공연 종료' : '예매 완료')))">
                                         예매 완료
                                     </span>
 
@@ -98,14 +119,15 @@
                         </a>
                     </div>
 
-                    <!-- 빈 목록 -->
-                    <div class="reservation-empty"
-                         th:if="${#lists.isEmpty(reservations)}">
+                    <!-- 빈 목록 (JS에서 display 제어) -->
+                    <div class="reservation-empty" id="reservationEmpty" style="display: none;">
                         <div class="reservation-empty__icon" aria-hidden="true">🎫</div>
-                        <strong>아직 예매 내역이 없습니다.</strong>
+                        <strong>예매 내역이 없습니다.</strong>
                         <p>관심 있는 공연을 찾아 첫 예매를 시작해 보세요.</p>
                         <a th:href="@{/performances}" href="/performances">공연 둘러보기</a>
                     </div>
+
+                    <div th:replace="~{fragments/common/pagination :: pagination}"></div>
 
                 </section>
             </section>
@@ -120,5 +142,150 @@
 <!-- 플로팅 버튼 -->
 <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll('#statusTabs li');
+        const sortSelect = document.getElementById('sortSelect');
+        const listContainer = document.getElementById('reservationList');
+        const emptyState = document.getElementById('reservationEmpty');
+        const countSpan = document.getElementById('totalCount');
+        const paginationContainer = document.getElementById('commonPagination'); // 공통 프래그먼트 영역
+
+        const allCards = Array.from(document.querySelectorAll('.reservation-card'));
+
+        let currentTab = 'ALL';
+        let currentSort = 'created_desc';
+
+        // 💡 페이징 관련 변수 추가
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
+        function renderCards() {
+            // 1. 탭 필터링
+            let filtered = allCards.filter(card => {
+                const status = card.dataset.status;
+                if (currentTab === 'RESERVED') return status === 'RESERVED' || status === 'PENDING';
+                if (currentTab === 'CANCELLED') return status === 'CANCELLED' || status === 'EXPIRED';
+                return true;
+            });
+
+            // 2. 정렬 적용
+            filtered.sort((a, b) => {
+                const now = new Date(); // 현재 시간
+                const startsAtA = new Date(a.dataset.startsAt);
+                const startsAtB = new Date(b.dataset.startsAt);
+
+                // 💡 예매완료 탭에서는 관람일자가 지난 공연을 무조건 뒤로 보냄
+                if (currentTab === 'RESERVED') {
+                    const isPassedA = startsAtA < now;
+                    const isPassedB = startsAtB < now;
+
+                    if (isPassedA && !isPassedB) return 1;  // A만 지났으면 A를 뒤로
+                    if (!isPassedA && isPassedB) return -1; // B만 지났으면 B를 뒤로
+                    // 둘 다 지났거나 둘 다 안 지났으면 아래의 일반 정렬 로직을 따름
+                }
+
+                // 💡 사용자가 선택한 정렬 기준 적용
+                const dateA = new Date(a.dataset[currentSort.startsWith('created') ? 'createdAt' : 'startsAt']);
+                const dateB = new Date(b.dataset[currentSort.startsWith('created') ? 'createdAt' : 'startsAt']);
+
+                return currentSort.endsWith('desc') ? dateB - dateA : dateA - dateB;
+            });
+
+            // 3. 💡 페이징 적용 (5개씩 자르기)
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages || 1; // 탭 전환 시 빈 페이지 방지
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedCards = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+            // 4. 화면 업데이트
+            listContainer.innerHTML = '';
+
+            if (filtered.length === 0) {
+                listContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+                if(paginationContainer) paginationContainer.innerHTML = ''; // 페이징 숨김
+            } else {
+                listContainer.style.display = 'block';
+                emptyState.style.display = 'none';
+                paginatedCards.forEach(card => listContainer.appendChild(card));
+                renderPagination(totalPages); // 페이징 버튼 그리기
+            }
+
+            // 카운트 갱신
+            countSpan.textContent = `총 ${filtered.length}건`;
+        }
+
+        // 💡 5. 페이지네이션 버튼 렌더링 함수
+        function renderPagination(totalPages) {
+            if (!paginationContainer) return;
+            paginationContainer.innerHTML = '';
+
+            if (totalPages <= 1) return; // 1페이지 이하면 버튼 생성 안 함
+
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.textContent = i;
+
+                // 공통 버튼 기본 스타일
+                btn.style.padding = '6px 12px';
+                btn.style.border = '1px solid #ddd';
+                btn.style.borderRadius = '4px';
+                btn.style.background = '#fff';
+                btn.style.cursor = 'pointer';
+                btn.style.fontSize = '14px';
+
+                // 현재 페이지 하이라이트 스타일
+                if (i === currentPage) {
+                    btn.style.background = '#5a28ff';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#5a28ff';
+                }
+
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderCards();
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); // 페이지 이동 시 맨 위로
+                });
+
+                li.appendChild(btn);
+                paginationContainer.appendChild(li);
+            }
+        }
+
+        // 탭 클릭 이벤트 (탭을 바꾸면 1페이지로 초기화)
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                tabs.forEach(t => {
+                    t.style.fontWeight = 'normal';
+                    t.style.color = '#888';
+                });
+                e.target.style.fontWeight = 'bold';
+                e.target.style.color = '#5a28ff';
+
+                currentTab = e.target.dataset.tab;
+                currentPage = 1; // 💡 탭 변경 시 1페이지로 리셋
+                renderCards();
+            });
+        });
+
+        // 정렬 조건 변경 이벤트
+        sortSelect.addEventListener('change', (e) => {
+            currentSort = e.target.value;
+            currentPage = 1; // 💡 정렬 변경 시 1페이지로 리셋
+            renderCards();
+        });
+
+        // 초기 화면 렌더링
+        if (allCards.length === 0) {
+            listContainer.style.display = 'none';
+            emptyState.style.display = 'block';
+        } else {
+            renderCards();
+        }
+    });
+</script>
 </body>
 </html>
