@@ -17,6 +17,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
+import java.time.Duration;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,6 +38,8 @@ public class BookingViewController {
     private final MemberRepository memberRepository;
     private final RedisWaitingQueueService waitingQueueService;
     private final BookingLimitService bookingLimitService;
+
+    private final RedissonClient redissonClient;
 
     /*@GetMapping({"/booking/queue", "/queue"})
     public String queue(@RequestParam(required = false) Long scheduleId, Model model) {
@@ -93,6 +98,15 @@ public class BookingViewController {
             model.addAttribute("maxTickets", maxTickets);
             model.addAttribute("remainingTickets", remainingTickets);
         }
+
+        String tabToken = java.util.UUID.randomUUID().toString();
+
+        // 2. Redis에 "유저 이메일 + 스케줄 ID" 조합으로 토큰 저장 (유효시간 30분)
+        RBucket<String> tabBucket = redissonClient.getBucket("active_tab:" + userDetails.getUsername() + ":" + scheduleId);
+        tabBucket.set(tabToken, Duration.ofMinutes(30));
+
+        // 3. HTML 화면으로 토큰 전달
+        model.addAttribute("tabToken", tabToken);
 
         return "booking/seat-select";
     }

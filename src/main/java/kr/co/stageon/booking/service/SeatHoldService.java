@@ -54,6 +54,9 @@ public class SeatHoldService {
 
         // 3. 상태 검증 및 HELD로 상태 변경
         for (ScheduleSeat seat : seats) {
+            if (seat.getStatus() != ScheduleSeat.Status.AVAILABLE) {
+                throw new IllegalStateException("이미 다른 사용자가 결제를 진행 중인 좌석입니다.");
+            }
             seat.hold();
         }
 

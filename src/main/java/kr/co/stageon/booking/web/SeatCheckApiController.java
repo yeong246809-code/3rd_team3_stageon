@@ -40,6 +40,7 @@ public class SeatCheckApiController {
     @PostMapping("/{scheduleSeatId}/check")
     public ResponseEntity<?> checkAndTempHoldSeat(
             @PathVariable Long scheduleSeatId,
+            @RequestHeader(value = "X-Tab-Token", defaultValue = "") String tabToken, // 💡 프론트에서 보낸 헤더 받기
             @AuthenticationPrincipal UserDetails userDetails) {
 
         if (userDetails == null) {
@@ -52,6 +53,14 @@ public class SeatCheckApiController {
         // 1. DB 1차 상태 검증
         ScheduleSeat seat = scheduleSeatRepository.findById(scheduleSeatId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
+
+        RBucket<String> tabBucket = redissonClient.getBucket("active_tab:" + currentUserId + ":" + seat.getSchedule().getId());
+        String activeToken = tabBucket.get();
+
+        if (activeToken == null || !activeToken.equals(tabToken)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("다른 창에서 새로운 예매가 시작되어 현재 창의 접근이 차단되었습니다. 새로고침 후 이용해주세요.");
+        }
 
         if (seat.getStatus() != ScheduleSeat.Status.AVAILABLE) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 예매된 좌석입니다.");

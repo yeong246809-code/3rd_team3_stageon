@@ -262,12 +262,12 @@
             <!-- =====================================
                  예매 가능일 때만 실제 링크
                  ===================================== -->
-            <a class="btn btn--primary btn--wide detail-booking__button"
-               th:if="${bookingStatus.bookable and param.bookingLimitReached == null}"
-               th:href="@{/booking/performances/{id}/schedules(id=${performance.id})}"
-               th:text="${bookingStatus.buttonText}">
-              예매 일정 확인
-            </a>
+              <button type="button" class="btn btn--primary btn--wide detail-booking__button"
+                      th:if="${bookingStatus.bookable and param.bookingLimitReached == null}"
+                      th:onclick="|openBookingPopup('${performance.id}')|"
+                      th:text="${bookingStatus.buttonText}">
+                  예매 일정 확인
+              </button>
 
             <button type="button"
                     class="btn btn--wide detail-booking__button detail-booking__button--disabled"
@@ -307,6 +307,20 @@
         </section>
       </div>
     </main>
+    <script>
+        function openBookingPopup(performanceId) {
+            const url = `/booking/performances/${performanceId}/schedules`;
+            // 팝업창 사이즈 설정
+            const width = 1000;
+            const height = 800;
+            // 모니터 한가운데에 띄우기 위한 좌표 계산
+            const left = (window.screen.width / 2) - (width / 2);
+            const top = (window.screen.height / 2) - (height / 2);
+
+            // 'StageonBookingWindow'라는 고정된 이름을 주어 팝업이 여러 개 열리지 않게 방어합니다.
+            window.open(url, 'StageonBookingWindow', `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`);
+        }
+    </script>
     <div th:replace="~{fragments/common/site-footer :: footer}"></div>
     <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
     <script defer th:src="@{/js/poster-fallback.js}" src="/js/poster-fallback.js"></script>
