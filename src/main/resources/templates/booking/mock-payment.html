@@ -118,9 +118,15 @@
       const orderId = /*[[${orderId}]]*/ 'STAGEON-TEST-0001';
       const baseUrl = window.location.origin;
 
-      console.log("🚀 토스 결제 요청:", { selectedMethod, amount, orderId });
+      const today = new Date();
+      const dueDateObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 0, 0, 0);
+      // 한국 시간(KST)을 고려하여 ISO 포맷으로 변환 시 타임존 보정
+      const offset = dueDateObj.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(dueDateObj - offset)).toISOString().slice(0, -1);
+      const formattedDueDate = localISOTime.substring(0, 19);
 
-      tossPayments.requestPayment(selectedMethod, {
+
+      const requestOptions = {
         amount: amount,
         orderId: orderId,
         orderName: orderName,
@@ -128,17 +134,26 @@
         customerEmail: customerEmail,
         successUrl: `${baseUrl}/payment/success`,
         failUrl: `${baseUrl}/payment/fail`
-      }).catch(function (error) {
-        if (error.code === 'USER_CANCEL') {
-          console.log("고객이 결제창을 닫았습니다.");
-        } else {
-          alert("결제창 호출 실패: " + error.message);
-        }
-      });
+      };
+
+      // 선택한 수단이 가상계좌일 때만 입금 기한 옵션 추가
+      if (selectedMethod === '가상계좌') {
+        requestOptions.virtualAccount = {
+          dueDate: formattedDueDate
+        };
+      }
+
+      tossPayments.requestPayment(selectedMethod, requestOptions)
+              .catch(function (error) {
+                if (error.code === 'USER_CANCEL') {
+                  console.log("고객이 결제창을 닫았습니다.");
+                } else {
+                  alert("결제창 호출 실패: " + error.message);
+                }
+              });
 
     } catch (e) {
-      console.error("자바스크립트 실행 중 에러 발생:", e);
-      alert("결제 처리 중 화면에 오류가 발생했습니다.");
+      console.error("에러 발생:", e);
     }
   }
 

@@ -31,11 +31,6 @@
         </div>
       </header>
 
-      <div class="notice notice--danger" style="margin-bottom:18px">
-        <b>좌석 선택 충돌</b>
-        · 다른 사용자가 먼저 선점한 좌석은 최신 상태 조회 후 선택할 수 있습니다.
-      </div>
-
       <div class="card">
         <div class="seat-stage">STAGE</div>
 
@@ -44,6 +39,7 @@
           <h3 style="text-align: center; margin: 20px 0 10px; font-size: 1.1rem;" th:text="${section.key}">A구역</h3>
 
           <div class="seat-map" aria-label="좌석 배치도">
+            <input type="hidden" id="tabToken" th:value="${tabToken}">
             <th:block th:with="uniqueRows=${#sets.toSet(section.value.![row])}">
               <div class="seat-row" th:each="rowLabel : ${#lists.sort(uniqueRows)}">
 
@@ -85,6 +81,12 @@
 </main>
 
 <script th:inline="javascript">
+
+  if (!window.opener) {
+    alert("비정상적인 접근입니다. 공연 상세 페이지의 [예매 일정 확인] 버튼을 이용해 주세요.");
+    window.location.href = "/"; // 메인 화면으로 강제 추방
+  }
+
   // 1. 서버에서 설정된 최대 예매 매수 가져오기
   const MAX_TICKETS = /*[[${maxTickets ?: 4}]]*/ 4;
   const REMAINING_TICKETS = /*[[${remainingTickets ?: 4}]]*/ 4;
@@ -132,14 +134,20 @@
       }
 
       try {
+        const tabToken = document.getElementById('tabToken')?.value;
+
         const response = await fetch(`/api/seats/${seatId}/check`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Tab-Token': tabToken
+          }
         });
 
         if (!response.ok) {
           const errorText = await response.text();
           alert(errorText);
+          window.close();
           return;
         }
 
