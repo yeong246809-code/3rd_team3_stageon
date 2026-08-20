@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${performance.title + ' | StageOn'}">StageOn | 공연 상세</title>
-    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+
+      <!-- 찜하기 POST / DELETE 요청에 사용할 CSRF 토큰 -->
+      <meta name="_csrf" th:content="${_csrf.token}">
+      <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+      <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
     <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
   </head>
   <body id="top">
@@ -21,7 +26,35 @@
                 예매 가능
             </span>
           </div>
-          <h1 th:text="${performance.title}">공연명</h1>
+            <div class="performance-title-row">
+
+                <h1 th:text="${performance.title}">공연명</h1>
+
+                <!-- 찜하기 버튼 -->
+                <button type="button"
+                        id="favoriteButton"
+                        class="favorite-button"
+                        th:data-performance-id="${performance.id}"
+                        th:data-favorite="${isFavorite}"
+                        aria-label="찜하기">
+
+                    <svg id="favoriteIcon"
+                         class="favorite-icon"
+                         viewBox="0 0 24 24"
+                         aria-hidden="true">
+
+                        <path d="M12 21
+             C10.8 19.9 5.2 15.2 3.4 12.4
+             C1.3 9.2 2.1 5.4 5.2 4
+             C7.4 3 9.7 3.7 12 6
+             C14.3 3.7 16.6 3 18.8 4
+             C21.9 5.4 22.7 9.2 20.6 12.4
+             C18.8 15.2 13.2 19.9 12 21Z"/>
+                    </svg>
+
+                </button>
+
+            </div>
         </header>
 
         <section class="detail-hero" aria-label="공연 주요 정보">
@@ -324,5 +357,102 @@
     <div th:replace="~{fragments/common/site-footer :: footer}"></div>
     <div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
     <script defer th:src="@{/js/poster-fallback.js}" src="/js/poster-fallback.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const favoriteButton =
+                document.getElementById("favoriteButton");
+
+            // 해당 페이지에 찜 버튼이 없으면 종료
+            if (!favoriteButton) {
+                return;
+            }
+
+            const favoriteIcon =
+                document.getElementById("favoriteIcon");
+
+            // 공연 ID
+            const performanceId =
+                favoriteButton.dataset.performanceId;
+
+            // 현재 찜 상태
+            let isFavorite =
+                favoriteButton.dataset.favorite === "true";
+
+            // 처음 페이지가 열렸을 때 찜 상태 반영
+            favoriteButton.classList.toggle("is-favorite", isFavorite);
+
+            // CSRF 정보
+            const csrfToken =
+                document.querySelector('meta[name="_csrf"]')?.content;
+
+            const csrfHeader =
+                document.querySelector('meta[name="_csrf_header"]')?.content;
+
+            /**
+             * 찜 버튼 클릭
+             */
+            favoriteButton.addEventListener("click", async function () {
+
+                try {
+
+                    // 찜 상태에 따라 POST 또는 DELETE 결정
+                    const method = isFavorite
+                        ? "DELETE"
+                        : "POST";
+
+                    const headers = {};
+
+                    // CSRF 값이 있으면 요청 헤더에 추가
+                    if (csrfToken && csrfHeader) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+
+                    const response = await fetch(
+                        `/api/favorites/${performanceId}`,
+                        {
+                            method: method,
+                            headers: headers
+                        }
+                    );
+
+                    /**
+                     * 로그인하지 않은 경우
+                     *
+                     * Spring Security가 로그인 페이지로
+                     * redirect할 수도 있기 때문에 함께 확인
+                     */
+                    if (response.status === 401 ||
+                        response.status === 403 ||
+                        response.redirected) {
+
+                        alert("로그인이 필요한 기능입니다.");
+                        window.location.href = "/login";
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error("찜 처리에 실패했습니다.");
+                    }
+
+                    // 현재 찜 상태 반전
+                    isFavorite = !isFavorite;
+
+                    // 찜 상태에 따라 SVG 하트 채우기 / 비우기
+                    favoriteButton.classList.toggle("is-favorite", isFavorite);
+
+                    // 현재 찜 상태 저장
+                    favoriteButton.dataset.favorite = isFavorite.toString();
+
+                } catch (error) {
+
+                    console.error(error);
+                    alert("찜 처리 중 오류가 발생했습니다.");
+
+                }
+            });
+
+        });
+    </script>
   </body>
 </html>

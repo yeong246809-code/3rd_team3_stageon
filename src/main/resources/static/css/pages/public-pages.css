@@ -22,6 +22,25 @@
 .info-list dt { color: var(--muted); }
 .info-list dd { min-width: 0; line-height: 1.65; overflow-wrap: anywhere; }
 .detail-pre-line { white-space: pre-line; }
+
+/* 공연 제목 + 찜 버튼을 가로로 배치 */
+.performance-title-row { display: flex; align-items: center; gap: 14px; }
+
+/* 공연 제목 기본 여백 제거 */
+.performance-title-row h1 { margin: 0; }
+
+/* 공연 찜 버튼 기본 스타일 */
+.favorite-button { width: 42px; height: 42px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 2px solid #e33131; border-radius: 50%; background: #fff; cursor: pointer; transition: transform 0.2s ease, background-color 0.2s ease; }
+
+/* 찜 버튼 안의 SVG 하트 스타일 */
+.favorite-icon { width: 23px; height: 23px; fill: none; stroke: #e33131; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: fill 0.2s ease, stroke 0.2s ease; }
+
+/* 찜한 상태일 때 하트 내부를 빨간색으로 채움 */
+.favorite-button.is-favorite .favorite-icon { fill: #e33131; stroke: #e33131; }
+
+/* 찜 버튼에 마우스를 올렸을 때 강조 효과 */
+.favorite-button:hover { transform: scale(1.05); background: #fff5f5; }
+
 /* 공연 상세 - 예매 상태 카드 */
 .detail-booking { position: sticky; top: 24px; padding: 28px 24px; border-radius: 16px; }
 
@@ -162,6 +181,45 @@
 .message { max-width: 75%; padding: 13px 16px; border-radius: 14px; background: var(--surface-2); font-size: 14px; }
 .message--user { margin-left: auto; color: #fff; background: var(--brand); }
 .chat-compose { margin-top: 18px; display: flex; gap: 10px; }
+
+/* 찜한 공연 목록 그리드 */
+.favorite-performance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+
+/* 찜한 공연 카드 */
+.favorite-performance-card { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+
+/* 찜한 공연 카드 hover 효과 */
+.favorite-performance-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+
+/* 포스터 링크 영역 */
+.favorite-performance-card__poster { display: block; overflow: hidden; background: var(--surface-2); }
+
+/* 공연 포스터 */
+.favorite-performance-card__poster img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+
+/* 공연 정보 영역 */
+.favorite-performance-card__body { padding: 18px; }
+
+/* 공연명 */
+.favorite-performance-card__body h2 { margin: 0; overflow: hidden; font-size: 18px; font-weight: 800; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 공연명 링크 */
+.favorite-performance-card__body h2 a { color: inherit; text-decoration: none; }
+
+/* 공연 기간 */
+.favorite-performance-card__period { margin-top: 10px; color: var(--ink-2); font-size: 13px; }
+
+/* 공연장 */
+.favorite-performance-card__venue { margin-top: 6px; overflow: hidden; color: var(--muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 공연 상세보기 버튼 */
+.favorite-performance-card__button { width: 100%; margin-top: 18px; text-align: center; }
+
+/* 태블릿 화면 */
+@media (max-width: 1000px) { .favorite-performance-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* 모바일 화면 */
+@media (max-width: 700px) { .favorite-performance-grid { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .detail-hero { grid-template-columns: 220px minmax(0, 1fr); } .detail-hero > :last-child { grid-column: 1 / -1; } .detail-booking { position: static; } }
 @media (max-width: 1100px) { .performance-list-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 700px) { .detail-hero, .mypage-grid, .ai-grid { grid-template-columns: 1fr; } .detail-poster { max-width: 300px; } .performance-detail-heading__meta { align-items: flex-start; flex-direction: column; gap: 8px; } .info-list div { grid-template-columns: 86px minmax(0, 1fr); } .performance-detail-section { padding-top: 48px; } .performance-venue { margin-top: 40px; padding: 22px; } .search-toolbar { align-items: flex-start; flex-direction: column; } .performance-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; } .performance-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; } }

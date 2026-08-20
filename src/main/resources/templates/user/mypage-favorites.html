@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>찜한 공연 | StageOn</title>
+
+    <!-- 공통 / 마이페이지 / 찜한 공연 CSS -->
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/mypage.css}" href="/css/pages/mypage.css">
+    <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
+</head>
+
+<body>
+
+<div th:replace="~{fragments/common/site-header :: header}"></div>
+
+<main class="mypage-page">
+    <div class="mypage-shell">
+
+        <!-- 페이지 제목 -->
+        <header class="mypage-heading">
+            <h1>찜한 공연</h1>
+            <p>관심 있는 공연을 한눈에 확인해보세요.</p>
+        </header>
+
+        <div class="mypage-layout">
+
+            <!-- 마이페이지 공통 사이드바 -->
+            <div th:replace="~{fragments/mypage/mypage-sidebar :: sidebar('favorites')}"></div>
+
+            <!-- 찜한 공연 영역 -->
+            <section class="mypage-content">
+
+
+
+                <!-- 찜한 공연이 없는 경우 -->
+                <div class="performance-empty"
+                     th:if="${#lists.isEmpty(favorites)}">
+
+                    <p>아직 찜한 공연이 없습니다.</p>
+
+                    <a th:href="@{/performances}"
+                       class="btn btn--primary">
+                        공연 둘러보기
+                    </a>
+
+                </div>
+
+                <!-- 찜한 공연 목록 -->
+                <div class="favorite-performance-grid"
+                     th:if="${!#lists.isEmpty(favorites)}">
+
+                    <article class="favorite-performance-card"
+                             th:each="favorite : ${favorites}">
+
+                        <a th:href="@{/performances/{id}(id=${favorite.performance.id})}"
+                           class="favorite-performance-card__poster">
+
+                            <img th:src="${#strings.isEmpty(favorite.performance.posterUrl)
+                                  ? '/images/posters/default-performance.webp'
+                                  : favorite.performance.posterUrl}"
+                                 th:alt="${favorite.performance.title + ' 포스터'}">
+
+                        </a>
+
+                        <div class="favorite-performance-card__body">
+
+                            <h2>
+                                <a th:href="@{/performances/{id}(id=${favorite.performance.id})}"
+                                   th:text="${favorite.performance.title}">
+                                    공연명
+                                </a>
+                            </h2>
+
+                            <p class="favorite-performance-card__period">
+
+                                <span th:text="${#temporals.format(
+                                        favorite.performance.startDate,
+                                        'yyyy.MM.dd'
+                                )}">
+                                    2026.01.01
+                                </span>
+
+                                <span aria-hidden="true"> ~ </span>
+
+                                <span th:text="${#temporals.format(
+                                        favorite.performance.endDate,
+                                        'yyyy.MM.dd'
+                                )}">
+                                    2026.12.31
+                                </span>
+
+                            </p>
+
+                            <p class="favorite-performance-card__venue"
+                               th:if="${favorite.performance.venueHall != null}"
+                               th:text="${favorite.performance.venueHall.venue.name}">
+                                공연장
+                            </p>
+
+                            <a th:href="@{/performances/{id}(id=${favorite.performance.id})}"
+                               class="btn btn--outline favorite-performance-card__button">
+                                공연 상세보기
+                            </a>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/common/site-footer :: footer}"></div>
+<div th:replace="~{fragments/common/floating-actions :: floatingActions}"></div>
+
+</body>
+</html>

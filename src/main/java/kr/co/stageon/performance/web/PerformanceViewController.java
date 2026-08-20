@@ -11,12 +11,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import kr.co.stageon.favorite.service.PerformanceFavoriteService;
+import kr.co.stageon.member.domain.Member;
+import kr.co.stageon.member.repository.MemberRepository;
+import org.springframework.security.core.Authentication;
+
 /** 공연 검색·상세·회차 선택 Thymeleaf 화면을 연결합니다. */
 @Controller
 @RequiredArgsConstructor
 public class PerformanceViewController {
 
     private final PerformanceQueryService performanceQueryService;
+    private final PerformanceFavoriteService favoriteService;
+    private final MemberRepository memberRepository;
 
     @GetMapping({"/performances", "/search-results"})
     public String search(
@@ -32,7 +39,12 @@ public class PerformanceViewController {
     }
 
     @GetMapping("/performances/{performanceId}")
-    public String detail(@PathVariable Long performanceId, Model model) {
+    public String detail(
+            @PathVariable Long performanceId,
+            Authentication authentication,
+            Model model
+    ) {
+
         // 공연 기본 정보 조회
         var performance = performanceQueryService.findPerformance(performanceId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -48,6 +60,32 @@ public class PerformanceViewController {
                 "bookingStatus",
                 performanceQueryService.findBookingStatus(performanceId)
         );
+
+        // 기본값: 찜하지 않은 상태
+        boolean isFavorite = false;
+
+        // 로그인 상태인 경우에만 찜 여부 확인
+        if (authentication != null && authentication.isAuthenticated()) {
+
+            Member member = memberRepository
+                    .findByEmail(
+                            authentication.getName()
+                                    .trim()
+                                    .toLowerCase()
+                    )
+                    .filter(m -> m.getStatus() == Member.Status.ACTIVE)
+                    .orElse(null);
+
+            if (member != null) {
+                isFavorite = favoriteService.isFavorite(
+                        member.getId(),
+                        performanceId
+                );
+            }
+        }
+
+        // Thymeleaf에서 하트 상태를 결정할 값
+        model.addAttribute("isFavorite", isFavorite);
 
         return "user/performance-detail";
     }

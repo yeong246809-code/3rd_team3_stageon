@@ -30,6 +30,13 @@
             보유 티켓
         </a>
 
+        <!-- 찜한 공연 -->
+        <a th:href="@{/mypage/favorites}"
+           href="/mypage/favorites"
+           th:classappend="${activeMenu == 'favorites'} ? ' is-active'">
+            찜한 공연
+        </a>
+
         <a th:href="@{/mypage/reviews}"
            href="/mypage/reviews"
            th:classappend="${activeMenu == 'reviews'} ? ' is-active'">

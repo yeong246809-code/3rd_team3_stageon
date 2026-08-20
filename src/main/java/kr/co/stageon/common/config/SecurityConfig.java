@@ -67,7 +67,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/booking/**",
                                 "/api/waiting-queue-history",
-                                "/api/waiting-queue/**"
+                                "/api/waiting-queue/**",
+                                "/api/favorites/**"      // 공연 찜 기능은 로그인 회원만 사용 가능
                         ).hasAnyRole("USER", "ADMIN")
 
                         .requestMatchers("/mypage/**")
