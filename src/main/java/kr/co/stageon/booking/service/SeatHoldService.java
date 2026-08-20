@@ -95,4 +95,31 @@ public class SeatHoldService {
             }
         }
     }
+
+    /**
+     * 사용자가 결제창에서 취소 버튼을 누르거나 창을 닫았을 때 즉시 좌석을 해제합니다.
+     */
+    @Transactional
+    public void cancelHoldImmediately(Long seatHoldId) {
+        // 1. 선점 내역(SeatHold) 조회
+        SeatHold seatHold = seatHoldRepository.findById(seatHoldId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 선점 내역입니다."));
+
+        // 이미 취소되었거나 결제 완료된 건이면 무시
+        if (seatHold.getStatus() != SeatHold.Status.ACTIVE) {
+            return;
+        }
+
+        // 2. 선점 상태를 만료(EXPIRED) 또는 취소(CANCELLED)로 강제 변경
+        seatHold.expire();
+
+        // 3. 묶여있던 개별 좌석들을 찾아 모두 AVAILABLE 상태로 복구
+        List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldId(seatHoldId);
+        for (SeatHoldItem item : holdItems) {
+            item.getScheduleSeat().release();
+
+            // 실시간 소켓/SSE 연동이 되어있다면 다른 유저 화면에서도 즉시 파란색으로 돌아오게 알림 전송
+            seatRealtimeService.notifySeatStatus(item.getScheduleSeat().getId(), "AVAILABLE");
+        }
+    }
 }

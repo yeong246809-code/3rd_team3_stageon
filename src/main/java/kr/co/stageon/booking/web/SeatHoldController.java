@@ -2,18 +2,18 @@ package kr.co.stageon.booking.web;
 
 import kr.co.stageon.booking.dto.SeatHoldRequest;
 import kr.co.stageon.booking.facade.SeatHoldRedissonFacade;
+import kr.co.stageon.booking.service.SeatHoldService;
 import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
 import kr.co.stageon.queue.config.WaitingQueueProperties;
 import kr.co.stageon.queue.service.RedisWaitingQueueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Log4j2
@@ -25,6 +25,7 @@ public class SeatHoldController {
     private final SeatHoldRedissonFacade seatHoldRedissonFacade;
     private final MemberRepository memberRepository;
     private final RedisWaitingQueueService waitingQueueService;
+    private final SeatHoldService seatHoldService;
 
     @PostMapping("/hold")
     public String holdSeats(SeatHoldRequest request,
@@ -64,5 +65,12 @@ public class SeatHoldController {
             Long fallbackId = request.scheduleId() != null ? request.scheduleId() : 1L;
             return "redirect:/booking/seats?scheduleId=" + fallbackId;
         }
+    }
+
+    @ResponseBody
+    @PostMapping("/holds/{seatHoldId}/cancel")
+    public ResponseEntity<Void> cancelSeatHold(@PathVariable Long seatHoldId) {
+        seatHoldService.cancelHoldImmediately(seatHoldId);
+        return ResponseEntity.ok().build();
     }
 }

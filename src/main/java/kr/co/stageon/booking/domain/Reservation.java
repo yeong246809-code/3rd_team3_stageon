@@ -130,4 +130,8 @@ public class Reservation {
             this.ticketCount -= cancelCount;
         }
     }
+
+    public void markAsPending() {
+        this.status = Status.PENDING;
+    }
 }
