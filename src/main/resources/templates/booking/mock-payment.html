@@ -91,9 +91,11 @@
 <script th:inline="javascript">
   const tossPayments = TossPayments("test_ck_ORzdMaqN3wnw4wQk6KJB85AkYXQG");
 
+  // 💡 결제창 호출 시 이탈 감지가 돌지 않도록 하는 플래그
+  let isSubmittingPayment = false;
+
   function requestPayment() {
     try {
-      // 선택한 결제 수단 가져오기
       const radioInput = document.querySelector('input[name="payMethod"]:checked');
       if (!radioInput) {
         alert("결제 수단을 선택해 주세요.");
@@ -101,30 +103,26 @@
       }
       const selectedMethod = radioInput.value;
 
-      // 💡 숨겨진 input 태그에서 금액을 읽어옵니다. (totalAmount 에러 완벽 해결!)
       const amountValue = document.getElementById('hiddenTotalPrice').value;
       const amount = Number(amountValue);
 
-      // 금액 검증 안전장치
       if (!amount || isNaN(amount) || amount <= 0) {
         alert("결제 금액 정보가 올바르지 않습니다. (금액: " + amountValue + ")");
         return;
       }
 
-      // Thymeleaf 변수 바인딩
       const orderName = /*[[${performanceTitle ?: 'StageOn 티켓 예매'}]]*/ 'StageOn 티켓 예매';
       const customerName = /*[[${paymentRequest.bookerName}]]*/ '테스터';
       const customerEmail = /*[[${paymentRequest.bookerEmail}]]*/ 'tester@example.com';
       const orderId = /*[[${orderId}]]*/ 'STAGEON-TEST-0001';
       const baseUrl = window.location.origin;
 
+      // 🚨 [수정 완료] 오늘 날짜를 기준으로 내일 23:59:59를 정확히 계산합니다.
       const today = new Date();
-      const dueDateObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 0, 0, 0);
-      // 한국 시간(KST)을 고려하여 ISO 포맷으로 변환 시 타임존 보정
-      const offset = dueDateObj.getTimezoneOffset() * 60000;
-      const localISOTime = (new Date(dueDateObj - offset)).toISOString().slice(0, -1);
-      const formattedDueDate = localISOTime.substring(0, 19);
+      const dueDateObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 23, 59, 59);
 
+      const offset = dueDateObj.getTimezoneOffset() * 60000;
+      const formattedDueDate = (new Date(dueDateObj - offset)).toISOString().slice(0, 19);
 
       const requestOptions = {
         amount: amount,
@@ -136,15 +134,20 @@
         failUrl: `${baseUrl}/payment/fail`
       };
 
-      // 선택한 수단이 가상계좌일 때만 입금 기한 옵션 추가
       if (selectedMethod === '가상계좌') {
-        requestOptions.virtualAccount = {
-          dueDate: formattedDueDate
-        };
+        requestOptions.dueDate = formattedDueDate;
+        // 확인용 로그
+        console.log("토스로 넘어가는 입금 기한:", requestOptions.dueDate);
       }
+
+      // 토스 결제창을 띄우기 직전에 true로 변경 (이탈 감지 방어막)
+      isSubmittingPayment = true;
 
       tossPayments.requestPayment(selectedMethod, requestOptions)
               .catch(function (error) {
+                // 결제창 호출에 실패하거나 고객이 닫은 경우, 다시 취소 가능 상태로 복구
+                isSubmittingPayment = false;
+
                 if (error.code === 'USER_CANCEL') {
                   console.log("고객이 결제창을 닫았습니다.");
                 } else {
@@ -157,13 +160,66 @@
     }
   }
 
+  // ✅ 1. 명시적인 결제 취소 버튼 클릭 시
   function cancelPayment() {
-    alert("결제를 취소하고 이전 화면으로 돌아갑니다.");
-    history.back();
+    if (confirm("결제를 취소하고 예매를 종료하시겠습니까?\n선택하신 좌석은 즉시 해제됩니다.")) {
+      const seatHoldId = /*[[${paymentRequest.seatHoldId}]]*/ null;
+
+      if (!seatHoldId) {
+        window.location.href = '/';
+        return;
+      }
+
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+      const headers = { 'Content-Type': 'application/json' };
+      if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+      // 백엔드로 즉시 취소 API 전송
+      fetch(`/booking/seats/holds/${seatHoldId}/cancel`, {
+        method: 'POST',
+        headers: headers
+      }).then(() => {
+        alert("결제가 취소되어 좌석이 해제되었습니다.");
+        window.location.href = '/';
+      }).catch(err => {
+        console.error("취소 처리 중 오류:", err);
+        window.location.href = '/';
+      });
+    }
   }
 
-  let timeRemaining = 300;
+  // ✅ 2. 창 닫기(X), 새로고침(F5) 등 이탈 감지 시 즉시 락 해제
+  function releaseHoldOnExit() {
+    // 토스 결제창으로 넘어가는 정상적인 흐름이 아닐 때만 작동
+    if (!isSubmittingPayment) {
+      const seatHoldId = /*[[${paymentRequest.seatHoldId}]]*/ null;
+      if (!seatHoldId) return;
 
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+      const headers = { 'Content-Type': 'application/json' };
+      if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+      fetch(`/booking/seats/holds/${seatHoldId}/cancel`, {
+        method: 'POST',
+        headers: headers,
+        keepalive: true
+      }).catch(err => console.error("이탈 시 해제 실패:", err));
+    }
+  }
+
+  // 이탈 감지 이벤트 리스너
+  window.addEventListener('beforeunload', function(e) {
+    releaseHoldOnExit();
+  });
+
+  window.addEventListener('pagehide', function() {
+    releaseHoldOnExit();
+  });
+
+  // ✅ 3. 기존 5분 카운트다운 타이머
+  let timeRemaining = 300;
   const countdown = setInterval(function() {
     timeRemaining--;
 
@@ -171,10 +227,8 @@
       clearInterval(countdown);
       alert("결제 대기 시간(5분)이 만료되어 좌석 선점이 취소되었습니다.\n처음부터 다시 예매를 진행해 주세요.");
 
-      // 예약 폼이나 결제 창에서 튕겨낼 때 좌석 해제 API 호출
+      // 타이머 만료 시에도 좌석 해제 API 호출
       releaseHoldOnExit();
-
-      // 메인 화면이나 좌석 선택 화면으로 강제 이동
       window.location.href = '/';
     }
   }, 1000);

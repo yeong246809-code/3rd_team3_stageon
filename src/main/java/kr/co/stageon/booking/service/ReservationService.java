@@ -38,75 +38,58 @@ public class ReservationService {
      * 결제 검증이 완료된 후, 실제 예매 데이터를 생성하고 DB에 저장합니다.
      */
     @Transactional
-    public Long confirmReservation(PaymentRequest request, String paymentKey, String orderId,
-                                   BigDecimal expectedAmount, Payment.PayMethod payMethod,
-                                   Payment.Status paymentStatus, String vbankNum,
-                                   String vbankName, LocalDateTime vbankDueDate) {
+    public Long confirmReservation(
+            PaymentRequest request, String paymentKey, String orderId, BigDecimal amount,
+            Payment.PayMethod payMethod, Payment.Status paymentStatus,
+            String vbankNum, String vbankName, LocalDateTime vbankDueDate) {
 
-        // 1. 임시 선점(SeatHold) 내역 조회
+        // 1. 선점 내역(SeatHold) 상태 변경
         SeatHold seatHold = seatHoldRepository.findById(request.seatHoldId())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 선점 내역입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("선점 내역을 찾을 수 없습니다."));
+        seatHold.complete();
 
-        if (!seatHold.getHoldTokenHash().equals(request.holdTokenHash())) {
-            throw new IllegalArgumentException("비정상적인 예매 요청입니다.");
-        }
+        List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldIdOrderByIdAsc(seatHold.getId());
 
-        List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldId(seatHold.getId());
-        int ticketCount = holdItems.size();
-
+        // 2. 예매(Reservation) 생성
         Reservation reservation = Reservation.create(
                 orderId,
                 seatHold.getMember(),
                 seatHold.getSchedule(),
-                ticketCount,
+                holdItems.size(),
                 seatHold,
-                request.receiveMethod(),
-                expectedAmount,
-                expectedAmount
+                Reservation.ReceiveMethod.MOBILE,
+                amount,
+                amount
         );
+
+        // 💡 3. 가상계좌(READY)인 경우, 예매 상태를 PENDING(입금 대기)으로 변경
+        if (paymentStatus == Payment.Status.READY) {
+            reservation.markAsPending();
+        }
         reservationRepository.save(reservation);
 
+        // 💡 4. 결제(Payment) 생성 (여기에 가상계좌 정보가 들어갑니다!)
         Payment payment = Payment.builder()
                 .reservation(reservation)
                 .paymentKey(paymentKey)
                 .orderId(orderId)
-                .provider(Payment.Provider.TOSSPAYMENTS)
+                .provider(Payment.Provider.TOSSPAYMENTS) // Provider 필수
+                .amount(amount)
                 .payMethod(payMethod)
-                .amount(expectedAmount)
                 .status(paymentStatus)
+                .requestedAt(LocalDateTime.now()) // 요청 시간
                 .vbankNum(vbankNum)
                 .vbankName(vbankName)
                 .vbankDueDate(vbankDueDate)
-                .requestedAt(LocalDateTime.now())
-                .processedAt(paymentStatus == Payment.Status.SUCCESS ? LocalDateTime.now() : null)
                 .build();
         paymentRepository.save(payment);
 
+        // 5. 개별 좌석(ScheduleSeat) 최종 확정 처리
         for (SeatHoldItem item : holdItems) {
-            ScheduleSeat scheduleSeat = item.getScheduleSeat();
-            scheduleSeat.reserve();
-
-            ReservationSeat reservationSeat = ReservationSeat.create(reservation, scheduleSeat);
-            reservationSeatRepository.save(reservationSeat);
-
-            // 🚨 예약 좌석이 저장된 직후, 수령 방법이 모바일이면 티켓 엔티티 생성
-            if (reservation.getReceiveMethod() == Reservation.ReceiveMethod.MOBILE) {
-                String qrToken = java.util.UUID.randomUUID().toString().replace("-", "");
-
-                Ticket ticket = Ticket.builder()
-                        .reservationSeat(reservationSeat) // 방금 위에서 만든 reservationSeat 사용
-                        .ticketNumber(reservation.getBookingNumber())
-                        .qrTokenHash(qrToken)
-                        .build();
-
-                ticketRepository.save(ticket);
-            }
+            item.getScheduleSeat().reserve();
         }
 
-        seatHold.complete();
-
         return reservation.getId();
-
     }
 
     /**
