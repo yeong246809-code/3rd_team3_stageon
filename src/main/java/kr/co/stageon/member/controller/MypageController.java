@@ -6,6 +6,7 @@ import kr.co.stageon.booking.dto.ReservationResponse;
 import kr.co.stageon.booking.service.BookingQueryService;
 import kr.co.stageon.booking.service.MyTicketQueryService;
 import kr.co.stageon.booking.service.ReservationDetailQueryService;
+import kr.co.stageon.favorite.domain.PerformanceFavorite;
 import kr.co.stageon.member.domain.Member;
 import kr.co.stageon.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 
-import java.time.LocalDateTime;
+import kr.co.stageon.favorite.service.PerformanceFavoriteService;
+
 import java.util.List;
+
+import java.time.LocalDateTime;
+
 
 /**
  * 로그인 회원의 마이페이지 화면을 담당합니다.
@@ -32,6 +37,7 @@ public class MypageController {
     private final BookingQueryService bookingQueryService;
     private final ReservationDetailQueryService reservationDetailQueryService;
     private final MyTicketQueryService myTicketQueryService;
+    private final PerformanceFavoriteService favoriteService;
 
     @GetMapping
     public String home(
@@ -146,6 +152,39 @@ public class MypageController {
                 "포인트·쿠폰",
                 "보유 포인트와 사용 가능한 쿠폰을 확인합니다."
         );
+    }
+
+    @GetMapping("/favorites")
+    public String favorites(
+            Authentication authentication,
+            Model model
+    ) {
+
+        // 현재 로그인한 회원 조회
+        Member member = memberRepository
+                .findByEmail(
+                        authentication.getName()
+                                .trim()
+                                .toLowerCase()
+                )
+                .filter(m -> m.getStatus() == Member.Status.ACTIVE)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "회원 정보를 찾을 수 없습니다."
+                        )
+                );
+
+        // 로그인한 회원이 찜한 공연 목록 조회
+        List<PerformanceFavorite> favorites =
+                favoriteService.getFavoriteList(member.getId());
+
+        // 화면으로 찜 목록 전달
+        model.addAttribute("favorites", favorites);
+
+        // 마이페이지 사이드바 현재 메뉴 표시
+        model.addAttribute("activeMenu", "favorites");
+
+        return "user/mypage-favorites";
     }
 
 
