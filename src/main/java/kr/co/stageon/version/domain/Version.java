@@ -10,16 +10,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** 프로젝트 버전별 변경 이력(체인지로그)입니다. */
+/** 프로젝트 버전별 배포 이력입니다. 관리자가 수동으로 등록하며, 사이트 공개 푸터에 노출됩니다. */
 @Entity
 @Table(name = "versions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Version {
-
-    public enum Category {
-        FEATURE, IMPROVEMENT, BUGFIX
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,13 +23,6 @@ public class Version {
 
     @Column(name = "version", length = 30, nullable = false)
     private String version;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "category", length = 20, nullable = false)
-    private Category category;
-
-    @Column(name = "title", length = 200, nullable = false)
-    private String title;
 
     @Lob
     @Column(name = "description")
@@ -53,26 +42,19 @@ public class Version {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    private Version(String version, Category category, String title, String description,
-                    String author, LocalDate releasedAt) {
+    private Version(String version, String description, String author, LocalDate releasedAt) {
         this.version = version;
-        this.category = category;
-        this.title = title;
         this.description = description;
         this.author = author;
         this.releasedAt = releasedAt;
     }
 
-    public static Version create(String version, Category category, String title, String description,
-                                 String author, LocalDate releasedAt) {
-        return new Version(version, category, title, description, author, releasedAt);
+    public static Version create(String version, String description, String author, LocalDate releasedAt) {
+        return new Version(version, description, author, releasedAt);
     }
 
-    public void update(String version, Category category, String title, String description,
-                       String author, LocalDate releasedAt) {
+    public void update(String version, String description, String author, LocalDate releasedAt) {
         this.version = version;
-        this.category = category;
-        this.title = title;
         this.description = description;
         this.author = author;
         this.releasedAt = releasedAt;

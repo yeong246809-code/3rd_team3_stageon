@@ -12,8 +12,6 @@ public class VersionFormDto {
 
     private Long id;
     private String version;
-    private String category;
-    private String title;
     private String description;
     private String author;
     private LocalDate releasedAt;

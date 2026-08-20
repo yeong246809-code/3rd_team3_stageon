@@ -20,7 +20,7 @@
             <header class="admin-title">
                 <div>
                     <h1 th:text="${form.id != null} ? '버전 이력 수정' : '버전 이력 등록'">버전 이력 등록</h1>
-                    <p>버전별 변경 내용을 기록합니다.</p>
+                    <p>배포 버전별 내용을 기록합니다.</p>
                 </div>
             </header>
 
@@ -31,35 +31,23 @@
 
                     <div class="admin-form-grid">
                         <div class="form-field">
-                            <label class="section-heading">버전명<span class="required-mark">*</span></label>
-                            <input class="input" type="text" th:field="*{version}" placeholder="예: v1.2.0" required>
+                            <label class="section-heading">버전<span class="required-mark">*</span></label>
+                            <input class="input" type="text" th:field="*{version}" placeholder="예: v1.0" required>
                         </div>
                         <div class="form-field">
-                            <label class="section-heading">구분<span class="required-mark">*</span></label>
-                            <select class="select" th:field="*{category}" required>
-                                <option value="">선택</option>
-                                <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"></option>
-                            </select>
+                            <label class="section-heading">배포자<span class="required-mark">*</span></label>
+                            <input class="input" type="text" th:field="*{author}" placeholder="배포자명" required>
                         </div>
                         <div class="form-field">
-                            <label class="section-heading">작성자<span class="required-mark">*</span></label>
-                            <input class="input" type="text" th:field="*{author}" placeholder="작성자명" required>
-                        </div>
-                        <div class="form-field">
-                            <label class="section-heading">배포일<span class="required-mark">*</span></label>
+                            <label class="section-heading">배포일자<span class="required-mark">*</span></label>
                             <input class="input" type="date" th:field="*{releasedAt}" required>
                         </div>
                     </div>
 
                     <div class="form-field" style="margin-top:18px;">
-                        <label class="section-heading">제목<span class="required-mark">*</span></label>
-                        <input class="input" type="text" th:field="*{title}" placeholder="변경 제목" required style="width:100%;">
-                    </div>
-
-                    <div class="form-field" style="margin-top:18px;">
-                        <label class="section-heading">상세 변경 내용</label>
+                        <label class="section-heading">내용</label>
                         <textarea class="input" th:field="*{description}" rows="10"
-                                  placeholder="변경 내용을 상세히 입력하세요." style="width:100%; resize:vertical;"></textarea>
+                                  placeholder="배포 내용을 입력하세요." style="width:100%; resize:vertical;"></textarea>
                     </div>
 
                     <div class="cluster" style="margin-top:24px; justify-content:flex-end;">

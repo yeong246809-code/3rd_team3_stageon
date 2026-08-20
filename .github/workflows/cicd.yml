@@ -85,18 +85,5 @@ jobs:
             nohup java -jar /home/${{ secrets.AWS_EC2_USER }}/$JAR_FILE > app.log 2>&1 &
           EOF
 
-      # 배포 성공 직후 관리자 "버전 관리" 화면에 자동으로 이력을 남깁니다.
-      # 호출 대상 도메인/포트(APP_BASE_URL)와 VERSION_WEBHOOK_SECRET은
-      # GitHub 저장소 Settings > Secrets and variables > Actions에 등록해야 합니다.
-      # EC2 서버의 .env(소스되는 파일)에도 동일한 VERSION_WEBHOOK_SECRET을 넣어줘야 인증이 통과됩니다.
-      - name: Register Version (Auto Changelog)
-        run: |
-          COMMIT_MSG=$(git log -1 --pretty=%s | sed 's/"/\\"/g')
-          AUTHOR="${{ github.actor }}"
-          curl -s -X POST "${{ secrets.APP_BASE_URL }}/api/deploy/version-hook" \
-            -H "Content-Type: application/json" \
-            -H "X-Deploy-Secret: ${{ secrets.VERSION_WEBHOOK_SECRET }}" \
-            -d "{\"title\": \"${COMMIT_MSG}\", \"author\": \"${AUTHOR}\", \"commitMessage\": \"${COMMIT_MSG}\"}"
-
       - name: Cleanup
         run: rm -f private_key.pem

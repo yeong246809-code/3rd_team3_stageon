@@ -2,7 +2,6 @@ package kr.co.stageon.admin.web;
 
 import kr.co.stageon.admin.dto.VersionFormDto;
 import kr.co.stageon.admin.service.AdminVersionService;
-import kr.co.stageon.version.domain.Version;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,14 +25,12 @@ public class AdminVersionController {
     @GetMapping("/new")
     public String newForm(Model model) {
         model.addAttribute("form", new VersionFormDto());
-        model.addAttribute("categories", Version.Category.values());
         return "admin/version-form";
     }
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         model.addAttribute("form", adminVersionService.getForm(id));
-        model.addAttribute("categories", Version.Category.values());
         return "admin/version-form";
     }
 
