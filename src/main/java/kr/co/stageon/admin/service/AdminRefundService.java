@@ -89,16 +89,27 @@ public class AdminRefundService {
         );
     }
 
-    /** 수동 환불 모달 - 이름/이메일 키워드로 회원을 검색합니다(자동완성용, 최대 10건). */
+    /**
+     * 수동 환불 모달 - 입력창 자동완성용 회원 검색입니다(키워드 필수, 최대 10건, 페이지네이션 없음).
+     */
     @Transactional(readOnly = true)
     public List<AdminMemberSearchItemDto> searchMembers(String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-            return List.of();
-        }
-        Page<Member> page = memberRepository.search(null, null, keyword, PageRequest.of(0, 10));
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword;
+        Page<Member> page = memberRepository.search(null, null, kw, PageRequest.of(0, 10));
         return page.getContent().stream()
                 .map(m -> new AdminMemberSearchItemDto(m.getId(), m.getName(), m.getEmail(), maskPhone(m.getPhone())))
                 .toList();
+    }
+
+    /**
+     * "회원 목록" 전용 모달용 검색입니다. 키워드가 없으면 전체 회원을 페이지네이션으로 보여주고,
+     * 키워드가 있으면 이름/이메일로 필터링합니다.
+     */
+    @Transactional(readOnly = true)
+    public Page<AdminMemberSearchItemDto> searchMembersPaged(String keyword, Pageable pageable) {
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword;
+        return memberRepository.search(null, null, kw, pageable)
+                .map(m -> new AdminMemberSearchItemDto(m.getId(), m.getName(), m.getEmail(), maskPhone(m.getPhone())));
     }
 
     /** 수동 환불 모달 - 회원 선택 후, 환불 가능액이 남은 SUCCESS 결제 건 목록을 조회합니다. */
