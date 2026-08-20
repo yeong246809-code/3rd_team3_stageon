@@ -22,7 +22,7 @@ public class AdminVersionService {
     public List<VersionListItemDto> getList() {
         return versionRepository.findAllByOrderByReleasedAtDescIdDesc().stream()
                 .map(v -> new VersionListItemDto(
-                        v.getId(), v.getVersion(), v.getCategory(), v.getTitle(), v.getAuthor(), v.getReleasedAt()))
+                        v.getId(), v.getVersion(), v.getDescription(), v.getAuthor(), v.getReleasedAt()))
                 .toList();
     }
 
@@ -32,7 +32,7 @@ public class AdminVersionService {
         Version v = versionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 버전 이력입니다."));
         return new VersionDetailDto(
-                v.getId(), v.getVersion(), v.getCategory(), v.getTitle(), v.getDescription(), v.getAuthor(), v.getReleasedAt());
+                v.getId(), v.getVersion(), v.getDescription(), v.getAuthor(), v.getReleasedAt());
     }
 
     @Transactional(readOnly = true)
@@ -42,8 +42,6 @@ public class AdminVersionService {
         VersionFormDto dto = new VersionFormDto();
         dto.setId(v.getId());
         dto.setVersion(v.getVersion());
-        dto.setCategory(v.getCategory().name());
-        dto.setTitle(v.getTitle());
         dto.setDescription(v.getDescription());
         dto.setAuthor(v.getAuthor());
         dto.setReleasedAt(v.getReleasedAt());
@@ -54,8 +52,6 @@ public class AdminVersionService {
     public void create(VersionFormDto form) {
         Version version = Version.create(
                 form.getVersion(),
-                Version.Category.valueOf(form.getCategory()),
-                form.getTitle(),
                 form.getDescription(),
                 form.getAuthor(),
                 form.getReleasedAt()
@@ -69,49 +65,10 @@ public class AdminVersionService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 버전 이력입니다."));
         v.update(
                 form.getVersion(),
-                Version.Category.valueOf(form.getCategory()),
-                form.getTitle(),
                 form.getDescription(),
                 form.getAuthor(),
                 form.getReleasedAt()
         );
-    }
-
-    /**
-     * 배포 웹훅(VersionWebhookController)에서 호출됩니다. 버전명은 "build-N" 형식으로 자동 채번하며,
-     * category는 커밋 메시지 키워드로 추정합니다. 자동 생성이라 부정확할 수 있어 관리자 화면에서 수정 가능합니다.
-     */
-    @Transactional
-    public Long registerFromDeploy(String title, String author, String commitMessage) {
-        long nextSeq = versionRepository.count() + 1;
-        String version = "build-" + nextSeq;
-        String resolvedTitle = (title == null || title.isBlank())
-                ? (commitMessage == null || commitMessage.isBlank() ? "배포 완료" : commitMessage)
-                : title;
-        String resolvedAuthor = (author == null || author.isBlank()) ? "system" : author;
-
-        Version v = Version.create(
-                version,
-                inferCategory(commitMessage),
-                resolvedTitle,
-                commitMessage,
-                resolvedAuthor,
-                java.time.LocalDate.now()
-        );
-        versionRepository.save(v);
-        return v.getId();
-    }
-
-    private Version.Category inferCategory(String text) {
-        if (text == null) return Version.Category.FEATURE;
-        String t = text.toLowerCase();
-        if (t.contains("fix") || t.contains("수정") || t.contains("버그") || t.contains("오류")) {
-            return Version.Category.BUGFIX;
-        }
-        if (t.contains("개선") || t.contains("리팩터") || t.contains("리팩토링") || t.contains("변경")) {
-            return Version.Category.IMPROVEMENT;
-        }
-        return Version.Category.FEATURE;
     }
 
     @Transactional
@@ -120,5 +77,15 @@ public class AdminVersionService {
             throw new IllegalArgumentException("존재하지 않는 버전 이력입니다.");
         }
         versionRepository.deleteById(id);
+    }
+
+    /** 공개 사이트 푸터에 노출할 최신 버전 1건입니다. */
+    @Transactional(readOnly = true)
+    public VersionListItemDto getLatest() {
+        return versionRepository.findAllByOrderByReleasedAtDescIdDesc().stream()
+                .findFirst()
+                .map(v -> new VersionListItemDto(
+                        v.getId(), v.getVersion(), v.getDescription(), v.getAuthor(), v.getReleasedAt()))
+                .orElse(null);
     }
 }
