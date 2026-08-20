@@ -3,44 +3,105 @@
 
 
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!-- 관리자 기능 전체를 연결하는 공통 사이드바 -->
 <aside th:fragment="sidebar" class="admin-sidebar" style="position:relative;">
   <a class="admin-brand" th:href="@{/admin/dashboard}" href="/admin/dashboard">StageOn<small>ADMIN CONSOLE</small></a>
+  <style>
+    /* 사이드바 아이콘 · 알림 뱃지 전용 스타일 (기존 CSS와 충돌 없이 추가) */
+    .admin-nav a { display: flex; align-items: center; }
+    .admin-nav__icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-right: 10px; flex-shrink: 0; }
+    .admin-nav__icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .admin-nav a > span:not(.admin-nav__badge) { flex: 1 1 auto; }
+    .admin-nav__badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px; margin-left: 8px;
+      border-radius: 999px; background: #ef4444; color: #fff;
+      font-size: 11px; font-weight: 700; line-height: 1; flex-shrink: 0;
+    }
+  </style>
   <nav class="admin-nav" aria-label="관리자 메뉴">
     <a th:href="@{/admin/dashboard}" href="/admin/dashboard"
-       th:classappend="${currentUri != null and currentUri.startsWith('/admin/dashboard')} ? 'is-active'">▦<span>통합 대시보드</span></a>
+       th:classappend="${currentUri != null and currentUri.startsWith('/admin/dashboard')} ? 'is-active'">
+      <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+      <span>통합 대시보드</span>
+    </a>
 
-    <div class="admin-nav__group">
-      <span class="admin-nav__group-label">공연 운영</span>
-      <a th:href="@{/admin/performances}" href="/admin/performances"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/performances')} ? 'is-active'">◫<span>공연 등록·수정</span></a>
-      <a th:href="@{/admin/venues}" href="/admin/venues"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/venues')} ? 'is-active'">⌂<span>공연장·좌석 관리</span></a>
-      <a th:href="@{/admin/schedules}" href="/admin/schedules"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/schedules')} ? 'is-active'">◷<span>일정·회차 관리</span></a>
-      <a th:href="@{/admin/seat-inventory}" href="/admin/seat-inventory"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/seat-inventory')} ? 'is-active'">▥<span>좌석 재고·선점 현황</span></a>
+    <div class="admin-nav__group" data-group="performance">
+      <button type="button" class="admin-nav__group-toggle" aria-expanded="true">
+        <span class="admin-nav__group-label">공연 운영</span>
+        <span class="admin-nav__group-arrow">▾</span>
+      </button>
+      <div class="admin-nav__group-items">
+        <a th:href="@{/admin/performances}" href="/admin/performances"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/performances')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><path d="M4 20 L4 15 L15 4 L20 9 L9 20 Z"/><path d="M13 6 L18 11"/></svg></span>
+          <span>공연 등록·수정</span>
+        </a>
+        <a th:href="@{/admin/venues}" href="/admin/venues"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/venues')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><path d="M12 21 C12 21 5 14.5 5 9.5 A7 7 0 0 1 19 9.5 C19 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.3"/></svg></span>
+          <span>공연장·좌석 관리</span>
+        </a>
+        <a th:href="@{/admin/schedules}" href="/admin/schedules"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/schedules')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></span>
+          <span>일정·회차 관리</span>
+        </a>
+        <a th:href="@{/admin/seat-inventory}" href="/admin/seat-inventory"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/seat-inventory')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="9.5" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="9.5" width="5" height="5" rx="1"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><rect x="16" y="9.5" width="5" height="5" rx="1"/></svg></span>
+          <span>좌석 재고·선점 현황</span>
+        </a>
+      </div>
     </div>
 
-    <div class="admin-nav__group">
-      <span class="admin-nav__group-label">예매·정산</span>
-      <a th:href="@{/admin/orders}" href="/admin/orders"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/orders')} ? 'is-active'">◎<span>예매·주문 조회</span></a>
-      <a th:href="@{/admin/refunds}" href="/admin/refunds"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/refunds')} ? 'is-active'">↺<span>환불 관리</span></a>
+    <div class="admin-nav__group" data-group="order">
+      <button type="button" class="admin-nav__group-toggle" aria-expanded="true">
+        <span class="admin-nav__group-label">예매·정산</span>
+        <span class="admin-nav__group-arrow">▾</span>
+      </button>
+      <div class="admin-nav__group-items">
+        <a th:href="@{/admin/orders}" href="/admin/orders"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/orders')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg></span>
+          <span>예매·주문 조회</span>
+        </a>
+        <a th:href="@{/admin/refunds}" href="/admin/refunds"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/refunds')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><path d="M4 12 A8 8 0 1 1 6.5 17.5"/><polyline points="4 7 4 12 9 12"/></svg></span>
+          <span>환불 관리</span>
+          <span class="admin-nav__badge" th:if="${pendingRefundCount != null and pendingRefundCount > 0}"
+                th:text="${pendingRefundCount > 99 ? '99+' : pendingRefundCount}">3</span>
+        </a>
+      </div>
     </div>
 
-    <div class="admin-nav__group">
-      <span class="admin-nav__group-label">회원·콘텐츠</span>
-      <a th:href="@{/admin/members}" href="/admin/members"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/members')} ? 'is-active'">☺<span>회원 관리</span></a>
-      <a th:href="@{/admin/banners}" href="/admin/banners"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/banners')} ? 'is-active'">▤<span>배너 관리</span></a>
-      <a th:href="@{/admin/versions}" href="/admin/versions"
-         th:classappend="${currentUri != null and currentUri.startsWith('/admin/versions')} ? 'is-active'">☰<span>버전 관리</span></a>
+    <div class="admin-nav__group" data-group="content">
+      <button type="button" class="admin-nav__group-toggle" aria-expanded="true">
+        <span class="admin-nav__group-label">회원·시스템</span>
+        <span class="admin-nav__group-arrow">▾</span>
+      </button>
+      <div class="admin-nav__group-items">
+        <a th:href="@{/admin/members}" href="/admin/members"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/members')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20 C3 15.5 5.7 13.5 9 13.5 C12.3 13.5 15 15.5 15 20"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15.5 13.6 C18.2 13.9 20 15.7 20.5 19"/></svg></span>
+          <span>회원 관리</span>
+        </a>
+        <a th:href="@{/admin/banners}" href="/admin/banners"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/banners')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M3 16 L9 11 L13 15 L16 12 L21 17"/></svg></span>
+          <span>배너 관리</span>
+        </a>
+        <a th:href="@{/admin/versions}" href="/admin/versions"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/versions')} ? 'is-active'">
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><path d="M3 11 L11 3 L20 3 L20 12 L12 20 Z"/><circle cx="15.5" cy="7.5" r="1.6"/></svg></span>
+          <span>버전 관리</span>
+        </a>
+      </div>
     </div>
   </nav>
 
@@ -51,6 +112,45 @@
       <span th:text="${admin != null ? admin.role : 'Super Admin'}">Super Admin</span>
     </div>
   </div>
+
+  <!-- 반드시 <aside> 내부에 위치해야 th:replace로 fragment를 가져오는 페이지에도 포함됩니다. -->
+  <script th:inline="none">
+    /* 사이드바 그룹 접기/펼치기: 쿠키로 상태 유지.
+       - 브라우저를 새로 열거나 로그아웃 후 재접속하면 항상 접힌 상태로 시작.
+       - 메뉴를 펼친 채로 다른 관리자 페이지로 이동해도 펼친 상태가 유지됨.
+       - 브라우저를 완전히 종료하면 쿠키가 사라져 다음 접속 때 다시 접힌 상태로 시작. */
+    (function () {
+      function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : null;
+      }
+      function setCookie(name, value) {
+        // 만료일(expires)을 지정하지 않으면 브라우저 종료 시 자동 삭제되는 세션 쿠키가 됨
+        document.cookie = name + '=' + encodeURIComponent(value) + '; path=/';
+      }
+
+      document.querySelectorAll('.admin-nav__group').forEach(group => {
+        const key = 'admin-nav-collapsed-' + group.dataset.group;
+        const toggle = group.querySelector('.admin-nav__group-toggle');
+        const stored = getCookie(key);
+        const collapsed = stored === null ? true : stored === '1';
+
+        if (collapsed) {
+          group.classList.add('is-collapsed');
+          toggle.setAttribute('aria-expanded', 'false');
+        } else {
+          group.classList.remove('is-collapsed');
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+
+        toggle.addEventListener('click', () => {
+          const nowCollapsed = group.classList.toggle('is-collapsed');
+          toggle.setAttribute('aria-expanded', String(!nowCollapsed));
+          setCookie(key, nowCollapsed ? '1' : '0');
+        });
+      });
+    })();
+  </script>
 </aside>
 </body>
 </html>

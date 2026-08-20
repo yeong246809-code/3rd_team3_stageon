@@ -28,8 +28,17 @@
                 </div>
             </header>
 
-            <div class="alert alert--success" th:if="${message}" th:text="${message}"></div>
-            <div class="alert alert--error" th:if="${error}" th:text="${error}"></div>
+            <!-- 토스트 알림: 페이지 흐름에 섞이지 않도록 우측 상단 고정, 3.5초 후 자동 소멸 -->
+            <div class="alert alert--success" th:if="${message}">
+                <span class="alert__icon">✓</span>
+                <span th:text="${message}"></span>
+                <button type="button" class="alert__close" onclick="this.parentElement.remove()" aria-label="닫기">&times;</button>
+            </div>
+            <div class="alert alert--error" th:if="${error}">
+                <span class="alert__icon">!</span>
+                <span th:text="${error}"></span>
+                <button type="button" class="alert__close" onclick="this.parentElement.remove()" aria-label="닫기">&times;</button>
+            </div>
 
             <form class="card refund-filter" method="get" th:action="@{/admin/refunds}">
                 <div class="refund-filter__row">
@@ -118,7 +127,7 @@
     </div>
 </div>
 
-<!-- 수동 환불 처리 모달: 회원 검색 -> 선택 -> 환불 가능 결제 선택 -> 금액/사유 입력 -->
+<!-- 수동 환불 처리 모달: 회원 검색/목록보기 -> 선택 -> 환불 가능 결제 선택 -> 금액/사유 입력 -->
 <div class="refund-modal" id="manualRefundModal">
     <div class="refund-modal__backdrop" onclick="closeManualRefundModal()"></div>
     <div class="refund-modal__content" id="manualRefundModalContent">
@@ -126,17 +135,20 @@
         <h3 class="refund-modal__title">수동 환불 처리</h3>
         <p class="refund-modal__hint">예매 취소 없이 결제 건 단위로 부분/전액 환불을 처리합니다.</p>
 
-        <!-- 1단계: 회원 검색 -->
+        <!-- 1단계: 회원 검색(자동완성) / 회원 목록 모달 열기 -->
         <div class="manual-refund__step" id="memberSearchStep">
             <label for="memberKeyword">회원 검색 (이름 또는 이메일)</label>
-            <input type="text" id="memberKeyword" placeholder="예: 홍길동 / hong@example.com" autocomplete="off">
+            <div class="manual-refund__search-row">
+                <input type="text" id="memberKeyword" placeholder="예: 홍길동 / hong@example.com" autocomplete="off">
+                <button type="button" class="manual-refund__nav-btn" onclick="openMemberBrowseModal()">회원 목록 보기</button>
+            </div>
             <div class="manual-refund__member-results" id="memberSearchResults"></div>
         </div>
 
         <!-- 2단계: 선택된 회원 + 결제 목록 -->
         <div class="manual-refund__step" id="paymentSelectStep" style="display:none;">
             <div class="manual-refund__selected-member" id="selectedMemberInfo"></div>
-            <button type="button" class="btn--sm btn--ghost" onclick="resetMemberSelection()">다른 회원 선택</button>
+            <button type="button" class="manual-refund__nav-btn" onclick="resetMemberSelection()">← 다른 회원 선택</button>
             <div class="manual-refund__payment-results" id="memberPaymentResults"></div>
         </div>
 
@@ -153,12 +165,24 @@
                 <label for="reason">환불 사유</label>
                 <input type="text" id="reason" name="reason" maxlength="200" required>
             </div>
-            <div class="cluster">
-                <button type="submit" class="btn btn--dark">환불 처리</button>
-                <button type="button" class="btn--sm btn--ghost" onclick="backToPaymentSelect()">결제 건 다시 선택</button>
-                <button type="button" class="btn btn--ghost" onclick="closeManualRefundModal()">취소</button>
+            <div class="cluster manual-refund__actions">
+                <button type="submit" class="manual-refund__submit-btn">환불 처리</button>
+                <button type="button" class="manual-refund__nav-btn" onclick="backToPaymentSelect()">← 결제 건 다시 선택</button>
+                <button type="button" class="manual-refund__nav-btn manual-refund__nav-btn--danger" onclick="closeManualRefundModal()">취소</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- 회원 목록 전용 모달: 검색 + 페이지네이션으로 회원이 많아도 쉽게 선택 -->
+<div class="refund-modal" id="memberBrowseModal">
+    <div class="refund-modal__backdrop" onclick="closeMemberBrowseModal()"></div>
+    <div class="refund-modal__content member-browse-modal__content" id="memberBrowseModalContent">
+        <button type="button" class="refund-modal__close" onclick="closeMemberBrowseModal()">&times;</button>
+        <h3 class="refund-modal__title">회원 목록</h3>
+        <input type="text" id="memberBrowseKeyword" class="member-browse-modal__search" placeholder="이름 또는 이메일로 검색" autocomplete="off">
+        <div class="manual-refund__member-results manual-refund__member-results--browse" id="memberBrowseResults"></div>
+        <div class="manual-refund__pager" id="memberBrowsePager"></div>
     </div>
 </div>
 
@@ -170,11 +194,19 @@
 <script th:inline="none">
     const refundBaseUrl = window.__REFUND_BASE_URL__;
 
+    /* 토스트 알림 자동 소멸 (3.5초 후 페이드아웃 후 제거) */
+    document.querySelectorAll('.alert').forEach(el => {
+        setTimeout(() => {
+            el.classList.add('alert--fade-out');
+            setTimeout(() => el.remove(), 300);
+        }, 5000);
+    });
+
     document.querySelectorAll('.js-refund-detail').forEach(btn => {
         btn.addEventListener('click', () => openRefundDetail(btn.dataset.id));
     });
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') { closeRefundModal(); closeManualRefundModal(); }
+        if (e.key === 'Escape') { closeRefundModal(); closeMemberBrowseModal(); closeManualRefundModal(); }
     });
 
     function closeRefundModal() {
@@ -262,7 +294,7 @@
             });
     }
 
-    /* 회원 검색 자동완성 (디바운스 300ms) */
+    /* 수동환불 모달 내 인라인 자동완성 검색 (키워드 필수) */
     let memberSearchTimer = null;
     document.getElementById('memberKeyword').addEventListener('input', (e) => {
         clearTimeout(memberSearchTimer);
@@ -273,6 +305,7 @@
             return;
         }
         memberSearchTimer = setTimeout(() => {
+            resultBox.innerHTML = '<div class="refund-modal__loading">불러오는 중…</div>';
             fetch(refundBaseUrl + '/members/search?keyword=' + encodeURIComponent(keyword))
                 .then(res => res.json())
                 .then(members => {
@@ -333,6 +366,76 @@
         document.getElementById('amount').value = p.refundableAmount;
         document.getElementById('paymentSelectStep').style.display = 'none';
         document.getElementById('refundFormStep').style.display = '';
+    }
+
+    /* 회원 목록 전용 모달: 검색 + 페이지네이션 (회원이 많아도 스크롤 없이 페이지로 탐색) */
+    let memberBrowsePage = 0;
+    let memberBrowseKeyword = '';
+    let memberBrowseTimer = null;
+
+    function openMemberBrowseModal() {
+        memberBrowsePage = 0;
+        memberBrowseKeyword = '';
+        document.getElementById('memberBrowseKeyword').value = '';
+        document.getElementById('memberBrowseModal').classList.add('is-open');
+        loadMemberBrowse();
+    }
+    function closeMemberBrowseModal() {
+        document.getElementById('memberBrowseModal').classList.remove('is-open');
+    }
+
+    function loadMemberBrowse() {
+        const box = document.getElementById('memberBrowseResults');
+        box.innerHTML = '<div class="refund-modal__loading">불러오는 중…</div>';
+        fetch(refundBaseUrl + '/members/browse?keyword=' + encodeURIComponent(memberBrowseKeyword) + '&page=' + (memberBrowsePage + 1))
+            .then(res => res.json())
+            .then(data => {
+                if (data.content.length === 0) {
+                    box.innerHTML = '<div class="manual-refund__empty">검색 결과가 없습니다.</div>';
+                } else {
+                    box.innerHTML = data.content.map(m => `
+                        <button type="button" class="manual-refund__member-item" onclick='chooseMemberFromBrowse(${m.memberId}, ${JSON.stringify(m.name)}, ${JSON.stringify(m.email)})'>
+                            <strong>${m.name}</strong>
+                            <span>${m.email}</span>
+                            <span>${m.maskedPhone || ''}</span>
+                        </button>
+                    `).join('');
+                }
+                renderMemberBrowsePager(data);
+            });
+    }
+
+    function renderMemberBrowsePager(data) {
+        const pagerBox = document.getElementById('memberBrowsePager');
+        if (data.totalPages <= 1) {
+            pagerBox.innerHTML = '';
+            return;
+        }
+        let html = '';
+        for (let p = 0; p < data.totalPages; p++) {
+            html += `<button type="button" class="manual-refund__pager-btn ${p === data.number ? 'is-active' : ''}" onclick="goMemberBrowsePage(${p})">${p + 1}</button>`;
+        }
+        pagerBox.innerHTML = html;
+    }
+
+    function goMemberBrowsePage(p) {
+        memberBrowsePage = p;
+        loadMemberBrowse();
+    }
+
+    document.getElementById('memberBrowseKeyword').addEventListener('input', (e) => {
+        clearTimeout(memberBrowseTimer);
+        const keyword = e.target.value.trim();
+        memberBrowseTimer = setTimeout(() => {
+            memberBrowseKeyword = keyword;
+            memberBrowsePage = 0;
+            loadMemberBrowse();
+        }, 300);
+    });
+
+    function chooseMemberFromBrowse(memberId, name, email) {
+        closeMemberBrowseModal();
+        selectMember(memberId, name, email);
     }
 </script>
 </body>

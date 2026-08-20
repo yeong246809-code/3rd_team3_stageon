@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 public class AdminRefundController {
 
     private static final int PAGE_SIZE = 5;
+    private static final int MEMBER_BROWSE_PAGE_SIZE = 8;
 
     private final AdminRefundService adminRefundService;
 
@@ -63,11 +64,19 @@ public class AdminRefundController {
         return adminRefundService.getDetail(id);
     }
 
-    /** 수동환불 모달 - 회원 검색 자동완성입니다. */
+    /** 수동환불 모달 - 입력창 자동완성용 회원 검색입니다(키워드 필수, 페이지네이션 없음). */
     @GetMapping("/members/search")
     @ResponseBody
-    public Object searchMembers(@RequestParam String keyword) {
+    public Object searchMembers(@RequestParam(required = false, defaultValue = "") String keyword) {
         return adminRefundService.searchMembers(keyword);
+    }
+
+    /** "회원 목록" 전용 모달 - 검색어 + 페이지네이션으로 회원을 조회합니다. */
+    @GetMapping("/members/browse")
+    @ResponseBody
+    public Object browseMembers(@RequestParam(required = false, defaultValue = "") String keyword,
+                                @RequestParam(defaultValue = "1") int page) {
+        return adminRefundService.searchMembersPaged(keyword, PageRequest.of(Math.max(page - 1, 0), MEMBER_BROWSE_PAGE_SIZE));
     }
 
     /** 수동환불 모달 - 선택한 회원의 환불 가능 결제 목록입니다. */
