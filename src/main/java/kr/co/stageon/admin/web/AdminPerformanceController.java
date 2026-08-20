@@ -5,7 +5,6 @@ import kr.co.stageon.admin.dto.SeatGradeSummaryDto;
 import kr.co.stageon.admin.dto.SeatMapItemDto;
 import kr.co.stageon.admin.service.AdminPerformanceService;
 import kr.co.stageon.admin.service.AdminVenueService;
-import kr.co.stageon.common.file.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,12 +23,10 @@ public class AdminPerformanceController {
 
     private final AdminPerformanceService adminPerformanceService;
     private final AdminVenueService adminVenueService;
-    private final FileStorageService fileStorageService;
 
     @PostMapping("/admin/performances")
     public String create(@ModelAttribute PerformanceFormDto form,
                          @RequestParam(defaultValue = "false") boolean draft) {
-        applyUploadedPoster(form);
         adminPerformanceService.create(form, draft);
         return "redirect:/admin/performances";
     }
@@ -37,7 +34,6 @@ public class AdminPerformanceController {
     @PostMapping("/admin/performances/{id}")
     public String update(@PathVariable Long id, @ModelAttribute PerformanceFormDto form,
                          @RequestParam(defaultValue = "false") boolean draft) {
-        applyUploadedPoster(form);
         adminPerformanceService.update(id, form, draft);
         return "redirect:/admin/performances";
     }
@@ -63,11 +59,4 @@ public class AdminPerformanceController {
         adminVenueService.renameGrade(gradeId, name);
     }
 
-    /** 새 파일이 업로드된 경우에만 posterUrl을 교체하고, 없으면 기존 값(hidden field)을 그대로 둡니다. */
-    private void applyUploadedPoster(PerformanceFormDto form) {
-        String savedUrl = fileStorageService.save(form.getPosterFile());
-        if (savedUrl != null) {
-            form.setPosterUrl(savedUrl);
-        }
-    }
 }

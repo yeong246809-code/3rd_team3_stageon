@@ -34,6 +34,9 @@ public class Performance {
     @Column(name = "poster_url", length = 500)
     private String posterUrl;
 
+    @Column(name = "poster_key", length = 500)
+    private String posterKey;
+
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
@@ -94,11 +97,20 @@ public class Performance {
                                      LocalDate startDate, LocalDate endDate, Integer runtimeMinutes,
                                      String ageText, String story, Status status, boolean draft,
                                      VenueHall venueHall, Integer basePrice) {
+        return create(kopisId, title, genre, posterUrl, null, startDate, endDate, runtimeMinutes,
+                ageText, story, status, draft, venueHall, basePrice);
+    }
+
+    public static Performance create(String kopisId, String title, String genre, String posterUrl, String posterKey,
+                                     LocalDate startDate, LocalDate endDate, Integer runtimeMinutes,
+                                     String ageText, String story, Status status, boolean draft,
+                                     VenueHall venueHall, Integer basePrice) {
         Performance p = new Performance();
         p.kopisId = kopisId;
         p.title = title;
         p.genre = genre;
         p.posterUrl = posterUrl;
+        p.posterKey = posterKey;
         p.startDate = startDate;
         p.endDate = endDate;
         p.runtimeMinutes = runtimeMinutes;
@@ -112,7 +124,7 @@ public class Performance {
     }
 
     /** 관리자 수정 폼에서 필드를 갱신할 때 사용합니다. */
-    public void update(String kopisId, String title, String genre, String posterUrl,
+    public void update(String kopisId, String title, String genre, String posterUrl, String posterKey,
                        LocalDate startDate, LocalDate endDate, Integer runtimeMinutes,
                        String ageText, String story, Status status, boolean draft,
                        VenueHall venueHall, Integer basePrice) {
@@ -120,6 +132,7 @@ public class Performance {
         this.title = title;
         this.genre = genre;
         this.posterUrl = posterUrl;
+        this.posterKey = posterKey;
         this.startDate = startDate;
         this.endDate = endDate;
         this.runtimeMinutes = runtimeMinutes;

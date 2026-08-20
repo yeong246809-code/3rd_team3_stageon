@@ -22,6 +22,7 @@ CREATE TABLE performances (
     title VARCHAR(200) NOT NULL COMMENT '공연명',
     genre VARCHAR(50) NOT NULL COMMENT '공연 장르',
     poster_url VARCHAR(500) NULL COMMENT '대표 포스터 URL',
+    poster_key VARCHAR(500) NULL COMMENT 'S3 객체 키',
     start_date DATE NOT NULL COMMENT '공연 시작일',
     end_date DATE NOT NULL COMMENT '공연 종료일',
     runtime_minutes INT NULL COMMENT '공연 시간(분)',
@@ -38,6 +39,36 @@ CREATE TABLE performances (
     UNIQUE KEY uk_performance_kopis_id (kopis_id),
     KEY idx_performance_search (status, start_date, genre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='공연 기본 정보';
+
+CREATE TABLE banners (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '배너 번호',
+    title VARCHAR(200) NOT NULL COMMENT '배너 제목',
+    description VARCHAR(500) NULL COMMENT '배너 설명',
+    image_url VARCHAR(500) NOT NULL COMMENT '브라우저 접근 URL',
+    image_key VARCHAR(500) NULL COMMENT 'S3 객체 키',
+    performance_id BIGINT NULL COMMENT '연결 공연 번호',
+    link_url VARCHAR(500) NULL COMMENT '배너 링크',
+    period_start DATE NULL COMMENT '노출 시작일',
+    period_end DATE NULL COMMENT '노출 종료일',
+    badge_text VARCHAR(50) NULL COMMENT '배지 문구',
+    button1_text VARCHAR(30) NOT NULL COMMENT '첫 번째 버튼 문구',
+    button1_url VARCHAR(500) NULL COMMENT '첫 번째 버튼 링크',
+    button2_text VARCHAR(30) NOT NULL COMMENT '두 번째 버튼 문구',
+    button2_url VARCHAR(500) NULL COMMENT '두 번째 버튼 링크',
+    display_order INT NOT NULL COMMENT '표시 순서',
+    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '노출 여부',
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '등록 일시',
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시',
+    PRIMARY KEY (id),
+    KEY idx_banner_display (is_active, display_order),
+    CONSTRAINT fk_banner_performance FOREIGN KEY (performance_id) REFERENCES performances (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='메인 히어로 배너';
+
+CREATE TABLE site_settings (
+    setting_key VARCHAR(100) NOT NULL COMMENT '설정 키',
+    setting_value VARCHAR(500) NOT NULL COMMENT '설정 값',
+    PRIMARY KEY (setting_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='사이트 전역 설정';
 
 CREATE TABLE venues (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '공연시설 번호',

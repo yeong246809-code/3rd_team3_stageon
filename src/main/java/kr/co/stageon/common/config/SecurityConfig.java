@@ -59,6 +59,8 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
+                                "/media/**",
+                                "/uploads/**",
                                 "/favicon.ico",
                                 "/error",
                                 "/api/payments/webhook"

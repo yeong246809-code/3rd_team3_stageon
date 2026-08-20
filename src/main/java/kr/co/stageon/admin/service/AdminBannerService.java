@@ -6,27 +6,20 @@ import kr.co.stageon.banner.domain.Banner;
 import kr.co.stageon.banner.repository.BannerRepository;
 import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.repository.PerformanceRepository;
+import kr.co.stageon.common.file.ObjectStorageService;
+import kr.co.stageon.common.file.StorageProperties;
+import kr.co.stageon.common.file.StorageTransactionCleanup;
+import kr.co.stageon.common.file.StoredFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /** AD "배너 관리" 화면의 목록, 등록, 수정, 삭제, 순서변경, 노출토글을 담당합니다. */
 @Service
 @RequiredArgsConstructor
 public class AdminBannerService {
-
-    private static final String UPLOAD_DIR = "uploads/banners";
-    private static final String UPLOAD_URL_PREFIX = "/uploads/banners/";
 
     /** 버튼 링크 드롭다운의 "사전 정의 페이지" 옵션입니다. 폼의 select value -> 실제 이동 경로. */
     public static final Map<String, String> PREDEFINED_LINKS = Map.ofEntries(
@@ -42,6 +35,9 @@ public class AdminBannerService {
 
     private final BannerRepository bannerRepository;
     private final PerformanceRepository performanceRepository;
+    private final ObjectStorageService storageService;
+    private final StorageProperties storageProperties;
+    private final StorageTransactionCleanup storageCleanup;
 
     @Transactional(readOnly = true)
     public List<BannerListItemDto> getList() {
@@ -87,12 +83,20 @@ public class AdminBannerService {
 
     @Transactional
     public void create(BannerFormDto form) {
-        String imageUrl = resolveImageUrl(form);
+        StoredFile uploaded = uploadImage(form);
+        String imageUrl = uploaded != null ? uploaded.publicUrl() : form.getImageUrl();
+        String imageKey = uploaded != null ? uploaded.objectKey() : null;
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new IllegalArgumentException("배너 이미지를 등록해주세요.");
+        }
+        if (uploaded != null) {
+            storageCleanup.deleteOnRollback(uploaded.objectKey());
+        }
         Performance performance = resolvePerformance(form.getPerformanceId());
         int nextOrder = bannerRepository.findAllByOrderByDisplayOrderAscIdAsc().size();
 
         Banner banner = Banner.create(
-                form.getTitle(), form.getDescription(), imageUrl, performance,
+                form.getTitle(), form.getDescription(), imageUrl, imageKey, performance,
                 form.getLinkUrl(), form.getPeriodStart(), form.getPeriodEnd(), form.getBadgeText(),
                 blankToDefault(form.getButton1Text(), "실시간 예매하기"), resolveButtonUrl(form.getButton1LinkType(), form.getButton1Url()),
                 blankToDefault(form.getButton2Text(), "자세히 보기"), resolveButtonUrl(form.getButton2LinkType(), form.getButton2Url()),
@@ -106,11 +110,19 @@ public class AdminBannerService {
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 배너입니다."));
 
-        String imageUrl = resolveImageUrl(form);
+        StoredFile uploaded = uploadImage(form);
+        String imageUrl = banner.getImageUrl();
+        String imageKey = banner.getImageKey();
+        if (uploaded != null) {
+            storageCleanup.deleteOnRollback(uploaded.objectKey());
+            storageCleanup.deleteAfterCommit(banner.getImageKey());
+            imageUrl = uploaded.publicUrl();
+            imageKey = uploaded.objectKey();
+        }
         Performance performance = resolvePerformance(form.getPerformanceId());
 
         banner.update(
-                form.getTitle(), form.getDescription(), imageUrl, performance,
+                form.getTitle(), form.getDescription(), imageUrl, imageKey, performance,
                 form.getLinkUrl(), form.getPeriodStart(), form.getPeriodEnd(), form.getBadgeText(),
                 blankToDefault(form.getButton1Text(), "실시간 예매하기"), resolveButtonUrl(form.getButton1LinkType(), form.getButton1Url()),
                 blankToDefault(form.getButton2Text(), "자세히 보기"), resolveButtonUrl(form.getButton2LinkType(), form.getButton2Url()),
@@ -120,10 +132,10 @@ public class AdminBannerService {
 
     @Transactional
     public void delete(Long id) {
-        if (!bannerRepository.existsById(id)) {
-            throw new IllegalArgumentException("존재하지 않는 배너입니다.");
-        }
-        bannerRepository.deleteById(id);
+        Banner banner = bannerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 배너입니다."));
+        bannerRepository.delete(banner);
+        storageCleanup.deleteAfterCommit(banner.getImageKey());
         reorderSequentially();
     }
 
@@ -206,32 +218,10 @@ public class AdminBannerService {
                 .orElse("CUSTOM");
     }
 
-    private String resolveImageUrl(BannerFormDto form) {
-        MultipartFile file = form.getBannerFile();
-        if (file == null || file.isEmpty()) {
-            if (form.getImageUrl() == null || form.getImageUrl().isBlank()) {
-                throw new IllegalArgumentException("배너 이미지를 등록해주세요.");
-            }
-            return form.getImageUrl();
+    private StoredFile uploadImage(BannerFormDto form) {
+        if (form.getBannerFile() == null || form.getBannerFile().isEmpty()) {
+            return null;
         }
-
-        try {
-            Path uploadPath = Path.of(UPLOAD_DIR);
-            Files.createDirectories(uploadPath);
-
-            String originalName = file.getOriginalFilename();
-            String extension = "";
-            if (originalName != null && originalName.contains(".")) {
-                extension = originalName.substring(originalName.lastIndexOf('.'));
-            }
-            String savedName = UUID.randomUUID() + extension;
-
-            Path target = uploadPath.resolve(savedName);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-
-            return UPLOAD_URL_PREFIX + savedName;
-        } catch (IOException e) {
-            throw new UncheckedIOException("배너 이미지 업로드에 실패했습니다.", e);
-        }
+        return storageService.storeImage(form.getBannerFile(), storageProperties.getS3().getBannerPrefix());
     }
 }

@@ -6,6 +6,9 @@ import tools.jackson.databind.ObjectMapper;
 import kr.co.stageon.admin.dto.PerformanceFormDto;
 import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.repository.PerformanceRepository;
+import kr.co.stageon.common.file.FileStorageService;
+import kr.co.stageon.common.file.StorageTransactionCleanup;
+import kr.co.stageon.common.file.StoredFile;
 import kr.co.stageon.venue.domain.VenueHall;
 import kr.co.stageon.venue.repository.VenueHallRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,8 @@ public class AdminPerformanceService {
     private final PerformanceRepository performanceRepository;
     private final VenueHallRepository venueHallRepository;
     private final ObjectMapper objectMapper;
+    private final FileStorageService fileStorageService;
+    private final StorageTransactionCleanup storageCleanup;
 
     /** 예전 방식(전체 조회)이 필요한 곳이 있을 수 있어 남겨둡니다. */
     @Transactional(readOnly = true)
@@ -62,8 +67,15 @@ public class AdminPerformanceService {
             checkHallConflict(hall.getId(), dto.getStartDate(), dto.getEndDate(), null);
         }
 
+        StoredFile uploaded = fileStorageService.savePoster(dto.getPosterFile());
+        if (uploaded != null) {
+            storageCleanup.deleteOnRollback(uploaded.objectKey());
+        }
+        String posterUrl = uploaded != null ? uploaded.publicUrl() : dto.getPosterUrl();
+        String posterKey = uploaded != null ? uploaded.objectKey() : null;
+
         Performance p = Performance.create(
-                dto.getKopisId(), dto.getTitle(), dto.getGenre(), dto.getPosterUrl(),
+                dto.getKopisId(), dto.getTitle(), dto.getGenre(), posterUrl, posterKey,
                 dto.getStartDate(), dto.getEndDate(), dto.getRuntimeMinutes(),
                 dto.getAgeText(), dto.getStory(), toStatus(dto.getStatus()), draft,
                 hall, dto.getBasePrice()
@@ -82,8 +94,18 @@ public class AdminPerformanceService {
             checkHallConflict(hall.getId(), dto.getStartDate(), dto.getEndDate(), id);
         }
 
+        StoredFile uploaded = fileStorageService.savePoster(dto.getPosterFile());
+        String posterUrl = p.getPosterUrl();
+        String posterKey = p.getPosterKey();
+        if (uploaded != null) {
+            storageCleanup.deleteOnRollback(uploaded.objectKey());
+            storageCleanup.deleteAfterCommit(p.getPosterKey());
+            posterUrl = uploaded.publicUrl();
+            posterKey = uploaded.objectKey();
+        }
+
         p.update(
-                dto.getKopisId(), dto.getTitle(), dto.getGenre(), dto.getPosterUrl(),
+                dto.getKopisId(), dto.getTitle(), dto.getGenre(), posterUrl, posterKey,
                 dto.getStartDate(), dto.getEndDate(), dto.getRuntimeMinutes(),
                 dto.getAgeText(), dto.getStory(), toStatus(dto.getStatus()), draft,
                 hall, dto.getBasePrice()
