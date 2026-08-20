@@ -29,6 +29,9 @@ public class Banner {
     @Column(name = "image_url", nullable = false, length = 500)
     private String imageUrl;
 
+    @Column(name = "image_key", length = 500)
+    private String imageKey;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "performance_id")
     private Performance performance;
@@ -69,7 +72,7 @@ public class Banner {
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    public static Banner create(String title, String description, String imageUrl, Performance performance,
+    public static Banner create(String title, String description, String imageUrl, String imageKey, Performance performance,
                                 String linkUrl, LocalDate periodStart, LocalDate periodEnd, String badgeText,
                                 String button1Text, String button1Url, String button2Text, String button2Url,
                                 int displayOrder, boolean active) {
@@ -77,6 +80,7 @@ public class Banner {
         b.title = title;
         b.description = description;
         b.imageUrl = imageUrl;
+        b.imageKey = imageKey;
         b.performance = performance;
         b.linkUrl = linkUrl;
         b.periodStart = periodStart;
@@ -91,13 +95,14 @@ public class Banner {
         return b;
     }
 
-    public void update(String title, String description, String imageUrl, Performance performance,
+    public void update(String title, String description, String imageUrl, String imageKey, Performance performance,
                        String linkUrl, LocalDate periodStart, LocalDate periodEnd, String badgeText,
                        String button1Text, String button1Url, String button2Text, String button2Url,
                        boolean active) {
         this.title = title;
         this.description = description;
         this.imageUrl = imageUrl;
+        this.imageKey = imageKey;
         this.performance = performance;
         this.linkUrl = linkUrl;
         this.periodStart = periodStart;
