@@ -82,6 +82,11 @@
         <button type="submit" class="btn btn--primary btn--wide" id="payBtn">
           모의 결제로 이동
         </button>
+
+        <button type="button" class="btn btn--secondary btn--wide" onclick="cancelOrder()" style="margin-top: 15px; background-color: #f8f9fa; color: #495057; border: 1px solid #ced4da;">
+          결제 취소 (좌석 해제)
+        </button>
+
       </form>
     </aside>
   </div>
@@ -169,7 +174,12 @@
     });
   }
 
-  // --- 이하 기존 이탈 감지 스크립트 그대로 유지 ---
+  function cancelOrder() {
+    if (confirm("결제를 취소하고 예매를 종료하시겠습니까?\n선택하신 좌석은 즉시 해제됩니다.")) {
+      window.close();
+    }
+  }
+
   function releaseHoldOnExit() {
     if (!isSubmitting) {
       const seatHoldInput = document.querySelector('input[name="seatHoldId"]');
@@ -218,7 +228,7 @@
       releaseHoldOnExit();
 
       // 메인 화면이나 좌석 선택 화면으로 강제 이동
-      window.location.href = '/';
+      window.close();
     }
   }, 1000);
 </script>
