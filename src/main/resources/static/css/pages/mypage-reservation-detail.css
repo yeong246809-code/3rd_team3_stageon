@@ -301,3 +301,13 @@
     background: #d0d5dd;
     cursor: not-allowed;
 }
+
+/* 예매 상세 - 공연명 상세 페이지 링크 */
+.detail-performance-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.detail-performance-link:hover {
+    text-decoration: underline;
+}

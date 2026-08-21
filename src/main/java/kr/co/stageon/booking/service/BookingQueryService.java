@@ -214,6 +214,8 @@ public class BookingQueryService {
                 reservation.getId(),
                 reservation.getBookingNumber(),
                 reservation.getMember().getId(),
+                // 공연 상세 페이지 링크에 사용할 ID
+                performance.getId(),
                 performance.getTitle(),
                 performance.getPosterUrl(),
                 schedule.getStartsAt(),
