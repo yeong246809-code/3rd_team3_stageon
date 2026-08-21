@@ -181,10 +181,10 @@
         headers: headers
       }).then(() => {
         alert("결제가 취소되어 좌석이 해제되었습니다.");
-        window.location.href = '/';
+        window.close(); //창닫기로 변경
       }).catch(err => {
         console.error("취소 처리 중 오류:", err);
-        window.location.href = '/';
+        window.close();
       });
     }
   }
@@ -229,7 +229,7 @@
 
       // 타이머 만료 시에도 좌석 해제 API 호출
       releaseHoldOnExit();
-      window.location.href = '/';
+      window.close();
     }
   }, 1000);
 </script>

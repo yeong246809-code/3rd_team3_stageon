@@ -60,7 +60,7 @@
           window.location.replace(`/booking/seats?scheduleId=${encodeURIComponent(scheduleId)}`);
         }, 1500);
       } else if (status === 'WAITING') {
-        let pollDelay = 3000;
+        let pollDelay = 1000;
 
         const pollQueueStatus = async () => {
           try {
@@ -86,13 +86,25 @@
               return;
             }
 
+            const currentOrder = Number(queueInfo.waitingOrder || 0);
+
             document.getElementById('queueWaitingOrder').textContent =
                     Number(queueInfo.waitingOrder || 0).toLocaleString('ko-KR');
             document.getElementById('queueProgress').style.width =
                     `${queueInfo.progressPercentage || 5}%`;
             document.getElementById('queueEstimate').textContent =
                     `예상 대기 시간 약 ${queueInfo.estimatedMinutes || 1}분 · 화면을 닫지 마세요.`;
-            pollDelay = Math.min(10000, pollDelay + 1000);
+
+            if (currentOrder > 1000) {
+              pollDelay = 10000;
+            } else if (currentOrder > 300) {
+              pollDelay = 5000;
+            } else if (currentOrder > 50) {
+              pollDelay = 3000;
+            } else {
+              pollDelay = 1000; // 혼자 남았거나 입장 직전이면 1초마다 빠르게 찌릅니다.
+            }
+
           } catch (error) {
             console.error(error);
             pollDelay = Math.min(10000, pollDelay + 2000);
