@@ -1,0 +1,297 @@
+
+
+
+
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 정산·매출 관리</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/settlements.css}" href="/css/pages/settlements.css">
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>정산·매출 관리</h1>
+                    <p>공연별 매출·환불·순매출 현황을 조회합니다.</p>
+                </div>
+            </header>
+
+            <!-- 통계 카드 -->
+            <div class="cluster settlement-stats">
+                <div class="card settlement-stat-card">
+                    <span class="settlement-stat-label">총 매출</span>
+                    <strong class="settlement-stat-value" th:text="${#numbers.formatInteger(stats.totalGrossAmount(), 0, 'COMMA')} + '원'">0원</strong>
+                </div>
+                <div class="card settlement-stat-card settlement-stat-card--danger">
+                    <span class="settlement-stat-label">총 환불액</span>
+                    <strong class="settlement-stat-value" th:text="${#numbers.formatInteger(stats.totalRefundAmount(), 0, 'COMMA')} + '원'">0원</strong>
+                </div>
+                <div class="card settlement-stat-card settlement-stat-card--accent">
+                    <span class="settlement-stat-label">순매출</span>
+                    <strong class="settlement-stat-value settlement-stat-value--accent" th:text="${#numbers.formatInteger(stats.netRevenue(), 0, 'COMMA')} + '원'">0원</strong>
+                </div>
+                <div class="card settlement-stat-card">
+                    <span class="settlement-stat-label">결제 건수</span>
+                    <strong class="settlement-stat-value" th:text="${stats.paymentCount()} + '건'">0건</strong>
+                </div>
+            </div>
+
+            <div class="card">
+                <form class="settlement-toolbar" method="get" th:action="@{/admin/settlements}" id="settlementSearchForm">
+                    <div class="settlement-field settlement-field--wide">
+                        <label>공연명</label>
+                        <input class="input" type="text" id="keywordInput" name="keyword" th:value="${keyword}"
+                               placeholder="클릭해서 공연 선택" readonly onclick="openPerformancePicker()">
+                    </div>
+                    <div class="settlement-field">
+                        <label>시작일</label>
+                        <input class="input" type="date" name="fromDate" th:value="${fromDate}">
+                    </div>
+                    <div class="settlement-field">
+                        <label>종료일</label>
+                        <input class="input" type="date" name="toDate" th:value="${toDate}">
+                    </div>
+                    <div class="settlement-field settlement-field--actions">
+                        <button class="btn btn--dark" type="submit">검색</button>
+                        <a class="btn btn--ghost" th:href="@{/admin/settlements}">초기화</a>
+                        <button class="btn btn--csv" type="button" id="csvExportBtn">⇩ CSV 내보내기</button>
+                    </div>
+                </form>
+
+                <div class="table-wrap">
+                    <table class="table" id="settlementsTable">
+                        <thead>
+                        <tr>
+                            <th>공연명</th>
+                            <th>결제건수</th>
+                            <th>좌석매출</th>
+                            <th>환불액</th>
+                            <th>순매출</th>
+                            <th>관리</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr class="settlement-empty-row" th:if="${settlements.empty}">
+                            <td colspan="6">조회된 정산 내역이 없습니다.</td>
+                        </tr>
+                        <tr th:each="s : ${settlements.content}">
+                            <td th:text="${s.title()}">오페라의 유령</td>
+                            <td th:text="${s.paymentCount()} + '건'">12건</td>
+                            <td th:text="${#numbers.formatInteger(s.grossAmount(), 0, 'COMMA')} + '원'">1,620,000원</td>
+                            <td th:text="${#numbers.formatInteger(s.refundAmount(), 0, 'COMMA')} + '원'">0원</td>
+                            <td class="is-amount" th:text="${#numbers.formatInteger(s.netAmount(), 0, 'COMMA')} + '원'">1,620,000원</td>
+                            <td>
+                                <button type="button" class="btn btn--detail" th:attr="data-id=${s.performanceId()}"
+                                        onclick="openSettlementDetail(this.dataset.id)">상세보기</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="settlement-pagination" th:if="${settlements.totalPages > 1}">
+                    <a th:each="i : ${#numbers.sequence(1, settlements.totalPages)}"
+                       class="settlement-page-link" th:classappend="${i == currentPage} ? 'is-active'"
+                       th:href="@{/admin/settlements(page=${i}, keyword=${keyword}, fromDate=${fromDate}, toDate=${toDate})}"
+                       th:text="${i}">1</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- 공연 정산 상세 모달: 회차별 매출 breakdown -->
+<div class="settlement-modal" id="settlementModal">
+    <div class="settlement-modal__backdrop" onclick="closeSettlementModal()"></div>
+    <div class="settlement-modal__content" id="settlementModalContent">
+        <button type="button" class="settlement-modal__close" onclick="closeSettlementModal()">&times;</button>
+        <div id="settlementModalBody">
+            <div class="settlement-modal__head">
+                <div class="settlement-modal__eyebrow">불러오는 중…</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 공연명 검색 모달: 목록에서 공연 선택 -->
+<div class="settlement-modal settlement-modal--picker" id="performancePickerModal">
+    <div class="settlement-modal__backdrop" onclick="closePerformancePicker()"></div>
+    <div class="settlement-modal__content settlement-modal__content--picker">
+        <button type="button" class="settlement-modal__close" onclick="closePerformancePicker()">&times;</button>
+        <div class="settlement-picker__head">
+            <div class="settlement-modal__eyebrow">공연 검색</div>
+            <h3 class="settlement-modal__title">공연을 선택하세요</h3>
+            <input class="input" type="text" id="performancePickerInput" placeholder="공연명으로 검색" oninput="searchPerformanceOptions(this.value)">
+        </div>
+        <div class="settlement-picker__list" id="performancePickerList">
+            <div class="settlement-picker__empty">검색 중…</div>
+        </div>
+        <button type="button" class="btn btn--ghost settlement-picker__clear" onclick="clearPerformanceKeyword()">전체 공연 보기 (검색어 초기화)</button>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    /* Thymeleaf 서버 URL 변수 주입 전용 스크립트입니다. */
+    window.__SETTLEMENT_DETAIL_URL_BASE__ = /*[[@{/admin/settlements}]]*/ '/admin/settlements';
+    window.__SETTLEMENT_OPTIONS_URL__ = /*[[@{/admin/settlements/performance-options}]]*/ '/admin/settlements/performance-options';
+</script>
+<script th:inline="none">
+    const settlementDetailUrlBase = window.__SETTLEMENT_DETAIL_URL_BASE__;
+    const settlementOptionsUrl = window.__SETTLEMENT_OPTIONS_URL__;
+    const settlementQuery = window.location.search.replace(/^\?/, '');
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeSettlementModal();
+            closePerformancePicker();
+        }
+    });
+
+    function fmtMoney(n) {
+        return Number(n).toLocaleString('ko-KR') + '원';
+    }
+
+    function fmtDateTime(s) {
+        if (!s) return '-';
+        return s.replace('T', ' ').substring(0, 16);
+    }
+
+    /* ---------- 정산 상세 모달 ---------- */
+
+    function closeSettlementModal() {
+        document.getElementById('settlementModal').classList.remove('is-open');
+    }
+
+    function buildDetailUrl(performanceId) {
+        const params = new URLSearchParams(settlementQuery);
+        const filtered = new URLSearchParams();
+        if (params.has('fromDate') && params.get('fromDate')) filtered.set('fromDate', params.get('fromDate'));
+        if (params.has('toDate') && params.get('toDate')) filtered.set('toDate', params.get('toDate'));
+        const qs = filtered.toString();
+        return settlementDetailUrlBase + '/' + performanceId + '/detail' + (qs ? '?' + qs : '');
+    }
+
+    function openSettlementDetail(performanceId) {
+        document.getElementById('settlementModalBody').innerHTML =
+            '<div class="settlement-modal__head"><div class="settlement-modal__eyebrow">불러오는 중…</div></div>';
+        document.getElementById('settlementModal').classList.add('is-open');
+
+        fetch(buildDetailUrl(performanceId))
+            .then(res => res.json())
+            .then(d => {
+                const rows = d.schedules.map(s => `
+                <tr>
+                  <td>${fmtDateTime(s.startsAt)}</td>
+                  <td>${s.paymentCount}건</td>
+                  <td>${fmtMoney(s.grossAmount)}</td>
+                  <td>${fmtMoney(s.refundAmount)}</td>
+                  <td class="is-amount">${fmtMoney(s.netAmount)}</td>
+                </tr>`).join('') || '<tr><td colspan="5">회차별 매출 내역이 없습니다.</td></tr>';
+
+                document.getElementById('settlementModalBody').innerHTML = `
+                <div class="settlement-modal__head">
+                  <div class="settlement-modal__eyebrow">공연 정산 상세</div>
+                  <h3 class="settlement-modal__title">${d.title}</h3>
+                  <div class="settlement-modal__summary">
+                    <span>총매출 <strong>${fmtMoney(d.totalGrossAmount)}</strong></span>
+                    <span>환불액 <strong>${fmtMoney(d.totalRefundAmount)}</strong></span>
+                    <span>순매출 <strong class="is-amount">${fmtMoney(d.totalNetAmount)}</strong></span>
+                  </div>
+                </div>
+                <div class="settlement-modal__body">
+                  <h4>회차별 매출</h4>
+                  <table class="table settlement-detail-table">
+                    <thead>
+                    <tr><th>회차 일시</th><th>결제건수</th><th>좌석매출</th><th>환불액</th><th>순매출</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                  </table>
+                </div>
+              `;
+            });
+    }
+
+    /* ---------- 공연명 검색 모달 ---------- */
+
+    let pickerDebounce = null;
+
+    function openPerformancePicker() {
+        document.getElementById('performancePickerModal').classList.add('is-open');
+        document.getElementById('performancePickerInput').value = '';
+        document.getElementById('performancePickerInput').focus();
+        searchPerformanceOptions('');
+    }
+
+    function closePerformancePicker() {
+        document.getElementById('performancePickerModal').classList.remove('is-open');
+    }
+
+    function clearPerformanceKeyword() {
+        document.getElementById('keywordInput').value = '';
+        closePerformancePicker();
+    }
+
+    function searchPerformanceOptions(keyword) {
+        clearTimeout(pickerDebounce);
+        pickerDebounce = setTimeout(() => {
+            const url = settlementOptionsUrl + (keyword ? '?keyword=' + encodeURIComponent(keyword) : '');
+            fetch(url)
+                .then(res => res.json())
+                .then(list => {
+                    const listEl = document.getElementById('performancePickerList');
+                    if (!list.length) {
+                        listEl.innerHTML = '<div class="settlement-picker__empty">검색 결과가 없습니다.</div>';
+                        return;
+                    }
+                    listEl.innerHTML = list.map(p => `
+                  <button type="button" class="settlement-picker__item" onclick="selectPerformance('${p.title.replace(/'/g, "\\'")}')">
+                    ${p.title}
+                  </button>`).join('');
+                });
+        }, 200);
+    }
+
+    function selectPerformance(title) {
+        document.getElementById('keywordInput').value = title;
+        closePerformancePicker();
+    }
+
+    /* ---------- CSV 내보내기 ---------- */
+    document.getElementById('csvExportBtn').addEventListener('click', () => {
+        const rows = [['공연명', '결제건수', '좌석매출', '환불액', '순매출']];
+        document.querySelectorAll('#settlementsTable tbody tr').forEach(tr => {
+            if (tr.classList.contains('settlement-empty-row')) return;
+            const cells = tr.querySelectorAll('td');
+            rows.push([
+                cells[0].innerText.trim(),
+                cells[1].innerText.trim(),
+                cells[2].innerText.trim(),
+                cells[3].innerText.trim(),
+                cells[4].innerText.trim()
+            ]);
+        });
+        const csv = rows.map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\r\n');
+        const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const today = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `stageon-settlements-${today}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+</script>
+</body>
+</html>
