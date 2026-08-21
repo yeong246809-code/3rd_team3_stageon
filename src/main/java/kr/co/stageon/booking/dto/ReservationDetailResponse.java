@@ -15,6 +15,10 @@ public record ReservationDetailResponse(
         Long reservationId,
         String bookingNumber,
         Long memberId,
+
+        // 공연 상세 페이지 이동에 사용할 공연 번호
+        Long performanceId,
+
         String performanceTitle,
         String posterUrl,
         LocalDateTime startsAt,

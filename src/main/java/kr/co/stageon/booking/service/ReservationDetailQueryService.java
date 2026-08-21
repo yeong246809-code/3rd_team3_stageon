@@ -63,6 +63,8 @@ public class ReservationDetailQueryService {
                 reservation.getId(),
                 reservation.getBookingNumber(),
                 reservation.getMember().getId(),
+                // 공연 상세 페이지 이동에 사용할 공연 ID
+                performance.getId(),
                 performance.getTitle(),
                 performance.getPosterUrl(),
                 schedule.getStartsAt(),

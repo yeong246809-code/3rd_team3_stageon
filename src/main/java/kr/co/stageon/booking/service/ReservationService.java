@@ -68,6 +68,19 @@ public class ReservationService {
         }
         reservationRepository.save(reservation);
 
+        // 3-1. 사용자가 선택한 좌석을 예매 좌석으로 저장
+        // READY(결제 대기) 상태에서도 좌석은 예매에 연결되어 있어야 합니다.
+        for (SeatHoldItem item : holdItems) {
+
+            ReservationSeat reservationSeat =
+                    ReservationSeat.create(
+                            reservation,
+                            item.getScheduleSeat()
+                    );
+
+            reservationSeatRepository.save(reservationSeat);
+        }
+
         // 💡 4. 결제(Payment) 생성 (여기에 가상계좌 정보가 들어갑니다!)
         Payment payment = Payment.builder()
                 .reservation(reservation)
