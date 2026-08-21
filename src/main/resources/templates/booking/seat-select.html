@@ -147,7 +147,11 @@
         if (!response.ok) {
           const errorText = await response.text();
           alert(errorText);
-          window.close();
+          //이선좌 창꺼짐 수정
+          button.classList.add('is-disabled');
+          button.disabled = true;
+          button.style.backgroundColor = '#ccc';
+          button.style.borderColor = '#ccc';
           return;
         }
 
