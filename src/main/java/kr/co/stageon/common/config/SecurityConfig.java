@@ -63,7 +63,8 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/favicon.ico",
                                 "/error",
-                                "/api/payments/webhook"
+                                "/api/payments/webhook",
+                                "/api/ai/**"
                         ).permitAll()
 
                         .requestMatchers(

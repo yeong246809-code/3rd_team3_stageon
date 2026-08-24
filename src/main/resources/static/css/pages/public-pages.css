@@ -177,10 +177,27 @@
 .profile-avatar { width: 72px; height: 72px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--brand); font-size: 24px; font-weight: 800; }
 .ai-grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
 .chat-window { min-height: 530px; display: flex; flex-direction: column; }
-.messages { flex: 1; display: grid; align-content: start; gap: 14px; }
-.message { max-width: 75%; padding: 13px 16px; border-radius: 14px; background: var(--surface-2); font-size: 14px; }
+.messages { min-height: 360px; max-height: 580px; flex: 1; display: grid; align-content: start; gap: 14px; overflow-y: auto; padding-right: 4px; }
+.message { max-width: 82%; padding: 13px 16px; border-radius: 14px; background: var(--surface-2); font-size: 14px; line-height: 1.7; white-space: pre-line; }
 .message--user { margin-left: auto; color: #fff; background: var(--brand); }
+.message--error { color: #b42318; background: #fee4e2; }
 .chat-compose { margin-top: 18px; display: flex; gap: 10px; }
+.chat-compose .input { flex: 1; }
+.chat-compose .btn { flex: none; }
+.chat-compose .btn:disabled { cursor: wait; opacity: .65; }
+.ai-chat-status { min-height: 21px; margin-top: 12px; color: var(--muted); font-size: 13px; }
+.ai-quick-question { width: 100%; text-align: left; }
+.ai-performance-results { display: grid; gap: 10px; margin-top: 14px; }
+.ai-performance-result { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; white-space: normal; }
+.ai-performance-result img { width: 58px; height: 78px; object-fit: cover; border-radius: 7px; background: var(--surface-2); }
+.ai-performance-result__placeholder { width: 58px; height: 78px; display: grid; place-items: center; border-radius: 7px; color: var(--muted); background: var(--surface-2); font-size: 11px; }
+.ai-performance-result strong { display: block; line-height: 1.4; }
+.ai-performance-result p { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.ai-performance-result__badge { display: inline-flex; margin-bottom: 8px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.ai-performance-result__badge.is-stageon { background: #e8f7ef; color: #137a45; }
+.ai-performance-result__badge.is-kopis { background: #f1f2f5; color: #5d6470; }
+.ai-performance-result__booking { display: inline-flex; margin-top: 10px; padding: 7px 12px; border-radius: 8px; background: #1f7a4d; color: #fff; font-size: 12px; font-weight: 700; text-decoration: none; }
+.ai-performance-result small { display: block; margin-top: 8px; color: #777f8b; }
 
 /* 찜한 공연 목록 그리드 */
 .favorite-performance-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
@@ -222,6 +239,6 @@
 @media (max-width: 700px) { .favorite-performance-grid { grid-template-columns: 1fr; } }
 @media (max-width: 900px) { .detail-hero { grid-template-columns: 220px minmax(0, 1fr); } .detail-hero > :last-child { grid-column: 1 / -1; } .detail-booking { position: static; } }
 @media (max-width: 1100px) { .performance-list-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 700px) { .detail-hero, .mypage-grid, .ai-grid { grid-template-columns: 1fr; } .detail-poster { max-width: 300px; } .performance-detail-heading__meta { align-items: flex-start; flex-direction: column; gap: 8px; } .info-list div { grid-template-columns: 86px minmax(0, 1fr); } .performance-detail-section { padding-top: 48px; } .performance-venue { margin-top: 40px; padding: 22px; } .search-toolbar { align-items: flex-start; flex-direction: column; } .performance-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; } .performance-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; } }
+@media (max-width: 700px) { .detail-hero, .mypage-grid, .ai-grid { grid-template-columns: 1fr; } .detail-poster { max-width: 300px; } .performance-detail-heading__meta { align-items: flex-start; flex-direction: column; gap: 8px; } .info-list div { grid-template-columns: 86px minmax(0, 1fr); } .performance-detail-section { padding-top: 48px; } .performance-venue { margin-top: 40px; padding: 22px; } .search-toolbar { align-items: flex-start; flex-direction: column; } .performance-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; } .performance-list-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; } .message { max-width: 92%; } .chat-compose { align-items: stretch; flex-direction: column; } .chat-compose .btn { width: 100%; } }
 @media (max-width: 380px) { .performance-list-grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .performance-list-card { transition: none; } .performance-list-card:hover, .performance-list-card:focus-visible { transform: none; } }
