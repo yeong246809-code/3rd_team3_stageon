@@ -174,15 +174,14 @@
                                 class="ticket-qr__button"
                                 th:if="${ticket.ticketStatus == 'AVAILABLE'}"
                                 th:attr="
+                                    data-ticket-id=${ticket.reservationSeatId},
                                     data-ticket-status=${ticket.ticketStatus},
                                     data-ticket-title=${ticket.performanceTitle},
                                     data-ticket-seat=|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|,
                                     data-qr-image=${ticket.qrCodeImage}
                                 ">
 
-                            <img class="ticket-qr__image"
-                                 th:src="${ticket.qrCodeImage}"
-                                 alt="모바일 티켓 QR 코드">
+                            <div class="ticket-qr__list-canvas" style="display: inline-block; padding: 5px; background: #fff; border-radius: 8px;"></div>
 
                         </button>
 
@@ -360,9 +359,10 @@
         <div class="ticket-modal__qr-view"
              data-modal-qr-view>
 
-            <img src=""
-                 alt="확대된 모바일 티켓 QR 코드"
-                 data-modal-qr-image>
+            <div id="modal-qr-canvas" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+            <div id="qr-timer-display" style="color: #f03e3e; font-weight: bold; font-size: 18px; text-align: center; margin-bottom: 15px;">
+                남은 시간: <span id="qr-time-left">30</span>초
+            </div>
 
             <strong>입장용 QR CODE</strong>
             <p>입장 시 직원에게 이 화면을 보여주세요.</p>
@@ -469,7 +469,7 @@
 <!--다음 단계에서 생성할 JS
     static/js/pages/mypage-tickets.js-->
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script th:src="@{/js/pages/mypage-tickets.js}"
         src="/js/pages/mypage-tickets.js"></script>
 

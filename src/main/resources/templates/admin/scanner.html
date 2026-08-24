@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 스캐너</title>
+    <!-- 카메라 스캔 라이브러리 -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { text-align: center; background: #333; color: white; font-family: sans-serif; padding-top: 50px; }
+        #reader { width: 100%; max-width: 500px; margin: 0 auto; background: black; }
+        #result { margin-top: 20px; font-size: 20px; font-weight: bold; padding: 15px; border-radius: 8px; }
+        .success { background: #2f9e44; }
+        .fail { background: #e03131; }
+    </style>
+</head>
+<body>
+<h1>티켓 검표 스캐너</h1>
+<div id="reader"></div>
+<div id="result">QR 코드를 스캔해 주세요.</div>
+
+<script>
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+    const resultDiv = document.getElementById('result');
+    let isScanning = false;
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (isScanning || !decodedText.startsWith("STAGEON:DYNAMIC:")) return;
+        isScanning = true;
+
+        // 🚨 스캔 성공 시 백엔드 검증 API로 즉시 통신
+        fetch(`/api/tickets/validate?token=${encodeURIComponent(decodedText)}`)
+            .then(res => res.text().then(text => ({ status: res.status, text })))
+            .then(res => {
+                resultDiv.textContent = res.text;
+                resultDiv.className = res.status === 200 ? "success" : "fail";
+                setTimeout(() => { isScanning = false; }, 2000); // 2초 대기 후 다음 스캔 재개
+            });
+    }
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+</body>
+</html>
