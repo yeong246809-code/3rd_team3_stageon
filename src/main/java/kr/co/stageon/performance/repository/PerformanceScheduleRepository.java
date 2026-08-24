@@ -2,6 +2,7 @@ package kr.co.stageon.performance.repository;
 
 import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.domain.PerformanceSchedule;
+import kr.co.stageon.booking.domain.ScheduleSeat;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -65,6 +66,47 @@ public interface PerformanceScheduleRepository extends JpaRepository<Performance
             @Param("now") LocalDateTime now,
             @Param("statuses") List<PerformanceSchedule.Status> statuses,
             @Param("performanceStatuses") List<Performance.Status> performanceStatuses,
+            Pageable pageable
+    );
+
+    /**
+     * AI 추천용으로 현재 StageOn에서 실제 예매 가능한 회차만 조회합니다.
+     * 공개 공연, 판매 시간, 취소 여부, 잔여 좌석을 모두 DB에서 검증합니다.
+     */
+    @Query("""
+            SELECT ps
+            FROM PerformanceSchedule ps
+            JOIN FETCH ps.performance p
+            JOIN FETCH ps.venueHall vh
+            JOIN FETCH vh.venue v
+            WHERE p.draft = false
+              AND p.status IN :performanceStatuses
+              AND p.endDate >= :today
+              AND ps.status <> :cancelledStatus
+              AND ps.salesOpenAt <= :now
+              AND ps.salesCloseAt > :now
+              AND ps.startsAt >= :from
+              AND ps.startsAt < :toExclusive
+              AND (:genre IS NULL OR p.genre = :genre)
+              AND (:region IS NULL OR LOWER(v.region) LIKE LOWER(CONCAT('%', :region, '%')))
+              AND EXISTS (
+                    SELECT ss.id
+                    FROM ScheduleSeat ss
+                    WHERE ss.schedule = ps
+                      AND ss.status = :availableSeatStatus
+              )
+            ORDER BY p.startDate ASC, ps.startsAt ASC, p.id ASC
+            """)
+    List<PerformanceSchedule> findBookableForAi(
+            @Param("performanceStatuses") List<Performance.Status> performanceStatuses,
+            @Param("cancelledStatus") PerformanceSchedule.Status cancelledStatus,
+            @Param("availableSeatStatus") ScheduleSeat.Status availableSeatStatus,
+            @Param("today") java.time.LocalDate today,
+            @Param("now") LocalDateTime now,
+            @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive,
+            @Param("genre") String genre,
+            @Param("region") String region,
             Pageable pageable
     );
 

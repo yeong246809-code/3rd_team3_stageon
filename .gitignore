@@ -121,3 +121,6 @@ stageon-ai-gateway/
 # Generated Notion documentation assets
 /docs/diagrams/
 /output/
+
+# Accidental source archive
+/src.zip
