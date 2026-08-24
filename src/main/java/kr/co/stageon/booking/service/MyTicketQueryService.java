@@ -5,6 +5,7 @@ import kr.co.stageon.booking.domain.ReservationSeat;
 import kr.co.stageon.booking.dto.MyTicketResponse;
 import kr.co.stageon.booking.repository.ReservationRepository;
 import kr.co.stageon.booking.repository.ReservationSeatRepository;
+import kr.co.stageon.ticket.repository.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class MyTicketQueryService {
 
     private final ReservationRepository reservationRepository;
     private final ReservationSeatRepository reservationSeatRepository;
+    private final TicketRepository ticketRepository;
     private final QrCodeService qrCodeService;
 
 
@@ -69,15 +71,12 @@ public class MyTicketQueryService {
                  * AVAILABLE → QR 생성
                  * ENDED     → QR 없음
                  */
-                String qrCodeImage = null;
-
+                String qrData = null;
                 if ("AVAILABLE".equals(ticketStatus)) {
-
-                    String qrContent =
-                            "STAGEON:TICKET:" + seat.getId();
-
-                    qrCodeImage =
-                            qrCodeService.generateQrCode(qrContent);
+                    // DB에서 해당 좌석의 Ticket 엔티티를 찾아 qrTokenHash를 가져옵니다.
+                    qrData = ticketRepository.findByReservationSeatId(seat.getId())
+                            .map(kr.co.stageon.ticket.domain.Ticket::getQrTokenHash)
+                            .orElse("STAGEON:TICKET:" + seat.getId()); // Ticket이 없을 때의 임시 Fallback
                 }
 
 
@@ -101,14 +100,37 @@ public class MyTicketQueryService {
                                 seat.getCapturedUnitPrice(),
 
                                 ticketStatus,
-                                qrCodeImage
+                                qrData
                         );
 
                 tickets.add(ticket);
             }
         }
 
-        return tickets;
+        // 🚨 필터링 및 정렬 로직 추가
+        LocalDateTime now = LocalDateTime.now();
+
+        return tickets.stream()
+                // 1. [필터링] 공연 시작 24시간이 지나면 화면에서 숨김 처리
+                .filter(ticket -> {
+                    if (ticket.startsAt() == null) return true;
+                    return ticket.startsAt().plusDays(1).isAfter(now);
+                })
+                // 2. [정렬] ENDED는 맨 밑으로, 나머지는 날짜 오름차순(빠른 순) 정렬
+                .sorted((t1, t2) -> {
+                    boolean t1Ended = "ENDED".equals(t1.ticketStatus());
+                    boolean t2Ended = "ENDED".equals(t2.ticketStatus());
+
+                    if (t1Ended && !t2Ended) return 1;
+                    if (!t1Ended && t2Ended) return -1;
+
+                    if (t1.startsAt() == null && t2.startsAt() == null) return 0;
+                    if (t1.startsAt() == null) return 1;
+                    if (t2.startsAt() == null) return -1;
+
+                    return t1.startsAt().compareTo(t2.startsAt());
+                })
+                .toList();
     }
 
 
@@ -131,9 +153,9 @@ public class MyTicketQueryService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // QR 공개 시각 = 공연 시작 24시간 전
+        // QR 공개 시각 = 공연 시작 2시간 전
         LocalDateTime qrOpenAt =
-                startsAt.minusHours(24);
+                startsAt.minusHours(2);
 
 
         // 아직 QR 공개 전

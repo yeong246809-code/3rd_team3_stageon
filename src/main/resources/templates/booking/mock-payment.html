@@ -51,9 +51,19 @@
             <span style="font-weight: 500; font-size: 16px; color: #333d4b;">토스페이</span>
           </label>
 
-          <label style="display: flex; align-items: center; padding: 18px 16px; border-bottom: 1px solid #e5e8eb; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#fff'">
+          <!-- 가상계좌 조건부 비활성화 (UX 향상) -->
+          <label th:if="${isVbankAvailable}" style="display: flex; align-items: center; padding: 18px 16px; border-bottom: 1px solid #e5e8eb; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#fff'">
             <input type="radio" name="payMethod" value="가상계좌" style="width: 20px; height: 20px; margin-right: 14px; accent-color: #3182f6; cursor: pointer;">
             <span style="font-weight: 500; font-size: 16px; color: #333d4b;">가상계좌 (무통장입금)</span>
+          </label>
+
+          <!-- 하루 전날이라 막힌 경우 (회색 처리 및 안내 문구 추가) -->
+          <label th:unless="${isVbankAvailable}" style="display: flex; align-items: center; padding: 18px 16px; border-bottom: 1px solid #e5e8eb; cursor: not-allowed; background-color: #f8f9fa;">
+            <input type="radio" name="payMethod" value="가상계좌" disabled style="width: 20px; height: 20px; margin-right: 14px;">
+            <span style="font-weight: 400; font-size: 16px; color: #adb5bd;">
+              가상계좌 (무통장입금)
+              <small style="color: #f03e3e; margin-left: 8px; font-weight: bold;">(공연 24시간 전 사용 불가)</small>
+            </span>
           </label>
 
           <label style="display: flex; align-items: center; padding: 18px 16px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='#fff'">
@@ -176,7 +186,7 @@
       if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
 
       // 백엔드로 즉시 취소 API 전송
-      fetch(`/booking/seats/holds/${seatHoldId}/cancel`, {
+      fetch(`/api/seats/holds/${seatHoldId}/cancel`, {
         method: 'POST',
         headers: headers
       }).then(() => {
@@ -201,7 +211,7 @@
       const headers = { 'Content-Type': 'application/json' };
       if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
 
-      fetch(`/booking/seats/holds/${seatHoldId}/cancel`, {
+      fetch(`/api/seats/holds/${seatHoldId}/cancel`, {
         method: 'POST',
         headers: headers,
         keepalive: true

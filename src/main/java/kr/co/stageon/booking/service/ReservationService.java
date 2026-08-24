@@ -48,8 +48,16 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("선점 내역을 찾을 수 없습니다."));
         seatHold.complete();
 
-        List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldIdOrderByIdAsc(seatHold.getId());
+        // 1-2. 공연 하루 전날부터 무통장입금 불가
+        if (payMethod == Payment.PayMethod.VBANK) {
+            java.time.LocalDate performanceDate = seatHold.getSchedule().getStartsAt().toLocalDate();
+            java.time.LocalDate today = java.time.LocalDate.now();
+            if (!today.isBefore(performanceDate.minusDays(1))) {
+                throw new IllegalStateException("공연일 하루 전부터는 가상계좌 결제를 이용할 수 없습니다.");
+            }
+        }
 
+        List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldIdOrderByIdAsc(seatHold.getId());
         // 2. 예매(Reservation) 생성
         Reservation reservation = Reservation.create(
                 orderId,

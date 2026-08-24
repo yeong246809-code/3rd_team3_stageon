@@ -121,4 +121,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("performanceId") Long performanceId,
             @Param("status") Reservation.Status status
     );
+
+    @Query("SELECT r FROM Reservation r WHERE r.status = :status AND r.expiresAt < :now")
+    List<Reservation> findExpiredPendingReservations(
+            @Param("status") Reservation.Status status,
+            @Param("now") LocalDateTime now
+    );
 }

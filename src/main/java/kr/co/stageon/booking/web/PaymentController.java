@@ -65,6 +65,12 @@ public class PaymentController {
         model.addAttribute("scheduleTime", seatHold.getSchedule().getStartsAt());
         model.addAttribute("orderId", orderId);
 
+        java.time.LocalDate performanceDate = seatHold.getSchedule().getStartsAt().toLocalDate();
+        java.time.LocalDate today = java.time.LocalDate.now();
+
+        boolean isVbankAvailable = today.isBefore(performanceDate.minusDays(1));
+        model.addAttribute("isVbankAvailable", isVbankAvailable);
+
         return "booking/mock-payment";
     }
 
