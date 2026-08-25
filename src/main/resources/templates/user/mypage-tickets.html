@@ -172,17 +172,27 @@
                         <!-- AVAILABLE : 실제 QR -->
                         <button type="button"
                                 class="ticket-qr__button"
-                                th:if="${ticket.ticketStatus == 'AVAILABLE'}"
+                                th:if="${ticket.ticketStatus == 'AVAILABLE' and ticket.receiveMethod != 'ON_SITE'}"
                                 th:attr="
-                                    data-ticket-id=${ticket.reservationSeatId},
-                                    data-ticket-status=${ticket.ticketStatus},
-                                    data-ticket-title=${ticket.performanceTitle},
-                                    data-ticket-seat=|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|,
-                                    data-qr-image=${ticket.qrCodeImage}
-                                ">
-
+                                        data-ticket-id=${ticket.reservationSeatId},
+                                        data-ticket-status=${ticket.ticketStatus},
+                                        data-ticket-title=${ticket.performanceTitle},
+                                        data-ticket-seat=|${ticket.gradeName} · ${ticket.sectionName} ${ticket.rowLabel}열 ${ticket.seatNumber}번|,
+                                        data-qr-image=${ticket.qrCodeImage}
+                                        ">
                             <div class="ticket-qr__list-canvas" style="display: inline-block; padding: 5px; background: #fff; border-radius: 8px;"></div>
+                        </button>
 
+                        <button type="button"
+                                class="ticket-qr__button is-disabled"
+                                th:if="${ticket.ticketStatus == 'AVAILABLE' and ticket.receiveMethod == 'ON_SITE'}">
+                                <span class="ticket-qr__placeholder">
+                                    <strong>현장수령</strong>
+                                    <small>ON-SITE</small>
+                                </span>
+                                                    <span class="ticket-qr__disabled">
+                                    지류 티켓 발권
+                                </span>
                         </button>
 
 

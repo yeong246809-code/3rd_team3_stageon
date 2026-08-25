@@ -109,6 +109,20 @@
         </a>
       </div>
     </div>
+    <div class="admin-nav__group" data-group="onsite">
+      <button type="button" class="admin-nav__group-toggle" aria-expanded="true">
+        <span class="admin-nav__group-label">현장 운영</span>
+        <span class="admin-nav__group-arrow">▾</span>
+      </button>
+      <div class="admin-nav__group-items">
+        <a th:href="@{/admin/scanner}" href="/admin/scanner"
+           th:classappend="${currentUri != null and currentUri.startsWith('/admin/scanner')} ? 'is-active'">
+          <!-- QR을 형상화한 아이콘 -->
+          <span class="admin-nav__icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h7v7h-7z"/></svg></span>
+          <span>QR 스캐너</span>
+        </a>
+      </div>
+    </div>
   </nav>
 
   <div class="admin-profile">
