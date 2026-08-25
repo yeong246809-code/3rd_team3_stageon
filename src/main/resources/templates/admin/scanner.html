@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- 🚨 Spring Security CSRF 토큰 추가 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <title>관리자 실시간 스캐너</title>
     <!-- 카메라 스캔 라이브러리 -->
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -32,7 +37,7 @@
 <div id="reader"></div>
 <div id="message-area">QR 코드를 네모 칸 안에 비춰주세요.</div>
 
-<!-- 🚨 티켓 정보 및 입장 처리 영역 (평소엔 숨겨져 있음) -->
+<!-- 티켓 정보 및 입장 처리 영역 -->
 <div id="ticket-info-area">
     <h3 id="info-title">공연명</h3>
     <p id="info-time">일시: <span></span></p>
@@ -51,22 +56,24 @@
     let isScanning = false;
     const html5QrCode = new Html5Qrcode("reader");
 
-    // 1. QR 스캔 성공 시 실행 (검증 API 호출)
+    // 🚨 CSRF 메타 태그 값 읽어오기
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+    // 1. QR 스캔 성공 시
     function onScanSuccess(decodedText) {
         if (isScanning || !decodedText.startsWith("STAGEON:DYNAMIC:")) return;
-        isScanning = true; // 중복 스캔 방지 락 걸기
+        isScanning = true;
 
         messageArea.textContent = "QR 검증 중...";
         messageArea.className = "";
 
-        // 방금 백엔드에 만드신 /api/tickets/validate 호출
         fetch(`/api/tickets/validate?token=${encodeURIComponent(decodedText)}`)
             .then(res => {
                 if (!res.ok) throw new Error("유효하지 않거나 만료된 QR입니다.");
-                return res.json(); // 백엔드에서 MyTicketResponse를 JSON으로 줌
+                return res.json();
             })
             .then(data => {
-                // 성공: 화면에 예매 정보 뿌리기
                 messageArea.textContent = "✅ 확인 완료! 입장 처리 버튼을 눌러주세요.";
                 messageArea.className = "success";
 
@@ -75,45 +82,48 @@
                 document.getElementById('info-seat').querySelector('span').textContent =
                     `${data.gradeName} · ${data.sectionName} ${data.rowLabel}열 ${data.seatNumber}번`;
 
-                // 입장 버튼에 seatId 몰래 숨겨두기
                 btnEnter.dataset.seatId = data.reservationSeatId;
-
-                // 정보 영역 짠! 하고 보여주기
                 infoArea.style.display = "block";
             })
             .catch(err => {
                 messageArea.textContent = err.message;
                 messageArea.className = "fail";
-                setTimeout(() => { isScanning = false; }, 2000); // 에러나면 2초 뒤 다시 스캔 가능
+                setTimeout(() => { isScanning = false; }, 2000);
             });
     }
 
-    // 2. 직원이 [입장 완료 처리] 버튼 클릭 시 실행 (입장 API 호출)
+    // 2. [입장 완료 처리] 버튼 클릭 시
     btnEnter.addEventListener('click', () => {
         const seatId = btnEnter.dataset.seatId;
         btnEnter.disabled = true;
         btnEnter.textContent = "처리 중...";
 
-        // 방금 백엔드에 만드신 /api/tickets/{seatId}/enter 호출
-        fetch(`/api/tickets/${seatId}/enter`, { method: 'POST' })
+        // 🚨 POST 요청에 CSRF 헤더 추가
+        fetch(`/api/tickets/${seatId}/enter`, {
+            method: 'POST',
+            headers: csrfHeader && csrfToken ? { [csrfHeader]: csrfToken } : {}
+        })
             .then(res => {
                 if (res.ok) {
                     alert("🎉 정상적으로 입장 처리되었습니다!");
-                    resetScanner(); // 화면 초기화하고 다음 사람 받을 준비
+                    resetScanner();
                 } else {
-                    alert("입장 처리에 실패했습니다. 이미 처리된 티켓인지 확인하세요.");
+                    alert("입장 처리에 실패했습니다. (서버 응답 오류)");
                     resetScanner();
                 }
             })
-            .catch(err => alert("서버 통신 오류가 발생했습니다."));
+            .catch(err => {
+                alert("서버 통신 오류가 발생했습니다.");
+                resetScanner();
+            });
     });
 
-    // 3. 직원이 [취소] 버튼 클릭 시 (잘못 찍었을 때)
+    // 3. [취소] 버튼 클릭 시
     btnCancel.addEventListener('click', () => {
         resetScanner();
     });
 
-    // 스캐너 화면 초기화 함수
+    // 스캐너 화면 초기화
     function resetScanner() {
         infoArea.style.display = "none";
         messageArea.className = "";
@@ -121,7 +131,6 @@
         btnEnter.disabled = false;
         btnEnter.textContent = "입장 완료 처리";
 
-        // 1.5초 정도 여유를 주고 스캐너 락 풀기
         setTimeout(() => { isScanning = false; }, 1500);
     }
 

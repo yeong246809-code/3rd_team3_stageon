@@ -217,6 +217,19 @@
 
                         </button>
 
+                        <!-- ENTERED : 입장 완료 -->
+                        <button type="button"
+                                class="ticket-qr__button is-disabled"
+                                th:if="${ticket.ticketStatus == 'ENTERED'}">
+                                <span class="ticket-qr__placeholder">
+                                    <strong>입장완료</strong>
+                                    <small>ENTERED</small>
+                                </span>
+                                                    <span class="ticket-qr__disabled">
+                                    입장 확인됨
+                                </span>
+                        </button>
+
 
                         <!-- ENDED : 공연 종료 -->
                         <button type="button"
@@ -241,12 +254,16 @@
 
 
                         <!-- 상태별 안내 -->
-                        <p th:text="${ticket.ticketStatus == 'AVAILABLE'
-                                    ? 'QR 코드를 눌러 크게 볼 수 있습니다.'
-                                    : ticket.ticketStatus == 'UPCOMING'
-                                        ? '공연 시작 24시간 전부터 QR이 활성화됩니다.'
+                        <p th:text="${ticket.ticketStatus == 'AVAILABLE' and ticket.receiveMethod != 'ON_SITE'
+                            ? 'QR 코드를 눌러 크게 볼 수 있습니다.'
+                            : ticket.ticketStatus == 'AVAILABLE' and ticket.receiveMethod == 'ON_SITE'
+                                ? '매표소에서 지류 티켓으로 교환해 주세요.'
+                                : ticket.ticketStatus == 'UPCOMING'
+                                    ? '공연 시작 24시간 전부터 QR이 활성화됩니다.'
+                                    : ticket.ticketStatus == 'ENTERED'
+                                        ? '입장 완료된 티켓입니다.'
                                         : '공연이 종료된 티켓입니다.'}">
-                            QR 안내
+                                        QR 안내
                         </p>
 
                     </div>

@@ -58,6 +58,7 @@ public class ReservationService {
         }
 
         List<SeatHoldItem> holdItems = seatHoldItemRepository.findBySeatHoldIdOrderByIdAsc(seatHold.getId());
+
         // 2. 예매(Reservation) 생성
         Reservation reservation = Reservation.create(
                 orderId,
@@ -65,19 +66,17 @@ public class ReservationService {
                 seatHold.getSchedule(),
                 holdItems.size(),
                 seatHold,
-                Reservation.ReceiveMethod.MOBILE,
+                Reservation.ReceiveMethod.MOBILE, // 필요시 request 정보 기반으로 동적 할당되도록 수정
                 amount,
                 amount
         );
 
-        // 💡 3. 가상계좌(READY)인 경우, 예매 상태를 PENDING(입금 대기)으로 변경
         if (paymentStatus == Payment.Status.READY) {
             reservation.markAsPending();
         }
         reservationRepository.save(reservation);
 
-        // 3-1. 사용자가 선택한 좌석을 예매 좌석으로 저장
-        // READY(결제 대기) 상태에서도 좌석은 예매에 연결되어 있어야 합니다.
+        // 3-1. 사용자가 선택한 좌석을 예매 좌석으로 저장 및 모바일 티켓 발급
         for (SeatHoldItem item : holdItems) {
 
             ReservationSeat reservationSeat =
@@ -87,18 +86,29 @@ public class ReservationService {
                     );
 
             reservationSeatRepository.save(reservationSeat);
+
+            // [추가된 로직] 수령 방식이 모바일인 경우 Ticket 테이블에 INSERT
+            if (reservation.getReceiveMethod() == Reservation.ReceiveMethod.MOBILE) {
+                String qrToken = java.util.UUID.randomUUID().toString();
+                Ticket ticket = Ticket.builder()
+                        .reservationSeat(reservationSeat)
+                        .ticketNumber(reservation.getBookingNumber())
+                        .qrTokenHash(qrToken)
+                        .build();
+                ticketRepository.save(ticket);
+            }
         }
 
-        // 💡 4. 결제(Payment) 생성 (여기에 가상계좌 정보가 들어갑니다!)
+        // 4. 결제(Payment) 생성
         Payment payment = Payment.builder()
                 .reservation(reservation)
                 .paymentKey(paymentKey)
                 .orderId(orderId)
-                .provider(Payment.Provider.TOSSPAYMENTS) // Provider 필수
+                .provider(Payment.Provider.TOSSPAYMENTS)
                 .amount(amount)
                 .payMethod(payMethod)
                 .status(paymentStatus)
-                .requestedAt(LocalDateTime.now()) // 요청 시간
+                .requestedAt(LocalDateTime.now())
                 .vbankNum(vbankNum)
                 .vbankName(vbankName)
                 .vbankDueDate(vbankDueDate)
