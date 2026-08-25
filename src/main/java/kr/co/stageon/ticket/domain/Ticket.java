@@ -68,4 +68,10 @@ public class Ticket {
         this.status = Status.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
     }
+    
+    //입장여부 확인
+    public void use() {
+        this.status = Status.USED;
+        this.usedAt = LocalDateTime.now();
+    }
 }

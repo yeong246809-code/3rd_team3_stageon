@@ -29,6 +29,9 @@ public record MyTicketResponse(
         // UPCOMING / AVAILABLE / ENDED
         String ticketStatus,
 
+        // MOBILE, ONSITE
+        String receiveMethod,
+
         // QR 코드 이미지
         String qrCodeImage
 

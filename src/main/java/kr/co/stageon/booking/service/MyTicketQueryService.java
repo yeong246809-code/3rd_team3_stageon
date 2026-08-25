@@ -24,7 +24,6 @@ public class MyTicketQueryService {
     private final TicketRepository ticketRepository;
     private final QrCodeService qrCodeService;
 
-
     /**
      * 로그인 회원의 보유 티켓 조회
      * 좌석 1개 = 모바일 티켓 1장
@@ -35,7 +34,6 @@ public class MyTicketQueryService {
                 reservationRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
 
         List<MyTicketResponse> tickets = new ArrayList<>();
-
 
         for (Reservation reservation : reservations) {
 
@@ -53,34 +51,28 @@ public class MyTicketQueryService {
             var hall = schedule.getVenueHall();
             var venue = hall.getVenue();
 
-
             for (ReservationSeat seat : reservationSeats) {
 
-                // 공연 시간 기준으로 현재 티켓 상태 계산
-                String ticketStatus =
-                        determineTicketStatus(
-                                schedule.getStartsAt(),
-                                performance.getRuntimeMinutes()
-                        );
+                kr.co.stageon.ticket.domain.Ticket ticket = ticketRepository.findByReservationSeatId(seat.getId()).orElse(null);
 
-
-                /*
-                 * QR은 공연 시작 2시간 전부터만 생성
-                 *
-                 * UPCOMING  → QR 없음
-                 * AVAILABLE → QR 생성
-                 * ENDED     → QR 없음
-                 */
+                String ticketStatus;
                 String qrData = null;
-                if ("AVAILABLE".equals(ticketStatus)) {
-                    // DB에서 해당 좌석의 Ticket 엔티티를 찾아 qrTokenHash를 가져옵니다.
-                    qrData = ticketRepository.findByReservationSeatId(seat.getId())
-                            .map(kr.co.stageon.ticket.domain.Ticket::getQrTokenHash)
-                            .orElse("STAGEON:TICKET:" + seat.getId()); // Ticket이 없을 때의 임시 Fallback
+
+                if (ticket != null && ticket.getStatus() == kr.co.stageon.ticket.domain.Ticket.Status.USED) {
+                    ticketStatus = "ENTERED";
+                } else {
+                    ticketStatus = determineTicketStatus(schedule.getStartsAt(), performance.getRuntimeMinutes());
                 }
 
+                if ("AVAILABLE".equals(ticketStatus)) {
+                    if (ticket != null) {
+                        qrData = ticket.getQrTokenHash();
+                    } else {
+                        qrData = "STAGEON:TICKET:" + seat.getId();
+                    }
+                }
 
-                MyTicketResponse ticket =
+                MyTicketResponse ticketRes =
                         new MyTicketResponse(
                                 seat.getId(),
                                 reservation.getId(),
@@ -100,23 +92,21 @@ public class MyTicketQueryService {
                                 seat.getCapturedUnitPrice(),
 
                                 ticketStatus,
+                                reservation.getReceiveMethod().name(),
                                 qrData
                         );
 
-                tickets.add(ticket);
+                tickets.add(ticketRes);
             }
         }
 
-        // 🚨 필터링 및 정렬 로직 추가
         LocalDateTime now = LocalDateTime.now();
 
         return tickets.stream()
-                // 1. [필터링] 공연 시작 24시간이 지나면 화면에서 숨김 처리
-                .filter(ticket -> {
-                    if (ticket.startsAt() == null) return true;
-                    return ticket.startsAt().plusDays(1).isAfter(now);
+                .filter(t -> {
+                    if (t.startsAt() == null) return true;
+                    return t.startsAt().plusDays(1).isAfter(now);
                 })
-                // 2. [정렬] ENDED는 맨 밑으로, 나머지는 날짜 오름차순(빠른 순) 정렬
                 .sorted((t1, t2) -> {
                     boolean t1Ended = "ENDED".equals(t1.ticketStatus());
                     boolean t2Ended = "ENDED".equals(t2.ticketStatus());
@@ -133,51 +123,83 @@ public class MyTicketQueryService {
                 .toList();
     }
 
+    /**
+     * 🚨 [추가됨] 스캐너에 띄워줄 단건 예매 정보 조회 (MyTicketResponse 재활용)
+     */
+    public MyTicketResponse getTicketBySeatId(Long seatId) {
+        ReservationSeat seat = reservationSeatRepository.findById(seatId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 좌석입니다."));
+
+        var reservation = seat.getReservation();
+        var schedule = reservation.getSchedule();
+        var performance = schedule.getPerformance();
+        var hall = schedule.getVenueHall();
+        var venue = hall.getVenue();
+
+        kr.co.stageon.ticket.domain.Ticket ticket = ticketRepository.findByReservationSeatId(seatId).orElse(null);
+        String ticketStatus = (ticket != null && ticket.getStatus() == kr.co.stageon.ticket.domain.Ticket.Status.USED) ? "ENTERED" : "AVAILABLE";
+
+        return new MyTicketResponse(
+                seat.getId(),
+                reservation.getId(),
+                reservation.getBookingNumber(),
+                performance.getTitle(),
+                performance.getPosterUrl(),
+                schedule.getStartsAt(),
+                venue.getName(),
+                hall.getName(),
+                seat.getCapturedGradeName(),
+                seat.getCapturedSectionName(),
+                seat.getCapturedRowLabel(),
+                seat.getCapturedSeatNumber(),
+                seat.getCapturedUnitPrice(),
+                ticketStatus,
+                reservation.getReceiveMethod().name(),
+                ticket != null ? ticket.getQrTokenHash() : null
+        );
+    }
+
+    /**
+     * 🚨 [추가됨] 직원이 스캐너에서 입장 처리할 때 호출되는 쓰기 메서드
+     * 클래스 레벨의 readOnly = true를 덮어쓰기 위해 @Transactional을 붙임
+     */
+    @Transactional
+    public void processTicketEntry(Long seatId) {
+        kr.co.stageon.ticket.domain.Ticket ticket = ticketRepository.findByReservationSeatId(seatId)
+                .orElseThrow(() -> new IllegalArgumentException("발급된 티켓이 없습니다."));
+
+        if (ticket.getStatus() == kr.co.stageon.ticket.domain.Ticket.Status.USED) {
+            throw new IllegalStateException("이미 입장 처리된 티켓입니다.");
+        }
+
+        // Ticket 엔티티의 상태 변경 메서드 호출
+        ticket.use();
+    }
 
     /**
      * 티켓 화면 상태 계산
-     *
-     * UPCOMING  : 공연 시작 24시간 이전
-     * AVAILABLE : 공연 시작 24시간 전 ~ 공연 종료 전
-     * ENDED     : 공연 종료 이후
      */
     private String determineTicketStatus(
             LocalDateTime startsAt,
             Integer runtimeMinutes
     ) {
-
-        // 공연 시작 정보가 없으면 QR 오픈 전으로 처리
         if (startsAt == null) {
             return "UPCOMING";
         }
-
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime qrOpenAt = startsAt.minusHours(2);
 
-        // QR 공개 시각 = 공연 시작 2시간 전
-        LocalDateTime qrOpenAt =
-                startsAt.minusHours(2);
-
-
-        // 아직 QR 공개 전
         if (now.isBefore(qrOpenAt)) {
             return "UPCOMING";
         }
 
+        int safeRuntime = (runtimeMinutes != null && runtimeMinutes > 0) ? runtimeMinutes : 120;
+        LocalDateTime endTime = startsAt.plusMinutes(safeRuntime);
 
-        // 러닝타임이 있다면 실제 공연 종료 시각 계산
-        if (runtimeMinutes != null && runtimeMinutes > 0) {
-
-            LocalDateTime endTime =
-                    startsAt.plusMinutes(runtimeMinutes);
-
-            // 공연 종료 시각과 같거나 지난 경우
-            if (!now.isBefore(endTime)) {
-                return "ENDED";
-            }
+        if (!now.isBefore(endTime)) {
+            return "ENDED";
         }
 
-
-        // 공연 시작 2시간 전 ~ 공연 종료 전
         return "AVAILABLE";
     }
 }
