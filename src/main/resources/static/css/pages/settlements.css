@@ -167,8 +167,8 @@
 .settlement-modal__content {
     position: relative;
     width: 94%;
-    max-width: 880px;
-    max-height: 85vh;
+    max-width: 900px;
+    max-height: 88vh;
     overflow-y: auto;
     background: #fff;
     border-radius: 20px;
@@ -205,11 +205,21 @@
     font-weight: 800;
     margin-left: 4px;
 }
+.settlement-modal__body {
+    margin-bottom: 26px;
+}
+.settlement-modal__body:last-child {
+    margin-bottom: 0;
+}
 .settlement-modal__body h4 {
     margin: 0 0 12px;
     font-size: 14px;
     font-weight: 800;
     color: #374151;
+}
+.settlement-modal__body--bookers {
+    padding-top: 20px;
+    border-top: 1px dashed #e5e7eb;
 }
 .settlement-detail-table {
     width: 100%;
@@ -220,6 +230,34 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* 예매자 목록 테이블 - 인원이 많을 수 있어 자체 스크롤 영역으로 분리 */
+.settlement-booker-table-wrap {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #f0f0f5;
+    border-radius: 10px;
+}
+.settlement-booker-table {
+    width: 100%;
+    table-layout: fixed;
+    font-size: 13px;
+}
+.settlement-booker-table th,
+.settlement-booker-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.settlement-order-link {
+    color: #6366f1;
+    font-weight: 700;
+    font-size: 12.5px;
+    text-decoration: none;
+}
+.settlement-order-link:hover {
+    text-decoration: underline;
 }
 
 /* ---------- 공연명 검색 모달 ---------- */

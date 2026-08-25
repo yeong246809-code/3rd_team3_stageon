@@ -4,6 +4,9 @@ import kr.co.stageon.admin.dto.AdminSettlementDetailDto;
 import kr.co.stageon.admin.dto.AdminSettlementListItemDto;
 import kr.co.stageon.admin.dto.AdminSettlementSearchCondition;
 import kr.co.stageon.admin.dto.AdminSettlementStatsDto;
+import kr.co.stageon.booking.domain.Reservation;
+import kr.co.stageon.booking.repository.ReservationRepository;
+import kr.co.stageon.booking.repository.ReservationSeatRepository;
 import kr.co.stageon.payment.repository.PaymentRepository;
 import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.repository.PerformanceRepository;
@@ -14,15 +17,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-/** AD "정산·매출 관리" 화면의 통계, 공연별 목록, 회차별 상세를 담당합니다. */
+/** AD "정산·매출 관리" 화면의 통계, 공연별 목록, 회차별·예매자 상세를 담당합니다. */
 @Service
 @RequiredArgsConstructor
 public class AdminSettlementService {
 
     private final PaymentRepository paymentRepository;
     private final PerformanceRepository performanceRepository;
+    private final ReservationRepository reservationRepository;
+    private final ReservationSeatRepository reservationSeatRepository;
 
     /** 상단 통계 카드입니다. */
     @Transactional(readOnly = true)
@@ -51,7 +59,7 @@ public class AdminSettlementService {
         ));
     }
 
-    /** 공연 1건의 회차별 매출 breakdown(상세 모달)입니다. */
+    /** 공연 1건의 회차별 매출 breakdown과 예매자 목록(상세 모달)입니다. */
     @Transactional(readOnly = true)
     public AdminSettlementDetailDto getDetail(Long performanceId, AdminSettlementSearchCondition condition) {
         Performance performance = performanceRepository.findById(performanceId)
@@ -78,13 +86,47 @@ public class AdminSettlementService {
                 .map(AdminSettlementDetailDto.ScheduleItem::refundAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        List<AdminSettlementDetailDto.BookerItem> bookers = getBookers(performanceId, condition);
+
         return new AdminSettlementDetailDto(
                 performanceId,
                 performance.getTitle(),
                 totalGross,
                 totalRefund,
                 totalGross.subtract(totalRefund),
-                items
+                items,
+                bookers
         );
+    }
+
+    /** 해당 공연을 예매 확정(RESERVED)한 회원 목록입니다. AD09와 동일하게 이름을 마스킹합니다. */
+    private List<AdminSettlementDetailDto.BookerItem> getBookers(Long performanceId, AdminSettlementSearchCondition condition) {
+        List<Reservation> reservations = reservationRepository.search(
+                performanceId, null, Reservation.Status.RESERVED, null, null,
+                condition.fromDate(), condition.toDate(), Pageable.unpaged()
+        ).getContent();
+
+        List<Long> reservationIds = reservations.stream().map(Reservation::getId).toList();
+
+        Map<Long, Integer> seatCountMap = reservationIds.isEmpty() ? Map.of()
+                : reservationSeatRepository.findByReservationIdInOrderByIdAsc(reservationIds).stream()
+                .collect(Collectors.groupingBy(rs -> rs.getReservation().getId(), Collectors.summingInt(rs -> 1)));
+
+        return reservations.stream()
+                .sorted(Comparator.comparing(Reservation::getReservedAt).reversed())
+                .map(r -> new AdminSettlementDetailDto.BookerItem(
+                        r.getBookingNumber(),
+                        maskName(r.getMember().getName()),
+                        seatCountMap.getOrDefault(r.getId(), 0),
+                        r.getTotalAmount(),
+                        r.getReservedAt()
+                ))
+                .toList();
+    }
+
+    /** 회원명 마스킹: 첫 글자만 남기고 나머지는 '*'로 표시합니다. (AD09 AdminOrderService와 동일한 규칙) */
+    private String maskName(String name) {
+        if (name == null || name.length() <= 1) return name;
+        return name.charAt(0) + "*".repeat(name.length() - 1);
     }
 }
