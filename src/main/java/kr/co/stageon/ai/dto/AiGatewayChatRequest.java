@@ -10,37 +10,30 @@ public record AiGatewayChatRequest(
         LocalDate dataUpdatedAt,
         List<AiPerformanceContext> performances,
         List<AiConversationMessage> conversationHistory,
+        AiMemberContext memberContext,
         boolean reusePreviousResults
 ) {
-    public static AiGatewayChatRequest kopis(
-            AiChatRequest request,
-            List<AiConversationMessage> history
-    ) {
-        return new AiGatewayChatRequest(
-                request.message(), request.conversationId(), "KOPIS", null,
-                List.of(), List.copyOf(history), false
-        );
-    }
-
     public static AiGatewayChatRequest stageon(
             AiChatRequest request,
             List<AiPerformanceContext> performances,
-            List<AiConversationMessage> history
+            List<AiConversationMessage> history,
+            AiMemberContext memberContext
     ) {
         return new AiGatewayChatRequest(
                 request.message(), request.conversationId(), "STAGEON",
-                LocalDate.now(), List.copyOf(performances), List.copyOf(history), false
+                LocalDate.now(), List.copyOf(performances), List.copyOf(history), memberContext, false
         );
     }
 
     public static AiGatewayChatRequest followUp(
             AiChatRequest request,
-            AiConversationSnapshot snapshot
+            AiConversationSnapshot snapshot,
+            AiMemberContext memberContext
     ) {
         return new AiGatewayChatRequest(
-                request.message(), request.conversationId(), snapshot.lastDataSource(),
+                request.message(), request.conversationId(), "STAGEON",
                 LocalDate.now(), List.copyOf(snapshot.lastPerformances()),
-                List.copyOf(snapshot.messages()), true
+                List.copyOf(snapshot.messages()), memberContext, true
         );
     }
 }

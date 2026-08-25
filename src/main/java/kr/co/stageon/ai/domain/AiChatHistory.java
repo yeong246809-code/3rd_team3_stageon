@@ -49,4 +49,21 @@ public class AiChatHistory {
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public static AiChatHistory success(
+            Member member,
+            String question,
+            String answer,
+            String conversationMetadata
+    ) {
+        AiChatHistory history = new AiChatHistory();
+        history.member = member;
+        history.requestType = "PERFORMANCE_CHAT";
+        history.question = question;
+        history.extractedCondition = conversationMetadata;
+        history.answer = answer;
+        history.provider = "OLLAMA";
+        history.success = true;
+        return history;
+    }
 }

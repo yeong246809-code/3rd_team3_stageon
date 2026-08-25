@@ -4,10 +4,15 @@ import kr.co.stageon.member.service.MemberUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults;
 
 @Configuration
 @RequiredArgsConstructor
@@ -63,11 +68,12 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/favicon.ico",
                                 "/error",
-                                "/api/payments/webhook",
-                                "/api/ai/**"
+                                "/api/payments/webhook"
                         ).permitAll()
 
                         .requestMatchers(
+                                "/ai/**",
+                                "/api/ai/**",
                                 "/booking/**",
                                 "/api/waiting-queue-history",
                                 "/api/waiting-queue/**",
@@ -100,11 +106,18 @@ public class SecurityConfig {
                 )
 
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(
-                                (request, response, authException) ->
-                                        response.sendRedirect(
-                                                "/login?required"
-                                        )
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                withDefaults().matcher("/api/ai/**")
+                        )
+                        .defaultAuthenticationEntryPointFor(
+                                (request, response, authException) -> {
+                                    String loginUrl = request.getRequestURI().startsWith("/ai")
+                                            ? "/login?required=1&ai=1"
+                                            : "/login?required";
+                                    response.sendRedirect(loginUrl);
+                                },
+                                AnyRequestMatcher.INSTANCE
                         )
                 );
 
