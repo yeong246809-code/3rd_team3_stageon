@@ -4,8 +4,10 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import kr.co.stageon.admin.dto.PerformanceFormDto;
+import kr.co.stageon.admin.log.AdminLoggable;
 import kr.co.stageon.performance.domain.Performance;
 import kr.co.stageon.performance.repository.PerformanceRepository;
+import kr.co.stageon.performance.repository.PerformanceScheduleRepository;
 import kr.co.stageon.common.file.FileStorageService;
 import kr.co.stageon.common.file.StorageTransactionCleanup;
 import kr.co.stageon.common.file.StoredFile;
@@ -28,6 +30,7 @@ import java.util.List;
 public class AdminPerformanceService {
 
     private final PerformanceRepository performanceRepository;
+    private final PerformanceScheduleRepository performanceScheduleRepository;
     private final VenueHallRepository venueHallRepository;
     private final ObjectMapper objectMapper;
     private final FileStorageService fileStorageService;
@@ -60,6 +63,8 @@ public class AdminPerformanceService {
     }
 
     /** draft=true면 임시저장(저장 상태 유지, 목록에 "임시저장됨" 표시), false면 정식 저장입니다. */
+    @AdminLoggable(actionType = "CREATE", targetEntity = "PERFORMANCE",
+            targetId = "#result", description = "'공연 등록: ' + #dto.title")
     @Transactional
     public Long create(PerformanceFormDto dto, boolean draft) {
         VenueHall hall = resolveHall(dto.getHallId());
@@ -84,6 +89,8 @@ public class AdminPerformanceService {
         return performanceRepository.save(p).getId();
     }
 
+    @AdminLoggable(actionType = "UPDATE", targetEntity = "PERFORMANCE",
+            targetId = "#id", description = "'공연 수정: ' + #dto.title")
     @Transactional
     public void update(Long id, PerformanceFormDto dto, boolean draft) {
         Performance p = performanceRepository.findById(id)
@@ -111,6 +118,34 @@ public class AdminPerformanceService {
                 hall, dto.getBasePrice()
         );
         p.updateSeatPriceJson(toSeatPriceJson(dto));
+    }
+
+    /**
+     * 공연을 삭제합니다.
+     * 안전장치: 등록된 회차가 하나라도 있으면 삭제를 막습니다(회차 안에 예매/좌석 데이터가 걸려있을 수 있어서
+     * 회차 단위로 먼저 정리하도록 유도합니다. AD07 회차 관리 화면에서 회차 삭제 후 다시 시도하면 됩니다).
+     * @return 삭제된 공연의 제목 (감사 로그 설명에 사용)
+     */
+    @AdminLoggable(actionType = "DELETE", targetEntity = "PERFORMANCE",
+            targetId = "#id", description = "'공연 삭제: ' + #result")
+    @Transactional
+    public String delete(Long id) {
+        Performance p = performanceRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("공연을 찾을 수 없습니다. id=" + id));
+
+        long scheduleCount = performanceScheduleRepository.countByPerformanceId(id);
+        if (scheduleCount > 0) {
+            throw new IllegalStateException(
+                    "등록된 회차가 " + scheduleCount + "개 있어 삭제할 수 없습니다. 일정·회차 관리에서 회차를 먼저 삭제해주세요.");
+        }
+
+        String title = p.getTitle();
+        String posterKey = p.getPosterKey();
+        performanceRepository.delete(p);
+        if (posterKey != null) {
+            storageCleanup.deleteAfterCommit(posterKey);
+        }
+        return title;
     }
 
     private VenueHall resolveHall(Long hallId) {

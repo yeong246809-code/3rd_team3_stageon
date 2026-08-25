@@ -17,6 +17,9 @@ public interface PerformanceScheduleRepository extends JpaRepository<Performance
     List<PerformanceSchedule> findByPerformanceIdOrderByStartsAtAsc(Long performanceId);
     List<PerformanceSchedule> findByVenueHallIdOrderByStartsAtAsc(Long venueHallId);
 
+    /** 공연 삭제 전 안전장치: 등록된 회차가 있는지 검증하는 데 사용합니다. */
+    long countByPerformanceId(Long performanceId);
+
     long countByStatus(PerformanceSchedule.Status status);
 
     /** 대시보드 요약/충돌 검사용으로 공연·공연장홀 정보를 함께 조회합니다. */

@@ -1,0 +1,181 @@
+
+
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 감사 로그</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/audit-logs.css}" href="/css/pages/audit-logs.css">
+    <script>
+        var __t = localStorage.getItem('stageon-admin-theme');
+        if (__t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    </script>
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <header class="admin-title">
+                <div>
+                    <h1>감사 로그</h1>
+                    <p>관리자가 수행한 생성·수정·삭제 이력입니다. 행을 클릭하면 상세 내용을 볼 수 있습니다.</p>
+                </div>
+            </header>
+
+            <section class="card audit-filter-card">
+                <form class="audit-filters" method="get" th:action="@{/admin/audit-logs}">
+                    <select name="actionType">
+                        <option value="">전체 액션</option>
+                        <option value="CREATE" th:selected="${search.actionType()} == 'CREATE'">생성</option>
+                        <option value="UPDATE" th:selected="${search.actionType()} == 'UPDATE'">수정</option>
+                        <option value="DELETE" th:selected="${search.actionType()} == 'DELETE'">삭제</option>
+                        <option value="CANCEL" th:selected="${search.actionType()} == 'CANCEL'">취소</option>
+                    </select>
+
+                    <select name="targetEntity">
+                        <option value="">전체 대상</option>
+                        <option value="PERFORMANCE" th:selected="${search.targetEntity()} == 'PERFORMANCE'">공연</option>
+                        <option value="MEMBER" th:selected="${search.targetEntity()} == 'MEMBER'">회원</option>
+                        <option value="RESERVATION" th:selected="${search.targetEntity()} == 'RESERVATION'">예매</option>
+                        <option value="REFUND" th:selected="${search.targetEntity()} == 'REFUND'">환불</option>
+                        <option value="SEAT_INVENTORY" th:selected="${search.targetEntity()} == 'SEAT_INVENTORY'">좌석재고</option>
+                    </select>
+
+                    <input type="date" name="dateFrom" th:value="${search.dateFrom()}">
+                    <span class="audit-filters__sep">~</span>
+                    <input type="date" name="dateTo" th:value="${search.dateTo()}">
+
+                    <button type="submit" class="btn btn--dark">조회</button>
+                </form>
+            </section>
+
+            <section class="card audit-table-card" style="margin-top:18px">
+                <div class="audit-table-card__head">
+                    <h2>활동 내역</h2>
+                    <span class="badge badge--upcoming" th:text="'총 ' + ${logs.totalElements} + '건'">총 0건</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="admin-table audit-log-table">
+                        <thead>
+                        <tr>
+                            <th>시각</th>
+                            <th>액션</th>
+                            <th>대상</th>
+                            <th>대상ID</th>
+                            <th>설명</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${logs.empty}">
+                            <td colspan="5">기록된 활동이 없습니다.</td>
+                        </tr>
+                        <tr class="audit-row" th:each="row : ${logs.content}"
+                            th:attr="data-time=${#temporals.format(row.createdAt(), 'yyyy-MM-dd HH:mm:ss')},
+                          data-admin=${row.adminEmail()},
+                          data-action=${row.actionType()},
+                          data-target=${row.targetEntity()},
+                          data-target-id=${row.targetId()},
+                          data-desc=${row.description()}"
+                            onclick="AuditLogModal.open(this)">
+                            <td th:text="${#temporals.format(row.createdAt(), 'yyyy-MM-dd HH:mm:ss')}"></td>
+                            <td>
+                <span th:switch="${row.actionType()}">
+                  <span th:case="'CREATE'" class="badge badge--on-sale">생성</span>
+                  <span th:case="'UPDATE'" class="badge badge--upcoming">수정</span>
+                  <span th:case="'DELETE'" class="badge badge--cancelled">삭제</span>
+                  <span th:case="'CANCEL'" class="badge badge--ended">취소</span>
+                  <span th:case="*" class="badge" th:text="${row.actionType()}"></span>
+                </span>
+                            </td>
+                            <td class="cell-title" th:text="${row.targetEntity()}"></td>
+                            <td th:text="${row.targetId()}"></td>
+                            <td th:text="${row.description()}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" th:if="${logs.totalPages > 1}">
+                    <a th:each="p : ${#numbers.sequence(0, logs.totalPages - 1)}"
+                       th:href="@{/admin/audit-logs(page=${p}, actionType=${search.actionType()}, targetEntity=${search.targetEntity()}, dateFrom=${search.dateFrom()}, dateTo=${search.dateTo()})}"
+                       th:text="${p + 1}"
+                       class="page-link"
+                       th:classappend="${p == logs.number} ? 'active'"></a>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<!-- 상세 모달: poster-modal 뼈대는 유지하되, 내용 구조를 헤더/그리드/설명박스로 재구성 -->
+<div id="auditModal" class="poster-modal">
+    <div class="poster-modal__backdrop" onclick="AuditLogModal.close()"></div>
+    <div class="poster-modal__content audit-modal__content" style="text-align:left">
+        <button type="button" class="poster-modal__close" onclick="AuditLogModal.close()">&times;</button>
+
+        <div class="audit-modal__head">
+            <span id="auditModalActionBadge" class="badge">액션</span>
+            <span id="auditModalTargetLabel" class="audit-modal__target"></span>
+        </div>
+        <p id="auditModalTime" class="audit-modal__time"></p>
+
+        <div class="audit-modal__grid">
+            <div class="audit-modal__field">
+                <span class="audit-modal__label">관리자</span>
+                <span id="auditModalAdmin" class="audit-modal__value"></span>
+            </div>
+            <div class="audit-modal__field">
+                <span class="audit-modal__label">대상 ID</span>
+                <span id="auditModalTargetId" class="audit-modal__value audit-mono"></span>
+            </div>
+        </div>
+
+        <div class="audit-modal__desc">
+            <span class="audit-modal__label">설명</span>
+            <p id="auditModalDesc"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    var AuditLogModal = (function () {
+        var ACTION_LABELS = { CREATE: '생성', UPDATE: '수정', DELETE: '삭제', CANCEL: '취소' };
+        var ACTION_BADGE_CLASS = { CREATE: 'badge--on-sale', UPDATE: 'badge--upcoming', DELETE: 'badge--cancelled', CANCEL: 'badge--ended' };
+        var TARGET_LABELS = { PERFORMANCE: '공연', MEMBER: '회원', RESERVATION: '예매', REFUND: '환불', SEAT_INVENTORY: '좌석재고' };
+
+        function open(rowEl) {
+            document.getElementById('auditModalTime').textContent = rowEl.getAttribute('data-time') || '-';
+            document.getElementById('auditModalAdmin').textContent = rowEl.getAttribute('data-admin') || '-';
+
+            var action = rowEl.getAttribute('data-action') || '-';
+            var badge = document.getElementById('auditModalActionBadge');
+            badge.textContent = ACTION_LABELS[action] || action;
+            badge.className = 'badge ' + (ACTION_BADGE_CLASS[action] || '');
+
+            var target = rowEl.getAttribute('data-target') || '-';
+            document.getElementById('auditModalTargetLabel').textContent = TARGET_LABELS[target] || target;
+
+            document.getElementById('auditModalTargetId').textContent = rowEl.getAttribute('data-target-id') || '-';
+            document.getElementById('auditModalDesc').textContent = rowEl.getAttribute('data-desc') || '설명이 등록되지 않았습니다.';
+            document.getElementById('auditModal').classList.add('is-open');
+        }
+
+        function close() {
+            document.getElementById('auditModal').classList.remove('is-open');
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') close();
+        });
+
+        return { open: open, close: close };
+    })();
+</script>
+</body>
+</html>
