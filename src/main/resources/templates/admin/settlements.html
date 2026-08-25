@@ -110,7 +110,7 @@
     </main>
 </div>
 
-<!-- 공연 정산 상세 모달: 회차별 매출 breakdown -->
+<!-- 공연 정산 상세 모달: 회차별 매출 breakdown + 예매자 목록 -->
 <div class="settlement-modal" id="settlementModal">
     <div class="settlement-modal__backdrop" onclick="closeSettlementModal()"></div>
     <div class="settlement-modal__content" id="settlementModalContent">
@@ -144,10 +144,12 @@
     /* Thymeleaf 서버 URL 변수 주입 전용 스크립트입니다. */
     window.__SETTLEMENT_DETAIL_URL_BASE__ = /*[[@{/admin/settlements}]]*/ '/admin/settlements';
     window.__SETTLEMENT_OPTIONS_URL__ = /*[[@{/admin/settlements/performance-options}]]*/ '/admin/settlements/performance-options';
+    window.__ORDERS_URL_BASE__ = /*[[@{/admin/orders}]]*/ '/admin/orders';
 </script>
 <script th:inline="none">
     const settlementDetailUrlBase = window.__SETTLEMENT_DETAIL_URL_BASE__;
     const settlementOptionsUrl = window.__SETTLEMENT_OPTIONS_URL__;
+    const ordersUrlBase = window.__ORDERS_URL_BASE__;
     const settlementQuery = window.location.search.replace(/^\?/, '');
 
     document.addEventListener('keydown', (e) => {
@@ -189,7 +191,7 @@
         fetch(buildDetailUrl(performanceId))
             .then(res => res.json())
             .then(d => {
-                const rows = d.schedules.map(s => `
+                const scheduleRows = d.schedules.map(s => `
                 <tr>
                   <td>${fmtDateTime(s.startsAt)}</td>
                   <td>${s.paymentCount}건</td>
@@ -197,6 +199,17 @@
                   <td>${fmtMoney(s.refundAmount)}</td>
                   <td class="is-amount">${fmtMoney(s.netAmount)}</td>
                 </tr>`).join('') || '<tr><td colspan="5">회차별 매출 내역이 없습니다.</td></tr>';
+
+                const bookerRows = d.bookers.map(b => `
+                <tr>
+                  <td>${b.bookingNumber}</td>
+                  <td>${b.maskedMemberName}</td>
+                  <td>${b.seatCount}석</td>
+                  <td>${fmtMoney(b.totalAmount)}</td>
+                  <td>${fmtDateTime(b.reservedAt)}</td>
+                  <td><a class="settlement-order-link" target="_blank"
+                         href="${ordersUrlBase}?keyword=${encodeURIComponent(b.bookingNumber)}">주문조회 →</a></td>
+                </tr>`).join('') || '<tr><td colspan="6">예매 내역이 없습니다.</td></tr>';
 
                 document.getElementById('settlementModalBody').innerHTML = `
                 <div class="settlement-modal__head">
@@ -206,6 +219,7 @@
                     <span>총매출 <strong>${fmtMoney(d.totalGrossAmount)}</strong></span>
                     <span>환불액 <strong>${fmtMoney(d.totalRefundAmount)}</strong></span>
                     <span>순매출 <strong class="is-amount">${fmtMoney(d.totalNetAmount)}</strong></span>
+                    <span>예매자 <strong>${d.bookers.length}명</strong></span>
                   </div>
                 </div>
                 <div class="settlement-modal__body">
@@ -214,8 +228,19 @@
                     <thead>
                     <tr><th>회차 일시</th><th>결제건수</th><th>좌석매출</th><th>환불액</th><th>순매출</th></tr>
                     </thead>
-                    <tbody>${rows}</tbody>
+                    <tbody>${scheduleRows}</tbody>
                   </table>
+                </div>
+                <div class="settlement-modal__body settlement-modal__body--bookers">
+                  <h4>예매자 목록</h4>
+                  <div class="settlement-booker-table-wrap">
+                    <table class="table settlement-booker-table">
+                      <thead>
+                      <tr><th>예매번호</th><th>회원</th><th>좌석</th><th>결제금액</th><th>예매일시</th><th></th></tr>
+                      </thead>
+                      <tbody>${bookerRows}</tbody>
+                    </table>
+                  </div>
                 </div>
               `;
             });
