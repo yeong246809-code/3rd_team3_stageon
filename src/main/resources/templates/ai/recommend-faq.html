@@ -5,55 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
-    <title>StageOn | AI 추천·FAQ</title>
+    <title>StageOn | AI 공연 추천</title>
     <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
     <link rel="stylesheet" th:href="@{/css/pages/public-pages.css}" href="/css/pages/public-pages.css">
   </head>
   <body id="top">
     <div th:replace="~{fragments/common/site-header :: header}"></div>
-    <main class="page page--soft">
-      <div class="shell">
-        <!-- AI 장애가 일반 검색·예매 흐름에 영향을 주지 않는 독립 화면 -->
-        <header class="page-heading">
-          <span class="eyebrow">STAGEON AI</span>
-          <h1>공연 추천 · FAQ</h1>
-          <p>자연어로 취향을 말하면 조건을 정리하고 공연을 추천합니다.</p>
+    <main class="ai-page">
+      <div class="shell ai-page__shell">
+        <header class="ai-page__intro">
+          <div>
+            <span class="eyebrow">STAGEON AI</span>
+            <h1>나만의 공연 추천 채팅</h1>
+            <p>예매·찜 취향을 반영해 지금 StageOn에서 예매 가능한 공연만 찾아드립니다.</p>
+          </div>
+          <span class="ai-page__principle">실제 StageOn 판매 데이터 기준</span>
         </header>
-        <div class="notice notice--ai" style="margin-bottom:20px">
-          <b>AI 사용 원칙</b>
-          · 좌석 수, 가격, 결제 상태, 대기 순번은 AI가 만들지 않으며 Spring Boot의 실제 데이터만 설명합니다.
-        </div>
-        <div class="ai-grid">
-          <aside class="card">
-            <h2>빠른 질문</h2>
-            <div class="stack ai-quick-questions" style="margin-top:18px">
-              <button class="btn ai-quick-question" type="button" data-ai-question="이번 주말 서울에서 볼 만한 뮤지컬을 추천해 줘.">이번 주말 서울 뮤지컬</button>
-              <button class="btn ai-quick-question" type="button" data-ai-question="부모님과 함께 볼 만한 클래식 공연을 추천해 줘.">부모님과 볼 클래식</button>
-              <button class="btn ai-quick-question" type="button" data-ai-question="아이와 함께 볼 수 있는 공연을 알려 줘.">아이와 함께 볼 공연</button>
+
+        <div id="ai-room-overlay" class="ai-room-overlay" hidden></div>
+        <section class="ai-chat-shell" aria-label="StageOn AI 채팅">
+          <aside id="ai-room-sidebar" class="ai-room-sidebar" aria-label="AI 대화 기록">
+            <div class="ai-room-sidebar__head">
+              <div>
+                <strong>채팅</strong>
+                <p>공연 추천 대화 기록</p>
+              </div>
+              <button id="ai-room-sidebar-close" class="ai-icon-button ai-room-sidebar__close"
+                      type="button" aria-label="대화 목록 닫기">×</button>
             </div>
-            <div class="notice notice--danger" style="margin-top:24px">
-              <b>AI 서버 연결 지연</b>
-              <br>
-              Ollama가 중단되어도 검색과 일반 예매는 정상 이용할 수 있습니다.
+            <button id="ai-new-chat" class="btn btn--primary ai-new-chat" type="button">
+              <span aria-hidden="true">＋</span> 새 채팅방
+            </button>
+            <p id="ai-room-limit" class="ai-room-limit">
+              최근 채팅방은 최대 10개까지 저장됩니다.<br>
+              초과하면 오래된 채팅방부터 자동 정리됩니다.
+            </p>
+            <nav id="ai-room-list" class="ai-room-list" aria-label="저장된 AI 채팅방"></nav>
+            <div class="ai-room-sidebar__footer">
+              <button id="ai-clear-history" class="ai-history-clear" type="button">전체 대화 기록 삭제</button>
             </div>
           </aside>
-          <section class="card chat-window" aria-label="StageOn AI 채팅">
-            <div id="ai-messages" class="messages" aria-live="polite">
-              <div class="message">
-                <b>StageOn AI입니다.</b>
-                <br>
-                지역, 날짜, 장르를 포함해 공연을 물어보세요. KOPIS의 공연 정보를 확인해 답변합니다.
+
+          <section class="ai-conversation" aria-labelledby="ai-conversation-title">
+            <header class="ai-conversation__header">
+              <button id="ai-room-toggle" class="ai-icon-button ai-room-toggle" type="button"
+                      aria-label="대화 목록 열기" aria-controls="ai-room-sidebar" aria-expanded="false">
+                <span aria-hidden="true">☰</span>
+              </button>
+              <div class="ai-conversation__title">
+                <strong id="ai-conversation-title">새 공연 추천 대화</strong>
+                <small id="ai-member-summary">StageOn 예매 가능 데이터만 사용합니다</small>
+              </div>
+              <span class="ai-online-status"><i aria-hidden="true"></i> AI 연결</span>
+            </header>
+
+            <div id="ai-quick-questions" class="ai-chat-quick" aria-label="추천 질문">
+              <button type="button" data-ai-question="내가 예매한 공연과 찜한 공연을 바탕으로 지금 볼 수 있는 공연을 추천해줘.">내 취향 추천</button>
+              <button type="button" data-ai-question="내가 찜한 공연과 비슷한 StageOn 예매 가능 공연을 알려줘.">찜 기반 추천</button>
+              <button type="button" data-ai-question="이번 주말에 StageOn에서 예매 가능한 공연을 알려줘.">이번 주말 공연</button>
+            </div>
+
+            <div id="ai-messages" class="ai-conversation__messages" role="log"
+                 aria-live="polite" aria-relevant="additions text">
+              <div class="ai-message ai-message--assistant">
+                <span class="ai-message__avatar" aria-hidden="true">S</span>
+                <div class="ai-message__body">
+                  <b>StageOn AI입니다.</b>
+                  <p>보고 싶은 지역, 날짜, 장르를 알려주세요. 예매·찜 내역을 반영해 추천하고 대화방도 저장합니다.</p>
+                </div>
               </div>
             </div>
-            <p id="ai-chat-status" class="ai-chat-status" role="status"></p>
-            <form id="ai-chat-form" class="chat-compose">
-              <label class="sr-only" for="ai-question">질문</label>
-              <input id="ai-question" class="input" maxlength="500" autocomplete="off"
-                     placeholder="예: 이번 주말 서울 뮤지컬 추천해 줘" required>
-              <button id="ai-send-button" class="btn btn--primary" type="submit">전송</button>
-            </form>
+
+            <div class="ai-compose-area">
+              <p id="ai-chat-status" class="ai-chat-status" role="status"></p>
+              <form id="ai-chat-form" class="ai-chat-compose">
+                <label class="sr-only" for="ai-question">공연 질문</label>
+                <textarea id="ai-question" rows="1" maxlength="500" autocomplete="off"
+                          placeholder="공연에 관해 물어보세요" required></textarea>
+                <button id="ai-send-button" type="submit" aria-label="메시지 전송">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 12 20 4l-6 16-3-6-7-2Z"></path>
+                  </svg>
+                </button>
+              </form>
+              <small class="ai-compose-note">AI 답변은 참고용이며 좌석·가격은 예매 화면에서 다시 확인해 주세요.</small>
+            </div>
           </section>
-        </div>
+        </section>
       </div>
     </main>
     <div th:replace="~{fragments/common/site-footer :: footer}"></div>

@@ -1,15 +1,69 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
   <body>
-    <div th:fragment="floatingActions" class="floating-actions" aria-label="빠른 메뉴">
-      <details>
-        <div class="chat-panel" role="status">
-          <strong>StageOn AI 도우미</strong>
-          <p>공연 추천과 FAQ를 도와드려요. 실제 좌석·가격·결제 정보는 StageOn 서버 데이터만 설명합니다.</p>
+    <div id="floating-actions" th:fragment="floatingActions" class="floating-actions" aria-label="빠른 메뉴">
+      <section sec:authorize="isAuthenticated()" id="floating-ai-panel" class="floating-ai" role="dialog"
+               aria-labelledby="floating-ai-title" aria-modal="false" hidden>
+        <header class="floating-ai__header">
+          <div class="floating-ai__identity">
+            <span class="floating-ai__presence" aria-hidden="true"></span>
+            <div>
+              <strong id="floating-ai-title">StageOn AI</strong>
+              <small>예매 가능한 공연만 알려드려요</small>
+            </div>
+          </div>
+          <div class="floating-ai__header-actions">
+            <a href="/ai" aria-label="AI 전체 화면 열기" title="전체 화면">↗</a>
+            <button id="floating-ai-close" type="button" aria-label="채팅 닫기">×</button>
+          </div>
+        </header>
+        <div id="floating-ai-quick" class="floating-ai__quick" aria-label="추천 질문">
+          <button type="button" data-floating-ai-question="내가 예매한 공연과 찜한 공연을 바탕으로 지금 볼 수 있는 공연을 추천해줘.">내 취향 추천</button>
+          <button type="button" data-floating-ai-question="내가 찜한 공연과 비슷한 예매 가능한 공연을 알려줘.">찜 기반 추천</button>
+          <button type="button" data-floating-ai-question="이번 주말에 StageOn에서 예매 가능한 공연을 알려줘.">이번 주말 공연</button>
         </div>
-        <summary class="fab chatbot-fab" aria-label="AI 챗봇 열기">✦</summary>
-      </details>
-      <a class="fab top-fab" href="#top" aria-label="맨 위로 이동">↑</a>
+        <div id="floating-ai-messages" class="floating-ai__messages"
+             aria-live="polite" aria-relevant="additions text">
+          <div class="floating-ai-message floating-ai-message--assistant">
+            <b>안녕하세요, StageOn AI입니다.</b>
+            <span>현재 StageOn에서 실제 예매 가능한 공연을 찾아드릴게요.</span>
+          </div>
+        </div>
+        <p id="floating-ai-status" class="floating-ai__status" role="status"></p>
+        <form id="floating-ai-form" class="floating-ai__compose">
+          <label class="sr-only" for="floating-ai-question">공연 질문</label>
+          <textarea id="floating-ai-question" rows="1" maxlength="500"
+                    placeholder="공연에 관해 물어보세요" required></textarea>
+          <button id="floating-ai-send" type="submit" aria-label="메시지 전송">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 12 20 4l-6 16-3-6-7-2Z"></path>
+            </svg>
+          </button>
+        </form>
+      </section>
+      <button sec:authorize="isAuthenticated()" id="floating-ai-toggle" class="fab chatbot-fab" type="button"
+              aria-expanded="false" aria-controls="floating-ai-panel" aria-label="AI 추천 채팅 열기">
+        <svg class="chatbot-fab__icon" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M7 7.5h18a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H15l-6.5 4v-4H7a3 3 0 0 1-3-3v-10a3 3 0 0 1 3-3Z"></path>
+          <path d="m16 10.5 1.15 3.1 3.1 1.15-3.1 1.15L16 19l-1.15-3.1-3.1-1.15 3.1-1.15L16 10.5Z"></path>
+        </svg>
+        <span class="chatbot-fab__label">AI 추천</span>
+      </button>
+      <a sec:authorize="!isAuthenticated()" class="fab chatbot-fab"
+         th:href="@{/login(required=1,ai=1)}" href="/login?required=1&amp;ai=1"
+         aria-label="로그인하고 AI 추천 이용하기">
+        <svg class="chatbot-fab__icon" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M7 7.5h18a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H15l-6.5 4v-4H7a3 3 0 0 1-3-3v-10a3 3 0 0 1 3-3Z"></path>
+          <path d="m16 10.5 1.15 3.1 3.1 1.15-3.1 1.15L16 19l-1.15-3.1-3.1-1.15 3.1-1.15L16 10.5Z"></path>
+        </svg>
+        <span class="chatbot-fab__label">로그인 후 AI 추천</span>
+      </a>
+      <a class="fab top-fab" href="#top" aria-label="맨 위로 이동">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6"></path></svg>
+      </a>
+      <script sec:authorize="isAuthenticated()" th:src="@{/js/components/floating-ai-chat.js}"
+              src="/js/components/floating-ai-chat.js" defer></script>
     </div>
   </body>
 </html>

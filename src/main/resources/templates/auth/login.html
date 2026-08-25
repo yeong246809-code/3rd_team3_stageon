@@ -56,7 +56,12 @@
 
         <!-- 로그인 요청 메시지 -->
         <p class="login-message"
-           th:if="${param.required}">
+           th:if="${param.ai != null}">
+          AI 공연 추천은 로그인 후 이용할 수 있습니다.
+        </p>
+
+        <p class="login-message"
+           th:if="${param.required != null and param.ai == null}">
           로그인 후 이용할 수 있는 페이지입니다.
         </p>
 

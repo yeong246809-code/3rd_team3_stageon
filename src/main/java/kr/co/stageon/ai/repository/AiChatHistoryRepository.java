@@ -7,5 +7,7 @@ import java.util.List;
 
 /** AI 요청·응답 및 fallback 이력 DAO입니다. */
 public interface AiChatHistoryRepository extends JpaRepository<AiChatHistory, Long> {
-    List<AiChatHistory> findTop20ByMemberIdOrderByCreatedAtDesc(Long memberId);
+    List<AiChatHistory> findByMemberIdOrderByCreatedAtDesc(Long memberId);
+
+    void deleteByMemberId(Long memberId);
 }
