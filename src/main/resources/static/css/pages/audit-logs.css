@@ -1,0 +1,156 @@
+/* 감사 로그 페이지 전용 스타일.
+   .admin-table, .badge--*, .pagination .page-link, .poster-modal 등은
+   admin-pages.css의 기존 컴포넌트를 그대로 재사용하고, 여기서는
+   이 페이지 고유의 레이아웃/정렬만 보강합니다. */
+
+.audit-filter-card {
+    padding: 18px 22px;
+}
+
+.audit-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.audit-filters select,
+.audit-filters input[type="date"] {
+    padding: 9px 12px;
+    border: 1px solid var(--line, #e2e4ec);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--surface, #fff);
+    color: var(--ink, #1c1f26);
+}
+
+.audit-filters__sep {
+    color: var(--muted, #9aa0ad);
+}
+
+.audit-table-card {
+    padding-bottom: 6px;
+}
+
+.audit-table-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 22px 14px;
+}
+
+.audit-table-card__head h2 {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0;
+}
+
+/* admin-table 기본값은 전부 가운데 정렬이라, 길게 늘어지는 컬럼(시각/설명)만 왼쪽 정렬로 보정 */
+.audit-log-table th:nth-child(1),
+.audit-log-table td:nth-child(1) {
+    text-align: left;
+    white-space: nowrap;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted, #6b7280);
+}
+
+.audit-log-table th:nth-child(4),
+.audit-log-table td:nth-child(4) {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12.5px;
+}
+
+.audit-log-table th:nth-child(5),
+.audit-log-table td:nth-child(5) {
+    text-align: left;
+    color: var(--ink-2, #4b5563);
+}
+
+.audit-row {
+    cursor: pointer;
+}
+
+/* ---------- 상세 모달 재설계 ---------- */
+.audit-modal__content {
+    width: 400px;
+    max-width: 92vw;
+    padding: 30px 28px;
+}
+
+.audit-modal__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.audit-modal__head .badge {
+    margin-left: 0;
+    font-size: 12px;
+    padding: 4px 12px;
+}
+
+.audit-modal__target {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink, #1c1f26);
+}
+
+.audit-modal__time {
+    margin: 0 0 20px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--muted, #9aa0ad);
+}
+
+.audit-modal__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line, #e5e7eb);
+    border-bottom: 1px solid var(--line, #e5e7eb);
+    margin-bottom: 18px;
+}
+
+.audit-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.audit-modal__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--muted, #9aa0ad);
+}
+
+.audit-modal__value {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink, #1c1f26);
+}
+
+.audit-modal__desc {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.audit-modal__desc .audit-modal__label {
+    margin-bottom: 0;
+}
+
+.audit-modal__desc p {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--surface-2, #f4f5f8);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink-2, #374151);
+    word-break: break-word;
+}

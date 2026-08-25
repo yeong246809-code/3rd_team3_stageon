@@ -94,12 +94,15 @@
 .admin-login__form button[type="submit"].is-loading .spinner { display: inline-block; }
 @keyframes admin-login-spin { to { transform: rotate(360deg); } }
 
-/* 사이드바 하단 관리자 프로필 (position:relative는 admin-sidebar.html의 아side에 인라인으로 지정) */
+/* 사이드바 하단 관리자 프로필 (사이드바가 admin-layout.css에서 sticky+자체 스크롤 컨테이너로 바뀌면서,
+   이 요소도 absolute 대신 flex 하단 고정 방식으로 변경함 - 2026-08-25) */
 .admin-profile {
-    position: absolute; left: 0; right: 0; bottom: 0;
+    margin-top: auto;
+    position: sticky; bottom: 0; left: 0; right: 0;
     display: flex; align-items: center; gap: 12px;
     padding: 16px 20px;
     border-top: 1px solid rgba(255,255,255,.08);
+    background: var(--sidebar);
 }
 .admin-profile__avatar {
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;

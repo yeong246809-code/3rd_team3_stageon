@@ -1,5 +1,6 @@
 
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -8,6 +9,9 @@
     <title>StageOn Admin | 공연 목록</title>
     <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
     <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <!-- 삭제 DELETE 요청에 사용할 CSRF 토큰 -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
 </head>
 <body>
 <div class="admin-page">
@@ -52,8 +56,9 @@
                         </td>
                         <td th:text="${p.startDate} + ' ~ ' + ${p.endDate}">기간</td>
                         <td>
-                            <button type="button" class="btn btn--sm btn--view"
-                                    th:attr="data-title=${p.title},
+                            <div class="table-actions">
+                                <button type="button" class="btn btn--sm btn--view"
+                                        th:attr="data-title=${p.title},
                                               data-poster=${p.posterUrl != null ? p.posterUrl : ''},
                                               data-genre=${p.genre},
                                               data-status=${p.status.name()},
@@ -62,8 +67,12 @@
                                               data-runtime=${p.runtimeMinutes != null ? p.runtimeMinutes : ''},
                                               data-age=${p.ageText != null ? p.ageText : ''},
                                               data-story=${p.story != null ? p.story : ''}"
-                                    onclick="openPosterModal(this)">상세보기</button>
-                            <a class="btn btn--sm btn--edit" th:href="@{'/admin/performances/' + ${p.id} + '/edit'}">수정</a>
+                                        onclick="openPosterModal(this)">상세보기</button>
+                                <a class="btn btn--sm btn--edit" th:href="@{'/admin/performances/' + ${p.id} + '/edit'}">수정</a>
+                                <button type="button" class="btn btn--sm btn--delete"
+                                        th:attr="data-id=${p.id}, data-title=${p.title}"
+                                        onclick="openDeleteModal(this)">삭제</button>
+                            </div>
                         </td>
                     </tr>
                     </tbody>
@@ -150,6 +159,99 @@
     }
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closePosterModal();
+    });
+</script>
+<!-- 공연 삭제 확인 모달: 위험 문구 + 회차 남아있으면 서버가 막고 그 이유를 여기에 표시 -->
+<div id="deleteModal" class="poster-modal">
+    <div class="poster-modal__backdrop" onclick="closeDeleteModal()"></div>
+    <div class="poster-modal__content" style="width:min(420px, 92vw); text-align:left">
+        <button type="button" class="poster-modal__close" onclick="closeDeleteModal()" aria-label="닫기">&times;</button>
+        <div class="confirm-modal__icon">!</div>
+        <p class="confirm-modal__title">정말로 삭제하시겠습니까?</p>
+        <p class="confirm-modal__desc">
+            <strong id="deleteModalTitle"></strong> 공연을 삭제합니다.<br>
+            이 작업은 되돌릴 수 없습니다.
+        </p>
+        <div id="deleteModalError" class="confirm-modal__error"></div>
+        <div class="confirm-modal__actions">
+            <button type="button" class="btn" onclick="closeDeleteModal()">취소</button>
+            <button type="button" id="deleteModalConfirm" class="btn btn--danger" onclick="confirmDelete()">삭제</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    var deleteTargetId = null;
+
+    function showToast(message) {
+        var toast = document.createElement('div');
+        toast.className = 'app-toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        requestAnimationFrame(function () { toast.classList.add('is-visible'); });
+        setTimeout(function () {
+            toast.classList.remove('is-visible');
+            setTimeout(function () { toast.remove(); }, 250);
+        }, 1600);
+    }
+
+    function buildCsrfHeaders() {
+        var tokenMeta = document.querySelector('meta[name="_csrf"]');
+        var headerMeta = document.querySelector('meta[name="_csrf_header"]');
+        var headers = {};
+        if (tokenMeta && headerMeta && tokenMeta.content) {
+            headers[headerMeta.content] = tokenMeta.content;
+        }
+        return headers;
+    }
+
+    function openDeleteModal(btn) {
+        deleteTargetId = btn.dataset.id;
+        document.getElementById('deleteModalTitle').textContent = btn.dataset.title || '';
+        document.getElementById('deleteModalError').classList.remove('is-visible');
+        document.getElementById('deleteModalError').textContent = '';
+        document.getElementById('deleteModal').classList.add('is-open');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('is-open');
+        deleteTargetId = null;
+    }
+
+    function confirmDelete() {
+        if (!deleteTargetId) return;
+        var confirmBtn = document.getElementById('deleteModalConfirm');
+        var errorBox = document.getElementById('deleteModalError');
+        confirmBtn.classList.add('is-loading');
+        errorBox.classList.remove('is-visible');
+
+        fetch('/admin/performances/' + deleteTargetId, {
+            method: 'DELETE',
+            headers: buildCsrfHeaders()
+        })
+            .then(function (res) {
+                if (res.ok) {
+                    return res.text().then(function (msg) {
+                        closeDeleteModal();
+                        showToast(msg || '삭제가 완료되었습니다.');
+                        setTimeout(function () { window.location.reload(); }, 1100);
+                    });
+                }
+                return res.text().then(function (msg) {
+                    throw new Error(msg || '삭제 중 오류가 발생했습니다.');
+                });
+            })
+            .catch(function (err) {
+                errorBox.textContent = err.message;
+                errorBox.classList.add('is-visible');
+            })
+            .finally(function () {
+                confirmBtn.classList.remove('is-loading');
+            });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDeleteModal();
     });
 </script>
 </body>

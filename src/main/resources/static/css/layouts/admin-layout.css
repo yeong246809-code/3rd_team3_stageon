@@ -1,5 +1,12 @@
 .admin-page { min-height: 100vh; display: grid; grid-template-columns: 252px 1fr; background: var(--surface); }
-.admin-sidebar { min-height: 100vh; padding: 28px 20px; color: #d1d5db; background: var(--sidebar); }
+.admin-sidebar {
+    position: sticky; top: 0;
+    height: 100vh; min-height: 100vh;
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+    padding: 28px 20px;
+    color: #d1d5db; background: var(--sidebar);
+}
 .admin-brand { color: #fff; font-size: 26px; font-weight: 800; }
 .admin-brand small { display: block; margin-top: 4px; color: #94a3b8; font-family: "Noto Sans KR"; font-size: 11px; }
 .admin-nav { margin-top: 38px; display: grid; gap: 6px; }
@@ -12,4 +19,3 @@
 .admin-title h1 { font-size: 28px; }
 .admin-title p { margin-top: 5px; color: var(--muted); font-size: 13px; }
 @media (max-width: 820px) { .admin-page { grid-template-columns: 76px 1fr; } .admin-sidebar { padding-inline: 12px; } .admin-brand small, .admin-nav a span { display: none; } .admin-content { padding-inline: 18px; } }
-

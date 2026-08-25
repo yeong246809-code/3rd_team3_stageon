@@ -27,6 +27,27 @@
     display: inline-block; margin: 0 3px;
 }
 
+/* 목록 행의 버튼 그룹(상세보기/수정/삭제)을 한 줄로 정렬 */
+.table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.table-actions .btn--sm { margin: 0; }
+
+/* 전역 토스트 알림 (화면 우하단, 액션 완료 안내용) */
+.app-toast {
+    position: fixed; right: 24px; bottom: 24px; z-index: 2000;
+    padding: 13px 20px; border-radius: 10px;
+    background: #1f2440; color: #fff; font-size: 13px; font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .22s ease, transform .22s ease;
+}
+.app-toast.is-visible { opacity: 1; transform: translateY(0); }
+
 /* 수정 버튼: 주황 계열 (.admin-table 접두로 우선순위를 .btn--sm과 동일하게 맞춰 뒤에 오는 규칙이 이기도록 함) */
 .admin-table .btn--edit { background: #fff1e6; color: #c2680a; border: 1px solid #ffdcbb; }
 .admin-table .btn--edit:hover { background: #c2680a; color: #fff; transform: translateY(-1px); }
@@ -34,6 +55,30 @@
 /* 상세보기 버튼: 청록 계열 */
 .admin-table .btn--view { background: #eef7f6; color: #14807a; border: 1px solid #cdeeeb; }
 .admin-table .btn--view:hover { background: #14807a; color: #fff; transform: translateY(-1px); }
+
+/* 삭제 버튼: 위험 빨강 계열 */
+.admin-table .btn--delete { background: #fdeeee; color: #c0392b; border: 1px solid #f7cdcd; }
+.admin-table .btn--delete:hover { background: #c0392b; color: #fff; transform: translateY(-1px); }
+
+/* 삭제 확인 모달: poster-modal 패턴 재사용, 위험 강조 톤만 추가 */
+.confirm-modal__icon {
+    width: 48px; height: 48px; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; background: #fdeeee; color: #c0392b; font-size: 24px; font-weight: 800;
+}
+.confirm-modal__title { text-align: center; font-size: 17px; font-weight: 800; color: var(--ink); margin: 0 0 8px; }
+.confirm-modal__desc { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 22px; }
+.confirm-modal__desc strong { color: var(--ink); }
+.confirm-modal__error {
+    display: none; margin: 0 0 16px; padding: 10px 14px; border-radius: 10px;
+    background: #fdeeee; color: #c0392b; font-size: 12.5px; line-height: 1.5;
+}
+.confirm-modal__error.is-visible { display: block; }
+.confirm-modal__actions { display: flex; gap: 10px; justify-content: center; }
+.confirm-modal__actions .btn { min-width: 96px; text-align: center; }
+.btn--danger { background: #c0392b; color: #fff; border: none; }
+.btn--danger:hover { filter: brightness(1.1); }
+.btn--danger.is-loading { opacity: .7; pointer-events: none; }
 
 /* 임시저장 뱃지 */
 .badge { display: inline-block; margin-left: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
