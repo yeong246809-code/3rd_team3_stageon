@@ -86,9 +86,14 @@
 
       <!-- 💡 핵심 해결책: 서버에서 전달받은 실제 결제 금액을 숨겨두는 input 추가 -->
       <input type="hidden" id="hiddenTotalPrice" th:value="${totalPrice}">
+      <input type="hidden" id="fallbackScheduleId" th:value="${holdItems[0].scheduleSeat.schedule.id}">
 
       <button type="button" class="btn btn--primary btn--wide" onclick="requestPayment()">
         <span th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA')} + '원'">0원</span> 결제하기
+      </button>
+
+      <button type="button" class="btn btn--secondary btn--wide" onclick="goBackToSeatSelect()" style="margin-top: 15px; background-color: #fff; border: 1px solid #5a28ff; color: #5a28ff;">
+        좌석 다시 선택하기
       </button>
 
       <div style="margin-top: 15px; text-align: center;">
@@ -242,6 +247,42 @@
       window.close();
     }
   }, 1000);
+
+  function goBackToSeatSelect() {
+    if (confirm("현재 선택한 좌석이 해제됩니다. 좌석을 다시 선택하시겠습니까?")) {
+
+      // 1. Thymeleaf를 통해 seatHoldId를 직접 가져옵니다.
+      const seatHoldId = /*[[${paymentRequest.seatHoldId}]]*/ null;
+
+      // 2. URL 대신 hidden input에서 scheduleId를 쏙 빼옵니다.
+      const scheduleInput = document.getElementById('fallbackScheduleId');
+      const scheduleId = scheduleInput ? scheduleInput.value : '';
+
+      if (!seatHoldId || !scheduleId) {
+        window.location.href = '/'; // 비정상 상태면 메인으로
+        return;
+      }
+
+      // 3. CSRF 토큰 세팅
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+      const headers = { 'Content-Type': 'application/json' };
+      if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+      // 4. 백엔드로 즉시 취소 API 전송 후 페이지 이동
+      fetch(`/api/seats/holds/${seatHoldId}/cancel`, {
+        method: 'POST',
+        headers: headers
+      }).then(() => {
+        isSubmittingPayment = true; // 이탈 감지 중복 실행 방지
+        window.location.href = `/booking/seats?scheduleId=${scheduleId}`;
+      }).catch(err => {
+        console.error("좌석 해제 중 오류:", err);
+        isSubmittingPayment = true;
+        window.location.href = `/booking/seats?scheduleId=${scheduleId}`;
+      });
+    }
+  }
 </script>
 </body>
 </html>
