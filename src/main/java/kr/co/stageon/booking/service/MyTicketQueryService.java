@@ -105,15 +105,23 @@ public class MyTicketQueryService {
         return tickets.stream()
                 .filter(t -> {
                     if (t.startsAt() == null) return true;
+                    // 어제 공연까지는 목록에 남겨둠
                     return t.startsAt().plusDays(1).isAfter(now);
                 })
                 .sorted((t1, t2) -> {
-                    boolean t1Ended = "ENDED".equals(t1.ticketStatus());
-                    boolean t2Ended = "ENDED".equals(t2.ticketStatus());
+                    // 💡 1. 티켓 상태별 우선순위 지정 (작을수록 상단 노출)
+                    // AVAILABLE/UPCOMING(관람 전) = 1, ENTERED(입장 완료) = 2, ENDED(공연 종료) = 3
+                    int p1 = "ENDED".equals(t1.ticketStatus()) ? 3 :
+                            ("ENTERED".equals(t1.ticketStatus()) ? 2 : 1);
+                    int p2 = "ENDED".equals(t2.ticketStatus()) ? 3 :
+                            ("ENTERED".equals(t2.ticketStatus()) ? 2 : 1);
 
-                    if (t1Ended && !t2Ended) return 1;
-                    if (!t1Ended && t2Ended) return -1;
+                    // 우선순위가 다르면 상태 우선순위대로 정렬
+                    if (p1 != p2) {
+                        return Integer.compare(p1, p2);
+                    }
 
+                    //  2. 상태가 같다면 공연 날짜가 빠른 순서대로 정렬
                     if (t1.startsAt() == null && t2.startsAt() == null) return 0;
                     if (t1.startsAt() == null) return 1;
                     if (t2.startsAt() == null) return -1;
