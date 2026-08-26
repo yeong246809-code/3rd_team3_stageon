@@ -6,9 +6,11 @@ import kr.co.stageon.admin.dto.SeatMapItemDto;
 import kr.co.stageon.admin.service.AdminPerformanceService;
 import kr.co.stageon.admin.service.AdminVenueService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,16 +31,55 @@ public class AdminPerformanceController {
 
     @PostMapping("/admin/performances")
     public String create(@ModelAttribute PerformanceFormDto form,
-                         @RequestParam(defaultValue = "false") boolean draft) {
-        adminPerformanceService.create(form, draft);
-        return "redirect:/admin/performances";
+                         @RequestParam(defaultValue = "false") boolean draft,
+                         Model model) {
+        try {
+            adminPerformanceService.create(form, draft);
+            return "redirect:/admin/performances";
+        } catch (IllegalStateException e) {
+            return showFormWithError(form, false, e.getMessage(), model);
+        } catch (DataIntegrityViolationException e) {
+            return showFormWithError(form, false, resolveDbErrorMessage(e), model);
+        }
     }
 
     @PostMapping("/admin/performances/{id}")
     public String update(@PathVariable Long id, @ModelAttribute PerformanceFormDto form,
-                         @RequestParam(defaultValue = "false") boolean draft) {
-        adminPerformanceService.update(id, form, draft);
-        return "redirect:/admin/performances";
+                         @RequestParam(defaultValue = "false") boolean draft,
+                         Model model) {
+        try {
+            form.setId(id);
+            adminPerformanceService.update(id, form, draft);
+            return "redirect:/admin/performances";
+        } catch (IllegalStateException e) {
+            return showFormWithError(form, false, e.getMessage(), model);
+        } catch (DataIntegrityViolationException e) {
+            return showFormWithError(form, false, resolveDbErrorMessage(e), model);
+        }
+    }
+
+    /** 저장 중 발생한 예외(홀 중복 등)를 사용자가 입력한 값 그대로 폼에 되돌려주며 에러 메시지를 표시합니다. */
+    private String showFormWithError(PerformanceFormDto form, boolean readOnly, String errorMessage, Model model) {
+        model.addAttribute("form", form);
+        model.addAttribute("readOnly", readOnly);
+        model.addAttribute("halls", getHallOptions());
+        model.addAttribute("errorMessage", errorMessage);
+        return "admin/performance-form";
+    }
+
+    /** DB 제약 위반 예외를 화면에 보여줄 문구로 변환합니다. 알려진 제약이 아니면 일반 안내 문구를 반환합니다. */
+    private String resolveDbErrorMessage(DataIntegrityViolationException e) {
+        String rootMsg = e.getMostSpecificCause().getMessage();
+        if (rootMsg != null && rootMsg.contains("uk_performance_kopis_id")) {
+            return "이미 등록된 KOPIS 공연 ID입니다. 다른 값을 입력하거나 비워두세요.";
+        }
+        return "입력값이 저장 규칙에 맞지 않아 저장할 수 없습니다. 입력값을 확인해주세요.";
+    }
+
+    private List<kr.co.stageon.admin.dto.VenueStructureRowDto> getHallOptions() {
+        return adminVenueService.getDashboard().getRows().stream()
+                .filter(row -> row.getHallId() != null)
+                .toList();
     }
 
     /** 목록 화면의 삭제 확인 모달에서 fetch로 호출합니다. 회차가 남아있으면 409로 차단됩니다. */

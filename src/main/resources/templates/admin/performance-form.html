@@ -1,11 +1,11 @@
 
-
-
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <title>StageOn Admin | 공연 등록·수정</title>
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
@@ -29,12 +29,17 @@
         </div>
       </header>
 
+      <div class="form-error-banner" th:if="${errorMessage}" th:text="${errorMessage}"
+           style="background:#fdecea;color:#b3261e;border:1px solid #f5c2c0;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:14px;">
+      </div>
+
       <form id="performanceForm" class="card stack" method="post" enctype="multipart/form-data"
             th:classappend="${readOnly} ? ' form--readonly' : ''"
             th:object="${form}"
             th:action="${form.id} != null ? @{'/admin/performances/' + ${form.id}} : @{/admin/performances}">
         <input type="hidden" th:field="*{id}">
         <input type="hidden" th:field="*{posterUrl}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
         <h2>포스터</h2>
         <div class="poster-upload">
@@ -190,6 +195,11 @@
   var existingSeatPrices = /*[[${form.seatPrices}]]*/ [];
   var currentGrades = []; // 모달 오픈 시 불러온 해당 홀의 등급 목록
   var savedPrices = {};   // gradeId -> price (확정된 값)
+</script>
+<script>
+  // CSRF 메타태그에서 토큰/헤더명을 읽어 fetch 요청에 사용
+  var csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+  var csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
   (function initExisting() {
     if (existingSeatPrices && existingSeatPrices.length > 0) {
@@ -419,9 +429,12 @@
       }
       if (newName !== input.dataset.originalName) {
         var gradeId = input.dataset.gradeNameId;
+        var headers = {};
+        headers[csrfHeader] = csrfToken;
         renamePromises.push(
                 fetch('/admin/performances/grades/' + gradeId + '/rename?name=' + encodeURIComponent(newName), {
-                  method: 'POST'
+                  method: 'POST',
+                  headers: headers
                 }).then(function (res) {
                   if (!res.ok) throw new Error('rename failed: ' + gradeId);
                   input.dataset.originalName = newName;
