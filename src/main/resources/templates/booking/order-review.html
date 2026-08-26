@@ -83,6 +83,10 @@
           모의 결제로 이동
         </button>
 
+        <button type="button" class="btn btn--secondary btn--wide" onclick="goBackToSeatSelect()" style="margin-top: 15px; background-color: #fff; border: 1px solid #5a28ff; color: #5a28ff;">
+          좌석 다시 선택하기
+        </button>
+
         <button type="button" class="btn btn--secondary btn--wide" onclick="cancelOrder()" style="margin-top: 15px; background-color: #f8f9fa; color: #495057; border: 1px solid #ced4da;">
           결제 취소 (좌석 해제)
         </button>
@@ -231,6 +235,45 @@
       window.close();
     }
   }, 1000);
+
+  function goBackToSeatSelect() {
+    if (confirm("현재 선택한 좌석이 해제됩니다. 좌석을 다시 선택하시겠습니까?")) {
+
+      // 1. 폼에 숨겨둔 선점 ID(seatHoldId)와 URL의 scheduleId 가져오기
+      const seatHoldInput = document.querySelector('input[name="seatHoldId"]');
+      const seatHoldId = seatHoldInput ? seatHoldInput.value : null;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const scheduleId = urlParams.get('scheduleId') || 1;
+
+      if (!seatHoldId) {
+        window.location.href = `/booking/seats?scheduleId=${scheduleId}`;
+        return;
+      }
+
+      // 2. CSRF 토큰 세팅
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+      const headers = { 'Content-Type': 'application/json' };
+      if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
+
+      // 3. 백엔드로 즉시 취소 API 전송 후 페이지 이동
+      fetch(`/api/seats/holds/${seatHoldId}/cancel`, {
+        method: 'POST',
+        headers: headers
+      }).then(() => {
+        // 이탈 감지 로직(beforeunload)이 중복으로 돌지 않도록 플래그 처리
+        isSubmitting = true;
+        // 좌석 선택 창으로 리다이렉트
+        window.location.href = `/booking/seats?scheduleId=${scheduleId}`;
+      }).catch(err => {
+        console.error("좌석 해제 중 오류:", err);
+        // 에러가 나더라도 일단 좌석 선택창으로 보내줌 (5분 뒤 백그라운드 스케줄러가 알아서 해제함)
+        isSubmitting = true;
+        window.location.href = `/booking/seats?scheduleId=${scheduleId}`;
+      });
+    }
+  }
 </script>
 </body>
 </html>
