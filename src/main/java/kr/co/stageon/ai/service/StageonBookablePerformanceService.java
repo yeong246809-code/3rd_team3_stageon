@@ -121,7 +121,7 @@ public class StageonBookablePerformanceService {
                 blank(performance.getAgeText()),
                 formatPrice(performance),
                 scheduleText,
-                "/booking/performances/" + performance.getId() + "/schedules",
+                "/performances/" + performance.getId(),
                 blank(performance.getPosterUrl()),
                 blank(performance.getStory()),
                 LocalDate.now(clock)

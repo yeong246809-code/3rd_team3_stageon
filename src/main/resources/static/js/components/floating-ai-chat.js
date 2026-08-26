@@ -71,7 +71,8 @@
       if (performance.bookingUrl) {
         const link = document.createElement("a");
         link.href = performance.bookingUrl;
-        link.textContent = "예매하기";
+        link.textContent = "공연 상세보기";
+        link.setAttribute("aria-label", `${performance.name || "공연"} 공연 상세보기`);
         body.appendChild(link);
       }
       card.append(image, body);

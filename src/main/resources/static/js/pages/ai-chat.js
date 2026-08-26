@@ -235,7 +235,11 @@
         const bookingLink = document.createElement("a");
         bookingLink.className = "ai-performance-result__booking";
         bookingLink.href = performance.bookingUrl;
-        bookingLink.textContent = "예매하기";
+        bookingLink.textContent = "공연 상세보기";
+        bookingLink.setAttribute(
+          "aria-label",
+          `${performance.name || "공연"} 공연 상세보기`
+        );
         copy.appendChild(bookingLink);
       }
       card.append(image, copy);
