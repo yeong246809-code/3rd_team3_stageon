@@ -37,6 +37,18 @@ public interface ScheduleSeatRepository extends JpaRepository<ScheduleSeat, Long
     @Query("update ScheduleSeat s set s.status = 'AVAILABLE' where s.id in :seatIds")
     void bulkReleaseSeats(@Param("seatIds") List<Long> seatIds);
 
+    /**
+     * AD06 좌석 개별 삭제 모달에서 삭제 실패 시 "어느 회차에 배정되어 있는지" 안내용으로 조회합니다.
+     * 물리 좌석 id 목록에 대해, 해당 좌석이 속한 회차·공연 정보를 함께 가져옵니다.
+     */
+    @Query("SELECT ss FROM ScheduleSeat ss " +
+            "JOIN FETCH ss.schedule sch " +
+            "JOIN FETCH sch.performance p " +
+            "JOIN FETCH ss.seat s " +
+            "WHERE ss.seat.id IN :seatIds " +
+            "ORDER BY sch.startsAt ASC")
+    List<ScheduleSeat> findWithScheduleInfoBySeatIdIn(@Param("seatIds") List<Long> seatIds);
+
     /** AD08 좌석 완전 삭제 판단용 - 이 물리 좌석(seat_id)이 다른 회차에도 등록되어 있는지 확인합니다. */
     boolean existsBySeatId(Long seatId);
 }

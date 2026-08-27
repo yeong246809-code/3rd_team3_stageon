@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -8,6 +9,8 @@
     <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
     <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
     <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+    <link rel="stylesheet" th:href="@{/css/pages/app-alert.css}" href="/css/pages/app-alert.css">
+    <script th:src="@{/js/pages/app-alert.js}" src="/js/pages/app-alert.js"></script>
 </head>
 <body>
 <div class="admin-page">
@@ -74,20 +77,61 @@
                 <div class="grade-preview" th:if="${!grades.isEmpty()}">
                     <h4>지금까지 추가된 등급</h4>
                     <div class="grade-preview__list">
-                <span class="grade-preview__item" th:each="g : ${grades}">
-                  <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
-                  <span th:text="${g.name}">VIP</span>
-                  <form th:action="@{/admin/venues/halls/{hallId}/grades/{gradeId}/delete(hallId=${hall.id}, gradeId=${g.id})}"
-                        method="post" style="display:inline">
-                    <button type="submit" class="grade-preview__delete" title="삭제"
-                            onclick="return confirm('이 등급을 삭제할까요?');">×</button>
-                  </form>
-                </span>
+                        <span class="grade-preview__item" th:each="g : ${grades}">
+                            <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
+                            <span th:text="${g.name}">VIP</span>
+                            <span class="grade-preview__count"
+                                  th:text="'(' + ${g.seatCount} + '석)'"
+                                  th:style="${g.seatCount > 0} ? 'color:#E8513D;font-weight:600;margin-left:2px' : 'color:var(--subtle);margin-left:2px'">(0석)</span>
+
+                            <!-- 좌석이 있는 등급: 좌석 전체 삭제 버튼 -->
+                            <form th:if="${g.seatCount > 0}" class="js-seats-delete-form"
+                                  th:action="@{/admin/venues/halls/{hallId}/grades/{gradeId}/seats/delete(hallId=${hall.id}, gradeId=${g.id})}"
+                                  method="post" style="display:inline">
+                                <button type="button" class="grade-preview__delete-seats js-seats-delete-btn"
+                                        th:attr="data-confirm-msg=${g.name} + ' 등급에 배치된 ' + ${g.seatCount} + '개 좌석을 전부 삭제할까요? 되돌릴 수 없습니다.'"
+                                        style="font-size:11px;margin-left:6px;padding:2px 8px;border-radius:6px;border:1px solid #E8513D;background:#fff;color:#E8513D;cursor:pointer">
+                                    좌석 삭제
+                                </button>
+                            </form>
+
+                            <!-- 등급 자체 삭제(X) -->
+                            <form class="js-grade-delete-form"
+                                  th:action="@{/admin/venues/halls/{hallId}/grades/{gradeId}/delete(hallId=${hall.id}, gradeId=${g.id})}"
+                                  method="post" style="display:inline">
+                                <button type="button" class="grade-preview__delete js-grade-delete-btn" title="삭제">×</button>
+                            </form>
+                        </span>
                     </div>
                 </div>
             </section>
         </div>
     </main>
 </div>
+
+<!-- 삭제 실패/성공 안내: 서버에서 넘어온 flash 메시지를 예쁜 팝업으로 표시 -->
+<script th:if="${error != null}" th:inline="javascript">
+    showAppAlert(/*[[${error}]]*/ '오류가 발생했습니다.', 'error');
+</script>
+<script th:if="${message != null}" th:inline="javascript">
+    showAppAlert(/*[[${message}]]*/ '처리되었습니다.', 'success');
+</script>
+<script>
+    document.querySelectorAll('.js-seats-delete-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var msg = btn.getAttribute('data-confirm-msg');
+            showAppConfirm(msg, function () {
+                btn.closest('form').submit();
+            });
+        });
+    });
+    document.querySelectorAll('.js-grade-delete-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            showAppConfirm('이 등급을 삭제할까요?', function () {
+                btn.closest('form').submit();
+            });
+        });
+    });
+</script>
 </body>
 </html>

@@ -9,6 +9,8 @@
   <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
   <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
   <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+  <link rel="stylesheet" th:href="@{/css/pages/app-alert.css}" href="/css/pages/app-alert.css">
+  <script th:src="@{/js/pages/app-alert.js}" src="/js/pages/app-alert.js"></script>
 </head>
 <body>
 <div class="admin-page">
@@ -197,5 +199,12 @@
 </div>
 
 <script th:src="@{/js/pages/venue-seats.js}" src="/js/pages/venue-seats.js"></script>
+
+<script th:if="${error != null}" th:inline="javascript">
+  showAppAlert(/*[[${error}]]*/ '오류가 발생했습니다.', 'error');
+</script>
+<script th:if="${message != null}" th:inline="javascript">
+  showAppAlert(/*[[${message}]]*/ '처리되었습니다.', 'success');
+</script>
 </body>
 </html>

@@ -1,89 +1,385 @@
 
 
-    <!doctype html>
-    <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>StageOn Admin | 홀 상세</title>
-        <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
-        <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
-        <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
-    </head>
-    <body>
-    <div class="admin-page">
-        <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
-        <main class="admin-main">
-            <div th:replace="~{fragments/admin/admin-header :: header}"></div>
-            <div class="admin-content">
-                <a class="back-link" th:href="@{/admin/venues}">← 공연장 목록으로</a>
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StageOn Admin | 홀 상세</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+    <link rel="stylesheet" th:href="@{/css/pages/admin-pages.css}" href="/css/pages/admin-pages.css">
+    <link rel="stylesheet" th:href="@{/css/pages/venue-seats.css}" href="/css/pages/venue-seats.css">
+    <link rel="stylesheet" th:href="@{/css/pages/seat-manage-modal.css}" href="/css/pages/seat-manage-modal.css">
+    <link rel="stylesheet" th:href="@{/css/pages/app-alert.css}" href="/css/pages/app-alert.css">
+    <script th:src="@{/js/pages/app-alert.js}" src="/js/pages/app-alert.js"></script>
+</head>
+<body>
+<div class="admin-page">
+    <div th:replace="~{fragments/admin/admin-sidebar :: sidebar}"></div>
+    <main class="admin-main">
+        <div th:replace="~{fragments/admin/admin-header :: header}"></div>
+        <div class="admin-content">
+            <a class="back-link" th:href="@{/admin/venues}">← 공연장 목록으로</a>
 
-                <header class="admin-title" style="margin-top:10px">
-                    <div>
-                        <h1 th:text="${hall.name}">홀 이름</h1>
-                        <p th:text="${hall.venue.name} + ' · ' + ${hall.seatCapacity} + '석'">공연장 · 좌석수</p>
+            <header class="admin-title" style="margin-top:10px">
+                <div>
+                    <h1 th:text="${hall.name}">홀 이름</h1>
+                    <p th:text="${hall.venue.name} + ' · ' + ${hall.seatCapacity} + '석'">공연장 · 좌석수</p>
+                </div>
+            </header>
+
+            <div class="structure-layout structure-layout--stretch">
+                <section class="structure-card">
+                    <div class="structure-card__head">
+                        <h2>좌석 등급</h2>
                     </div>
-                </header>
 
-                <div class="structure-layout structure-layout--stretch">
-                    <section class="structure-card">
-                        <div class="structure-card__head">
-                            <h2>좌석 등급</h2>
-                        </div>
+                    <p class="grade-card__subtitle" th:if="${grades.isEmpty()}">
+                        등록된 좌석 등급이 없습니다. "등급 관리"에서 먼저 등록해주세요.
+                    </p>
 
-                        <p class="grade-card__subtitle" th:if="${grades.isEmpty()}">
-                            등록된 좌석 등급이 없습니다. "등급 관리"에서 먼저 등록해주세요.
-                        </p>
-
-                        <table class="grade-table" th:if="${!grades.isEmpty()}">
-                            <thead>
-                            <tr>
-                                <th>등급</th>
-                                <th>좌석 수</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="g : ${grades}">
-                                <td>
+                    <table class="grade-table" th:if="${!grades.isEmpty()}">
+                        <thead>
+                        <tr>
+                            <th>등급</th>
+                            <th>좌석 수</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="g : ${grades}">
+                            <td>
                           <span class="grade-name">
                             <span class="grade-swatch" th:style="'background:' + ${g.displayColor}"></span>
                             <span th:text="${g.name}">VIP</span>
                           </span>
-                                </td>
-                                <td><span class="grade-count" th:text="${g.seatCount} + '석'">0석</span></td>
-                            </tr>
-                            </tbody>
-                        </table>
+                            </td>
+                            <td><span class="grade-count" th:text="${g.seatCount} + '석'">0석</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
 
-                        <div class="structure-card__footer">
-                            <a class="btn-mini" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">+ 등급 관리</a>
+                    <div class="structure-card__footer">
+                        <a class="btn-mini" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">+ 등급 관리</a>
+                    </div>
+                </section>
+
+                <aside class="side-stack">
+                    <section class="side-card">
+                        <h3>좌석 관리</h3>
+                        <div class="side-card__actions">
+                            <a class="btn--venue-add"
+                               th:href="@{/admin/venues/halls/{hallId}/seats/bulk-new(hallId=${hall.id})}">구역별 좌석 일괄 생성</a>
+                            <a class="btn--cancel" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">좌석 등급 등록/삭제</a>
+                            <button type="button" class="btn--cancel" id="seatManageOpenBtn">🪑 좌석 목록 보기 · 삭제</button>
                         </div>
                     </section>
 
-                    <aside class="side-stack">
-                        <section class="side-card">
-                            <h3>좌석 관리</h3>
-                            <div class="side-card__actions">
-                                <a class="btn--venue-add"
-                                   th:href="@{/admin/venues/halls/{hallId}/seats/bulk-new(hallId=${hall.id})}">구역별 좌석 일괄 생성</a>
-                                <a class="btn--cancel" th:href="@{/admin/venues/halls/{hallId}/grades/new(hallId=${hall.id})}">좌석 등급 등록/삭제</a>
-                            </div>
-                        </section>
-
-                        <section class="side-card danger-zone">
-                            <h3>위험 구역</h3>
-                            <p>홀을 삭제하면 연결된 좌석도·등급·좌석이 모두 함께 삭제되며 되돌릴 수 없습니다.</p>
-                            <form class="danger-zone__actions" th:action="@{/admin/venues/halls/{hallId}/delete(hallId=${hall.id})}" method="post">
-                                <button type="submit" class="btn-mini btn-mini--danger"
-                                        onclick="return confirm('이 홀을 삭제하면 등록된 좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?');">
-                                    홀 삭제
-                                </button>
-                            </form>
-                        </section>
-                    </aside>
-                </div>
+                    <section class="side-card danger-zone">
+                        <h3>위험 구역</h3>
+                        <p>홀을 삭제하면 연결된 좌석도·등급·좌석이 모두 함께 삭제되며 되돌릴 수 없습니다.</p>
+                        <form class="danger-zone__actions" id="hallDeleteForm" th:action="@{/admin/venues/halls/{hallId}/delete(hallId=${hall.id})}" method="post">
+                            <button type="button" class="btn-mini btn-mini--danger" id="hallDeleteBtn">
+                                홀 삭제
+                            </button>
+                        </form>
+                    </section>
+                </aside>
             </div>
-        </main>
+        </div>
+    </main>
+</div>
+
+<!-- 좌석 개별 삭제 모달 -->
+<div class="seat-modal-overlay" id="seatModalOverlay">
+    <div class="seat-modal">
+        <div class="seat-modal__head">
+            <h3>좌석 개별 삭제</h3>
+            <button type="button" class="seat-modal__close" id="seatModalCloseBtn">×</button>
+        </div>
+        <div class="seat-modal__toolbar">
+            <label>
+                <input type="checkbox" id="seatModalSelectAll">
+                전체 선택
+            </label>
+            <button type="button" class="seat-modal__delete-btn" id="seatModalDeleteBtn" disabled>
+                선택 삭제 (<span id="seatModalSelectedCount">0</span>)
+            </button>
+        </div>
+        <div class="seat-modal__body" id="seatModalBody">
+            <div class="seat-modal__loading">불러오는 중...</div>
+        </div>
     </div>
-    </body>
-    </html>
+</div>
+
+<script th:if="${error != null}" th:inline="javascript">
+    showAppAlert(/*[[${error}]]*/ '오류가 발생했습니다.', 'error');
+</script>
+<script th:inline="javascript">
+    var SEAT_MODAL_HALL_ID = /*[[${hall.id}]]*/ 0;
+</script>
+<script>
+    (function () {
+        var hallId = SEAT_MODAL_HALL_ID;
+        var mapUrl = '/admin/venues/halls/' + hallId + '/seats/map';
+        var deleteUrl = '/admin/venues/halls/' + hallId + '/seats/delete-bulk';
+        var scheduleInfoUrl = '/admin/venues/halls/' + hallId + '/seats/schedule-info';
+
+        var overlay = document.getElementById('seatModalOverlay');
+        var openBtn = document.getElementById('seatManageOpenBtn');
+        var closeBtn = document.getElementById('seatModalCloseBtn');
+        var body = document.getElementById('seatModalBody');
+        var selectAll = document.getElementById('seatModalSelectAll');
+        var deleteBtn = document.getElementById('seatModalDeleteBtn');
+        var countLabel = document.getElementById('seatModalSelectedCount');
+
+        function readCookie(name) {
+            var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+
+        function csrfHeaders() {
+            var headers = { 'Content-Type': 'application/json' };
+
+            // 1) meta 태그 방식
+            var tokenMeta = document.querySelector('meta[name="_csrf"]');
+            var headerMeta = document.querySelector('meta[name="_csrf_header"]');
+            if (tokenMeta && headerMeta && tokenMeta.content && headerMeta.content) {
+                headers[headerMeta.content] = tokenMeta.content;
+                return headers;
+            }
+
+            // 2) 폼 hidden input 방식 (다른 admin 화면의 <form>에 있는 _csrf 값 재사용)
+            var tokenInput = document.querySelector('input[name="_csrf"]');
+            if (tokenInput && tokenInput.value) {
+                headers['X-CSRF-TOKEN'] = tokenInput.value;
+                return headers;
+            }
+
+            // 3) 쿠키 방식 (CookieCsrfTokenRepository 사용 시 XSRF-TOKEN 쿠키)
+            var cookieToken = readCookie('XSRF-TOKEN');
+            if (cookieToken) {
+                headers['X-XSRF-TOKEN'] = cookieToken;
+                return headers;
+            }
+
+            return headers;
+        }
+
+        function openModal() {
+            overlay.classList.add('is-open');
+            loadSeats();
+        }
+
+        function closeModal() {
+            overlay.classList.remove('is-open');
+        }
+
+        function updateSelectedCount() {
+            var checked = body.querySelectorAll('input.seat-check:checked');
+            countLabel.textContent = checked.length;
+            deleteBtn.disabled = checked.length === 0;
+            var all = body.querySelectorAll('input.seat-check');
+            selectAll.checked = all.length > 0 && checked.length === all.length;
+        }
+
+        function loadSeats() {
+            body.innerHTML = '<div class="seat-modal__loading">불러오는 중...</div>';
+            selectAll.checked = false;
+            deleteBtn.disabled = true;
+            countLabel.textContent = '0';
+
+            fetch(mapUrl, { headers: { 'Accept': 'application/json' } })
+                .then(function (res) { return res.json(); })
+                .then(renderSeats)
+                .catch(function () {
+                    body.innerHTML = '<div class="seat-modal__empty">좌석 목록을 불러오지 못했습니다.</div>';
+                });
+        }
+
+        // 서버 DTO 필드명이 무엇이든(seatGradeName/gradeName/name 등) 값을 찾아내는 방어 함수
+        function pick(obj) {
+            for (var i = 1; i < arguments.length; i++) {
+                var v = obj[arguments[i]];
+                if (v !== undefined && v !== null && v !== '') return v;
+            }
+            return null;
+        }
+
+        function renderSeats(seats) {
+            if (!seats || seats.length === 0) {
+                body.innerHTML = '<div class="seat-modal__empty">등록된 좌석이 없습니다.</div>';
+                return;
+            }
+
+            // 등급 > 구역 2단계로 그룹핑
+            var gradeGroups = {};
+            var gradeOrder = [];
+            seats.forEach(function (s) {
+                var gradeId = pick(s, 'seatGradeId', 'gradeId', 'seatGradeID');
+                var gradeName = pick(s, 'seatGradeName', 'gradeName', 'name') || '미지정 등급';
+                var gradeColor = pick(s, 'seatGradeColor', 'gradeColor', 'displayColor', 'color') || '#6B7280';
+                var key = gradeId != null ? gradeId : gradeName;
+
+                if (!gradeGroups[key]) {
+                    gradeGroups[key] = { name: gradeName, color: gradeColor, sections: {}, sectionOrder: [], seats: [] };
+                    gradeOrder.push(key);
+                }
+                var grp = gradeGroups[key];
+                grp.seats.push(s);
+
+                var sectionName = pick(s, 'sectionName', 'section') || '구역 미지정';
+                if (!grp.sections[sectionName]) {
+                    grp.sections[sectionName] = [];
+                    grp.sectionOrder.push(sectionName);
+                }
+                grp.sections[sectionName].push(s);
+            });
+
+            var html = '';
+            gradeOrder.forEach(function (gradeKey, gIdx) {
+                var g = gradeGroups[gradeKey];
+                var groupClass = 'seat-modal-grade-' + gIdx;
+
+                html += '<div class="seat-modal__group">';
+                html += '<div class="seat-modal__group-title">';
+                html += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1">';
+                html += '<input type="checkbox" class="seat-check-group" data-group="' + groupClass + '">';
+                html += '<span class="seat-modal__group-swatch" style="background:' + g.color + '"></span>';
+                html += '<span>' + g.name + ' (' + g.seats.length + '석) 전체선택</span>';
+                html += '</label></div>';
+
+                g.sectionOrder.forEach(function (sectionName) {
+                    var sectionSeats = g.sections[sectionName];
+                    html += '<div style="margin:6px 0 8px 4px">';
+                    html += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--subtle,#888);cursor:pointer;margin-bottom:6px">';
+                    html += '<input type="checkbox" class="seat-check-section" data-group="' + groupClass + '">';
+                    html += '<span>' + sectionName + ' (' + sectionSeats.length + '석)</span>';
+                    html += '</label>';
+                    html += '<div class="seat-modal__grid">';
+                    sectionSeats.forEach(function (s) {
+                        var rowLabel = pick(s, 'rowLabel', 'row') || '';
+                        var seatNumber = pick(s, 'seatNumber', 'number') || '';
+                        var label = rowLabel + '열 ' + seatNumber + '번';
+                        html += '<label class="seat-modal__seat">';
+                        html += '<input type="checkbox" class="seat-check" data-group="' + groupClass + '" data-section="' + sectionName + '" value="' + s.id + '">';
+                        html += '<span>' + label + '</span>';
+                        html += '</label>';
+                    });
+                    html += '</div></div>';
+                });
+                html += '</div>';
+            });
+
+            body.innerHTML = html;
+
+            body.querySelectorAll('input.seat-check').forEach(function (cb) {
+                cb.addEventListener('change', updateSelectedCount);
+            });
+
+            // 등급 단위 전체선택
+            body.querySelectorAll('input.seat-check-group').forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    var group = cb.getAttribute('data-group');
+                    body.querySelectorAll('input.seat-check[data-group="' + group + '"]').forEach(function (target) {
+                        target.checked = cb.checked;
+                    });
+                    body.querySelectorAll('input.seat-check-section[data-group="' + group + '"]').forEach(function (target) {
+                        target.checked = cb.checked;
+                    });
+                    updateSelectedCount();
+                });
+            });
+
+            // 구역 단위 전체선택
+            body.querySelectorAll('input.seat-check-section').forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    var group = cb.getAttribute('data-group');
+                    var section = cb.closest('div').parentElement.querySelector('.seat-modal__grid') ? cb : null;
+                    var wrapper = cb.parentElement.nextElementSibling; // .seat-modal__grid
+                    if (wrapper) {
+                        wrapper.querySelectorAll('input.seat-check').forEach(function (target) {
+                            target.checked = cb.checked;
+                        });
+                    }
+                    updateSelectedCount();
+                });
+            });
+        }
+
+        selectAll.addEventListener('change', function () {
+            body.querySelectorAll('input.seat-check').forEach(function (cb) {
+                cb.checked = selectAll.checked;
+            });
+            updateSelectedCount();
+        });
+
+        function showScheduleAssignments(seatIds) {
+            fetch(scheduleInfoUrl, {
+                method: 'POST',
+                headers: csrfHeaders(),
+                body: JSON.stringify(seatIds)
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (assignments) {
+                    if (!assignments || assignments.length === 0) {
+                        showAppAlert('회차 배정 정보를 찾지 못했습니다.', 'info');
+                        return;
+                    }
+                    var lines = assignments.map(function (a) {
+                        var seatLabel = (a.sectionName || '') + ' ' + (a.rowLabel || '') + '열 ' + (a.seatNumber || '') + '번';
+                        var when = a.startsAt ? a.startsAt.replace('T', ' ') : '일정 미정';
+                        var round = a.roundNumber != null ? a.roundNumber + '회차' : '회차 미지정';
+                        return seatLabel + ' → ' + (a.performanceTitle || ('공연#' + a.performanceId)) + ' / ' + round + ' / ' + when + ' (' + a.status + ')';
+                    });
+                    showAppAlert('아래 좌석들이 회차에 배정되어 있어 삭제할 수 없습니다.\n\n' + lines.join('\n'), 'error');
+                })
+                .catch(function () {
+                    showAppAlert('회차 배정 정보를 불러오지 못했습니다.', 'error');
+                });
+        }
+
+        deleteBtn.addEventListener('click', function () {
+            var ids = Array.prototype.map.call(
+                body.querySelectorAll('input.seat-check:checked'),
+                function (cb) { return Number(cb.value); }
+            );
+            if (ids.length === 0) return;
+
+            showAppConfirm('선택한 ' + ids.length + '개 좌석을 삭제할까요? 되돌릴 수 없습니다.', function () {
+                fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: csrfHeaders(),
+                    body: JSON.stringify(ids)
+                })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data.error) {
+                            showAppAlert(data.error, 'error');
+                            showScheduleAssignments(ids);
+                            return;
+                        }
+                        showAppAlert((data.deleted || 0) + '개 좌석이 삭제되었습니다.', 'success', function () {
+                            location.reload();
+                        });
+                    })
+                    .catch(function () {
+                        showAppAlert('삭제 중 오류가 발생했습니다.', 'error');
+                    });
+            });
+        });
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeModal();
+        });
+
+        document.getElementById('hallDeleteBtn').addEventListener('click', function () {
+            showAppConfirm('이 홀을 삭제하면 등록된 좌석도·등급·좌석이 모두 함께 삭제됩니다. 계속할까요?', function () {
+                document.getElementById('hallDeleteForm').submit();
+            });
+        });
+    })();
+</script>
+</body>
+</html>
