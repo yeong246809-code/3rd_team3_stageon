@@ -1,0 +1,127 @@
+/* 공용 알림 팝업 (alert 대체) */
+
+.app-alert-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 17, 21, 0.55);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: appAlertFadeIn 0.15s ease-out;
+}
+
+@keyframes appAlertFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.app-alert-box {
+    background: #fff;
+    width: 460px;
+    max-width: 92vw;
+    max-height: 82vh;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: appAlertPopIn 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes appAlertPopIn {
+    from { opacity: 0; transform: scale(0.92) translateY(6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.app-alert-box__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 24px 14px;
+}
+
+.app-alert-box__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.app-alert-box--error .app-alert-box__icon {
+    background: #FDEDEA;
+    color: #E8513D;
+}
+
+.app-alert-box--success .app-alert-box__icon {
+    background: #E8F7EE;
+    color: #16A34A;
+}
+
+.app-alert-box--info .app-alert-box__icon {
+    background: #EAF1FE;
+    color: #4C8BF5;
+}
+
+.app-alert-box__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.app-alert-box__body {
+    padding: 0 24px 22px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #4B4B4B;
+    white-space: pre-line;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    overflow-y: auto;
+}
+
+.app-alert-box__footer {
+    padding: 14px 24px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.app-alert-box__btn--cancel {
+    background: #F1F1F1;
+    color: #4B4B4B;
+}
+
+.app-alert-box__btn--cancel:hover {
+    background: #E5E5E5;
+    opacity: 1;
+}
+
+.app-alert-box__btn {
+    border: none;
+    background: #1A1A1A;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.app-alert-box--error .app-alert-box__btn {
+    background: #E8513D;
+}
+
+.app-alert-box--success .app-alert-box__btn {
+    background: #16A34A;
+}
+
+.app-alert-box__btn:hover {
+    opacity: 0.9;
+}

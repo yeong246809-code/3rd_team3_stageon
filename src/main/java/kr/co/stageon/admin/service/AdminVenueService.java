@@ -4,10 +4,13 @@ import kr.co.stageon.admin.dto.SeatBulkFormDto;
 import kr.co.stageon.admin.dto.SeatGradeFormDto;
 import kr.co.stageon.admin.dto.SeatGradeSummaryDto;
 import kr.co.stageon.admin.dto.SeatMapItemDto;
+import kr.co.stageon.admin.dto.ScheduleAssignmentInfoDto;
 import kr.co.stageon.admin.dto.VenueDashboardDto;
 import kr.co.stageon.admin.dto.VenueFormDto;
 import kr.co.stageon.admin.dto.VenueHallFormDto;
 import kr.co.stageon.admin.dto.VenueStructureRowDto;
+import kr.co.stageon.booking.domain.ScheduleSeat;
+import kr.co.stageon.booking.repository.ScheduleSeatRepository;
 import kr.co.stageon.venue.domain.Seat;
 import kr.co.stageon.venue.domain.SeatChart;
 import kr.co.stageon.venue.domain.SeatGrade;
@@ -41,6 +44,7 @@ public class AdminVenueService {
     private final SeatChartRepository seatChartRepository;
     private final SeatGradeRepository seatGradeRepository;
     private final SeatRepository seatRepository;
+    private final ScheduleSeatRepository scheduleSeatRepository;
 
     /** 상단 통계 카드 + "공연장 구조" 테이블(공연장·홀·등급 구성·좌석도 상태)용 데이터입니다. */
     @Transactional(readOnly = true)
@@ -129,6 +133,32 @@ public class AdminVenueService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 선택한 좌석 중 이미 회차에 배정되어 삭제가 막힌 좌석들이 "어느 공연·회차"에 배정되어 있는지 조회합니다.
+     * 홀 상세 "좌석 개별 삭제" 모달에서, 삭제 실패 시 원인을 보여주기 위해 사용합니다.
+     */
+    @Transactional(readOnly = true)
+    public List<ScheduleAssignmentInfoDto> getScheduleAssignments(List<Long> seatIds) {
+        if (seatIds == null || seatIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<ScheduleSeat> scheduleSeats = scheduleSeatRepository.findWithScheduleInfoBySeatIdIn(seatIds);
+        return scheduleSeats.stream()
+                .map(ss -> new ScheduleAssignmentInfoDto(
+                        ss.getSeat().getId(),
+                        ss.getSeat().getSectionName(),
+                        ss.getSeat().getRowLabel(),
+                        ss.getSeat().getSeatNumber(),
+                        ss.getSchedule().getId(),
+                        ss.getSchedule().getPerformance().getId(),
+                        ss.getSchedule().getPerformance().getTitle(),
+                        ss.getSchedule().getRoundNumber(),
+                        ss.getSchedule().getStartsAt(),
+                        ss.getStatus().name()
+                ))
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public Long createVenue(VenueFormDto dto) {
         Venue v = Venue.create(
@@ -176,7 +206,12 @@ public class AdminVenueService {
         List<SeatChart> charts = seatChartRepository.findByVenueHallIdOrderByVersionDesc(hall.getId());
         for (SeatChart chart : charts) {
             List<Seat> seats = seatRepository.findBySeatChartIdOrderBySectionNameAscRowLabelAscSeatNumberAsc(chart.getId());
-            seatRepository.deleteAll(seats);
+            try {
+                seatRepository.deleteAll(seats);
+                seatRepository.flush();
+            } catch (DataIntegrityViolationException e) {
+                throw new IllegalStateException("이 홀에는 이미 회차에 배정된 좌석이 있어 삭제할 수 없습니다. 관련 회차·예매 데이터를 먼저 정리해주세요.");
+            }
 
             List<SeatGrade> grades = seatGradeRepository.findBySeatChartIdOrderBySortOrderAsc(chart.getId());
             seatGradeRepository.deleteAll(grades);
@@ -254,6 +289,45 @@ public class AdminVenueService {
             throw new IllegalStateException("이미 배치된 좌석이 있는 등급은 삭제할 수 없습니다. 좌석을 먼저 정리해주세요.");
         }
         seatGradeRepository.deleteById(gradeId);
+    }
+
+    /**
+     * 해당 등급에 배치된 좌석을 전부 삭제합니다(되돌릴 수 없음).
+     * 좌석 삭제 후에는 등급 삭제(deleteGrade)가 가능해집니다.
+     *
+     * @return 삭제된 좌석 수
+     */
+    @Transactional
+    public int deleteSeatsByGrade(Long gradeId) {
+        List<Seat> seats = seatRepository.findBySeatGradeId(gradeId);
+        try {
+            seatRepository.deleteAll(seats);
+            seatRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("이 등급의 좌석 중 일부가 이미 회차에 배정되어 삭제할 수 없습니다. 해당 회차의 좌석 배정을 먼저 정리해주세요.");
+        }
+        return seats.size();
+    }
+
+    /**
+     * 체크박스로 선택된 좌석 ID 목록만 골라서 삭제합니다(되돌릴 수 없음).
+     * 홀 상세 페이지의 "좌석 관리" 모달에서 사용합니다.
+     *
+     * @return 삭제된 좌석 수
+     */
+    @Transactional
+    public int deleteSeatsByIds(List<Long> seatIds) {
+        if (seatIds == null || seatIds.isEmpty()) {
+            return 0;
+        }
+        List<Seat> seats = seatRepository.findAllById(seatIds);
+        try {
+            seatRepository.deleteAll(seats);
+            seatRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalStateException("선택한 좌석 중 일부가 이미 회차에 배정되어 삭제할 수 없습니다. 해당 좌석의 회차 배정을 먼저 정리해주세요.");
+        }
+        return seats.size();
     }
 
     /**

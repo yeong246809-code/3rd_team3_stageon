@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -48,8 +49,12 @@ public class AdminVenueController {
     }
 
     @PostMapping("/{venueId}/delete")
-    public String deleteVenue(@PathVariable Long venueId) {
-        adminVenueService.deleteVenue(venueId);
+    public String deleteVenue(@PathVariable Long venueId, RedirectAttributes ra) {
+        try {
+            adminVenueService.deleteVenue(venueId);
+        } catch (IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/venues";
     }
 
@@ -82,9 +87,14 @@ public class AdminVenueController {
     }
 
     @PostMapping("/halls/{hallId}/delete")
-    public String deleteHall(@PathVariable Long hallId) {
-        adminVenueService.deleteHall(hallId);
-        return "redirect:/admin/venues";
+    public String deleteHall(@PathVariable Long hallId, RedirectAttributes ra) {
+        try {
+            adminVenueService.deleteHall(hallId);
+            return "redirect:/admin/venues";
+        } catch (IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/venues/halls/" + hallId;
+        }
     }
 
     @GetMapping("/halls/{hallId}/grades/new")
@@ -101,10 +111,56 @@ public class AdminVenueController {
         return "redirect:/admin/venues/halls/" + hallId + "/grades/new";
     }
 
+    /** 등급 삭제. 배치된 좌석이 있으면 삭제하지 않고 경고 메시지를 화면에 표시합니다(500 방지). */
     @PostMapping("/halls/{hallId}/grades/{gradeId}/delete")
-    public String deleteGrade(@PathVariable Long hallId, @PathVariable Long gradeId) {
-        adminVenueService.deleteGrade(gradeId);
+    public String deleteGrade(@PathVariable Long hallId, @PathVariable Long gradeId, RedirectAttributes ra) {
+        try {
+            adminVenueService.deleteGrade(gradeId);
+            ra.addFlashAttribute("message", "등급이 삭제되었습니다.");
+        } catch (IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/admin/venues/halls/" + hallId + "/grades/new";
+    }
+
+    /** 등급에 배치된 좌석을 전부 삭제합니다. 삭제 후에는 등급 삭제가 가능해집니다. */
+    @PostMapping("/halls/{hallId}/grades/{gradeId}/seats/delete")
+    public String deleteGradeSeats(@PathVariable Long hallId, @PathVariable Long gradeId, RedirectAttributes ra) {
+        try {
+            int count = adminVenueService.deleteSeatsByGrade(gradeId);
+            ra.addFlashAttribute("message", count + "개 좌석이 삭제되었습니다. 이제 등급을 삭제할 수 있습니다.");
+        } catch (IllegalStateException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/venues/halls/" + hallId + "/grades/new";
+    }
+
+    /**
+     * 홀 상세 페이지 "좌석 관리" 모달에서 체크박스로 선택한 좌석만 삭제합니다.
+     * 페이지 이동 없이 JSON으로 삭제 결과를 반환합니다.
+     */
+    @PostMapping("/halls/{hallId}/seats/delete-bulk")
+    @ResponseBody
+    public java.util.Map<String, Object> deleteSeatsBulk(@PathVariable Long hallId,
+                                                         @org.springframework.web.bind.annotation.RequestBody List<Long> seatIds) {
+        try {
+            int deleted = adminVenueService.deleteSeatsByIds(seatIds);
+            return java.util.Map.of("deleted", deleted);
+        } catch (IllegalStateException e) {
+            return java.util.Map.of("deleted", 0, "error", e.getMessage());
+        }
+    }
+
+    /**
+     * 선택한 좌석 중 이미 회차에 배정되어 삭제가 막힌 좌석이 "어느 공연·회차"에 배정되어 있는지 조회합니다.
+     * 삭제 실패(error) 응답을 받은 뒤 모달에서 후속 조회로 호출합니다.
+     */
+    @PostMapping("/halls/{hallId}/seats/schedule-info")
+    @ResponseBody
+    public List<kr.co.stageon.admin.dto.ScheduleAssignmentInfoDto> getScheduleAssignments(
+            @PathVariable Long hallId,
+            @org.springframework.web.bind.annotation.RequestBody List<Long> seatIds) {
+        return adminVenueService.getScheduleAssignments(seatIds);
     }
 
     @GetMapping("/halls/{hallId}/seats/bulk-new")
